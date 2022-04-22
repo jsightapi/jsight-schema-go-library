@@ -2,7 +2,7 @@ package validator
 
 import (
 	"j/schema/bytes"
-	"j/schema/internal/errors"
+	"j/schema/errors"
 	"j/schema/internal/json"
 	"j/schema/notations/jschema/internal/schema"
 	"j/schema/notations/jschema/internal/schema/constraint"

@@ -1,7 +1,7 @@
 package test
 
 import (
-	"j/schema/internal/errors"
+	"j/schema/errors"
 	"path/filepath"
 	"strings"
 )

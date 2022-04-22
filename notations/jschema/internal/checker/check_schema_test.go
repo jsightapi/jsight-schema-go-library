@@ -2,8 +2,8 @@ package checker
 
 import (
 	"j/schema/bytes"
+	"j/schema/errors"
 	"j/schema/fs"
-	"j/schema/internal/errors"
 	"j/schema/internal/logger"
 	"j/schema/notations/jschema/internal/loader"
 	"j/schema/notations/jschema/internal/scanner"

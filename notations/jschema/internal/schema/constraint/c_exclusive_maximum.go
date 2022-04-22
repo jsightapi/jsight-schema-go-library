@@ -3,7 +3,7 @@ package constraint //nolint:dupl // Duplicates exclusive minimum with small diff
 import (
 	"j/schema"
 	"j/schema/bytes"
-	"j/schema/internal/errors"
+	"j/schema/errors"
 	"j/schema/internal/json"
 	"strconv"
 )

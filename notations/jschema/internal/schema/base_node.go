@@ -2,7 +2,7 @@ package schema
 
 import (
 	"j/schema/bytes"
-	"j/schema/internal/errors"
+	"j/schema/errors"
 	"j/schema/internal/json"
 	"j/schema/internal/lexeme"
 	"j/schema/notations/jschema/internal/schema/constraint"

@@ -2,8 +2,8 @@ package validator
 
 import (
 	"fmt"
-	jschema "j/schema"
-	"j/schema/internal/errors"
+	"j/schema"
+	"j/schema/errors"
 	"j/schema/internal/lexeme"
 	"j/schema/notations/jschema/internal/schema"
 	"j/schema/notations/jschema/internal/schema/constraint"

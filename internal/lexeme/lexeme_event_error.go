@@ -2,7 +2,7 @@ package lexeme
 
 import (
 	"fmt"
-	"j/schema/internal/errors"
+	"j/schema/errors"
 )
 
 func CatchLexEventError(lex LexEvent) {

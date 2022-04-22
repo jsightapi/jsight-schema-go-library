@@ -1,7 +1,7 @@
 package checker
 
 import (
-	"j/schema/internal/errors"
+	"j/schema/errors"
 	"j/schema/internal/json"
 	"j/schema/internal/lexeme"
 	"j/schema/internal/logger"

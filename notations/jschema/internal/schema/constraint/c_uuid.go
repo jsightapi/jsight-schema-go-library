@@ -2,11 +2,11 @@ package constraint
 
 import (
 	"bytes"
-	"errors"
+	stdErrors "errors"
 	"fmt"
 	"j/schema"
 	jbytes "j/schema/bytes"
-	internalErrors "j/schema/internal/errors"
+	"j/schema/errors"
 	"j/schema/internal/json"
 )
 
@@ -33,7 +33,7 @@ func (Uuid) String() string {
 func (Uuid) Validate(value jbytes.Bytes) {
 	err := ParseBytes(value.Unquote())
 	if err != nil {
-		panic(internalErrors.Format(internalErrors.ErrInvalidUuid, err))
+		panic(errors.Format(errors.ErrInvalidUuid, err))
 	}
 }
 
@@ -53,13 +53,13 @@ func ParseBytes(b []byte) error { //nolint:gocyclo // For now it's okay.
 		b = b[9:]
 	case 36 + 2: // {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
 		if b[0] != '{' || b[37] != '}' {
-			return errors.New("invalid prefix: braces expected")
+			return stdErrors.New("invalid prefix: braces expected")
 		}
 		b = b[1:]
 	case 32: // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 		for i := 0; i < 32; i += 2 {
 			if !xtob(b[i], b[i+1]) {
-				return errors.New("invalid UUID format")
+				return stdErrors.New("invalid UUID format")
 			}
 		}
 		return nil
@@ -69,7 +69,7 @@ func ParseBytes(b []byte) error { //nolint:gocyclo // For now it's okay.
 
 	// it must be of the form  xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 	if b[8] != '-' || b[13] != '-' || b[18] != '-' || b[23] != '-' {
-		return errors.New("invalid UUID format")
+		return stdErrors.New("invalid UUID format")
 	}
 	for _, x := range [16]int{
 		0, 2, 4, 6,
@@ -78,7 +78,7 @@ func ParseBytes(b []byte) error { //nolint:gocyclo // For now it's okay.
 		19, 21,
 		24, 26, 28, 30, 32, 34} {
 		if !xtob(b[x], b[x+1]) {
-			return errors.New("invalid UUID format")
+			return stdErrors.New("invalid UUID format")
 		}
 	}
 	return nil

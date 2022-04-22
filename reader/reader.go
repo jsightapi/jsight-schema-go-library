@@ -2,8 +2,8 @@ package reader
 
 import (
 	"io/ioutil"
+	"j/schema/errors"
 	"j/schema/fs"
-	"j/schema/internal/errors"
 )
 
 // Read reads the contents of the file, returns a slice of bytes.

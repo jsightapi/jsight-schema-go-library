@@ -1,13 +1,13 @@
 package jschema
 
 import (
-	"errors"
+	stdErrors "errors"
 	"fmt"
 	"io"
 	"j/schema"
+	"j/schema/errors"
 	"j/schema/formats/json"
 	"j/schema/fs"
-	internalErrors "j/schema/internal/errors"
 	"j/schema/internal/logger"
 	"j/schema/notations/internal"
 	"j/schema/notations/jschema/internal/checker"
@@ -103,7 +103,7 @@ func (s *Schema) Example() (b []byte, err error) {
 	}
 
 	if s.inner.RootNode() == nil {
-		return nil, internalErrors.NewDocumentError(s.file, internalErrors.ErrEmptySchema)
+		return nil, errors.NewDocumentError(s.file, errors.ErrEmptySchema)
 	}
 
 	return buildExample(s.inner.RootNode()), nil
@@ -112,7 +112,7 @@ func (s *Schema) Example() (b []byte, err error) {
 func buildExample(node internalSchema.Node) []byte {
 	c := node.Constraint(constraint.TypesListConstraintType)
 	if c != nil {
-		panic(internalErrors.ErrUserTypeFound)
+		panic(errors.ErrUserTypeFound)
 	}
 
 	switch typedNode := node.(type) {
@@ -199,7 +199,7 @@ func (s *Schema) AddType(name string, sc jschema.Schema) (err error) {
 }
 
 func (*Schema) AddRule(string, jschema.Rule) error {
-	return errors.New("not supported yet")
+	return stdErrors.New("not supported yet")
 }
 
 func (s *Schema) Check() (err error) {
@@ -235,7 +235,7 @@ func (s *Schema) validate(document jschema.Document) error {
 	for {
 		jsonLex, err := document.NextLexeme()
 		if err != nil {
-			if errors.Is(err, io.EOF) {
+			if stdErrors.Is(err, io.EOF) {
 				break
 			}
 			return err
@@ -248,14 +248,14 @@ func (s *Schema) validate(document jschema.Document) error {
 	}
 
 	if empty {
-		return internal.NewValidatorError(internalErrors.ErrEmptyJson, "")
+		return internal.NewValidatorError(errors.ErrEmptyJson, "")
 	}
 
 	// check for error: Invalid non-space byte after top-level value
 	for {
 		_, err := document.NextLexeme()
 		if err != nil {
-			if errors.Is(err, io.EOF) {
+			if stdErrors.Is(err, io.EOF) {
 				break
 			}
 			return err
@@ -387,7 +387,10 @@ func (s *Schema) buildASTNode() jschema.ASTNode {
 	root := s.inner.RootNode()
 	if root == nil {
 		// This case will be handled in loader.CompileBasic.
-		return jschema.ASTNode{}
+		return jschema.ASTNode{
+			Properties: &jschema.ASTNodes{},
+			Rules:      &jschema.RuleASTNodes{},
+		}
 	}
 
 	an, err := root.ASTNode()

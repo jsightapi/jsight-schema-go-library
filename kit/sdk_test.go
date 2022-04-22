@@ -2,8 +2,8 @@ package kit
 
 import (
 	"fmt"
+	"j/schema/errors"
 	"j/schema/fs"
-	"j/schema/internal/errors"
 	"j/schema/reader"
 	"j/schema/test"
 	"path/filepath"

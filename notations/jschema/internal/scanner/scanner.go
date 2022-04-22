@@ -3,8 +3,8 @@ package scanner
 import (
 	"fmt"
 	"j/schema/bytes"
+	"j/schema/errors"
 	"j/schema/fs"
-	"j/schema/internal/errors"
 	"j/schema/internal/lexeme"
 	"j/schema/internal/scanner"
 )
@@ -1313,12 +1313,14 @@ func stateMultiLineAnnotationEnd(s *Scanner, c byte) state {
 }
 
 func stateInlineAnnotation(s *Scanner, c byte) state {
-	if c == ' ' || c == '\t' {
+	switch c {
+	case ' ', '\t':
 		return scanContinue
-	}
-	if c == '{' {
+
+	case '{':
 		return stateFoundRootValue(s, c)
 	}
+
 	s.found(lexeme.InlineAnnotationTextBegin)
 	s.step = stateInlineAnnotationText
 	return s.step(s, c)
@@ -1360,7 +1362,8 @@ func stateInlineAnnotationTextPrefix2(s *Scanner, c byte) state {
 }
 
 func stateInlineAnnotationText(s *Scanner, c byte) state {
-	if c == '\n' || c == '\r' {
+	switch c {
+	case '\n', '\r':
 		s.found(lexeme.InlineAnnotationTextEnd)
 		s.found(lexeme.InlineAnnotationEnd)
 		s.found(lexeme.NewLine)
@@ -1376,6 +1379,34 @@ func stateInlineAnnotationText(s *Scanner, c byte) state {
 		} else {
 			s.annotation = annotationNone
 		}
+
+	case '#':
+		if !s.isInsideMultiLineAnnotation() {
+			s.found(lexeme.InlineAnnotationTextEnd)
+			s.found(lexeme.InlineAnnotationEnd)
+			s.step = stateInlineAnnotationTextSkip
+		}
+	}
+	return scanContinue
+}
+
+func stateInlineAnnotationTextSkip(s *Scanner, c byte) state {
+	if c != '\n' && c != '\r' {
+		return scanContinue
+	}
+
+	s.found(lexeme.NewLine)
+	fn := s.returnToStep.Pop()
+	s.step = func(s *Scanner, c byte) state {
+		if s.isAnnotationStart(c) {
+			panic(s.newDocumentErrorAtCharacter("after inline annotation"))
+		}
+		return fn(s, c)
+	}
+	if s.isInsideMultiLineAnnotation() {
+		s.annotation = annotationMultiLine
+	} else {
+		s.annotation = annotationNone
 	}
 	return scanContinue
 }

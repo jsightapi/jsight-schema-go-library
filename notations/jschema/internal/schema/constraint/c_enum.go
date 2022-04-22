@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"j/schema"
 	jbytes "j/schema/bytes"
-	"j/schema/internal/errors"
+	"j/schema/errors"
 	"j/schema/internal/json"
 	"strings"
 )
@@ -51,7 +51,7 @@ func (c Enum) String() string {
 }
 
 func (c *Enum) Append(b jbytes.Bytes) int {
-	key := b.Unquote().TrimSpaces().String()
+	key := b.TrimSpaces().String()
 	if _, ok := c.uniqueIdx[key]; ok {
 		panic(errors.Format(errors.ErrDuplicationInEnumRule, b.String()))
 	}

@@ -3,8 +3,8 @@ package schema
 import (
 	"context"
 	"fmt"
-	jschema "j/schema"
-	"j/schema/internal/errors"
+	"j/schema"
+	"j/schema/errors"
 	"j/schema/internal/json"
 	"j/schema/internal/lexeme"
 	"strings"

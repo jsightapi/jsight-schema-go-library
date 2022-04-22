@@ -1,11 +1,11 @@
 package json
 
 import (
-	"errors"
+	stdErrors "errors"
 	"io"
 	"j/schema"
+	"j/schema/errors"
 	"j/schema/fs"
-	internalErrors "j/schema/internal/errors"
 	"j/schema/internal/lexeme"
 	"sync"
 )
@@ -106,11 +106,11 @@ func (d *Document) check() error {
 			continue
 		}
 
-		if errors.Is(err, io.EOF) {
+		if stdErrors.Is(err, io.EOF) {
 			err = nil
 
 			if jsonLexCounter == 0 {
-				err = internalErrors.NewDocumentError(d.file, internalErrors.ErrEmptyJson)
+				err = errors.NewDocumentError(d.file, errors.ErrEmptyJson)
 			}
 		}
 		return err

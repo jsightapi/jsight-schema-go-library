@@ -3,9 +3,9 @@ package kit
 import (
 	"fmt"
 	lib "j/schema"
+	"j/schema/errors"
 	"j/schema/formats/json"
 	"j/schema/fs"
-	"j/schema/internal/errors"
 	"j/schema/notations/jschema"
 )
 

@@ -2,8 +2,8 @@ package schema
 
 import (
 	"j/schema/bytes"
+	"j/schema/errors"
 	"j/schema/fs"
-	"j/schema/internal/errors"
 	"strconv"
 	"strings"
 )

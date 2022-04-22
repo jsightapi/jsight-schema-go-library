@@ -1,9 +1,9 @@
 package loader
 
 import (
-	jschema "j/schema"
+	"j/schema"
 	"j/schema/bytes"
-	"j/schema/internal/errors"
+	"j/schema/errors"
 	"j/schema/internal/lexeme"
 	"j/schema/notations/jschema/internal/schema"
 	"j/schema/notations/jschema/internal/schema/constraint"

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"j/schema"
 	"j/schema/bytes"
-	"j/schema/internal/errors"
+	"j/schema/errors"
 	internalJSON "j/schema/internal/json"
 	"regexp"
 )

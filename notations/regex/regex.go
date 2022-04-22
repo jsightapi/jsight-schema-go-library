@@ -4,8 +4,8 @@ import (
 	stdErrors "errors"
 	"j/schema"
 	"j/schema/bytes"
+	"j/schema/errors"
 	"j/schema/fs"
-	"j/schema/internal/errors"
 	"j/schema/internal/scanner"
 	"sync"
 

@@ -2,8 +2,8 @@ package json
 
 import (
 	"j/schema/bytes"
+	"j/schema/errors"
 	"j/schema/fs"
-	"j/schema/internal/errors"
 	"j/schema/internal/lexeme"
 	internalScanner "j/schema/internal/scanner"
 )

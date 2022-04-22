@@ -3,10 +3,10 @@ package jschema
 import (
 	"fmt"
 	"github.com/davecgh/go-spew/spew"
-	jschema "j/schema"
+	"j/schema"
+	"j/schema/errors"
 	"j/schema/formats/json"
 	"j/schema/fs"
-	"j/schema/internal/errors"
 	"j/schema/notations/jschema/internal/loader"
 	"j/schema/notations/jschema/internal/mocks"
 	internalSchema "j/schema/notations/jschema/internal/schema"
@@ -408,6 +408,7 @@ func TestSchema_Check(t *testing.T) {
 			`{
 	"foo": 2 // {nullable: false, optional: true}
 }`: nil,
+			`"5" // {enum: ["5", 5]}`: nil,
 		}
 
 		for content, types := range cc {
@@ -2962,6 +2963,405 @@ func TestSchema_GetAST(t *testing.T) {
 						},
 						[]string{"enum"},
 					),
+				},
+			},
+
+			`"foo" // {type: "string"} - annotation # should not be a comment in AST node`: {
+				expected: jschema.ASTNode{
+					JSONType:   jschema.JSONTypeString,
+					SchemaType: string(jschema.SchemaTypeString),
+					Properties: &jschema.ASTNodes{},
+					Value:      "foo",
+					Rules: jschema.NewRuleASTNodes(
+						map[string]jschema.RuleASTNode{
+							"type": {
+								JSONType:   jschema.JSONTypeString,
+								Properties: &jschema.RuleASTNodes{},
+								Value:      "string",
+								Source:     jschema.RuleASTNodeSourceManual,
+							},
+						},
+						[]string{"type"},
+					),
+					Comment: "annotation",
+				},
+			},
+
+			`"#" // {regex: "#"} - annotation # comment`: {
+				expected: jschema.ASTNode{
+					JSONType:   jschema.JSONTypeString,
+					SchemaType: string(jschema.SchemaTypeString),
+					Properties: &jschema.ASTNodes{},
+					Value:      "#",
+					Rules: jschema.NewRuleASTNodes(
+						map[string]jschema.RuleASTNode{
+							"regex": {
+								JSONType:   jschema.JSONTypeString,
+								Properties: &jschema.RuleASTNodes{},
+								Value:      "#",
+								Source:     jschema.RuleASTNodeSourceManual,
+							},
+						},
+						[]string{"regex"},
+					),
+					Comment: "annotation",
+				},
+			},
+
+			`"#" // {enum: ["#", "##"]} - annotation # comment`: {
+				expected: jschema.ASTNode{
+					JSONType:   jschema.JSONTypeString,
+					SchemaType: string(jschema.SchemaTypeEnum),
+					Properties: &jschema.ASTNodes{},
+					Value:      "#",
+					Rules: jschema.NewRuleASTNodes(
+						map[string]jschema.RuleASTNode{
+							"enum": {
+								JSONType:   jschema.JSONTypeArray,
+								Properties: &jschema.RuleASTNodes{},
+								Items: []jschema.RuleASTNode{
+									{
+										JSONType:   jschema.JSONTypeString,
+										Value:      "#",
+										Properties: &jschema.RuleASTNodes{},
+										Source:     jschema.RuleASTNodeSourceManual,
+									},
+									{
+										JSONType:   jschema.JSONTypeString,
+										Value:      "##",
+										Properties: &jschema.RuleASTNodes{},
+										Source:     jschema.RuleASTNodeSourceManual,
+									},
+								},
+								Source: jschema.RuleASTNodeSourceManual,
+							},
+						},
+						[]string{"enum"},
+					),
+					Comment: "annotation",
+				},
+			},
+
+			`{
+  "id": 5,
+  "name": "John" # single-line COMMENT
+}`: {
+				expected: jschema.ASTNode{
+					JSONType:   jschema.JSONTypeObject,
+					SchemaType: string(jschema.SchemaTypeObject),
+					Properties: jschema.NewASTNodes(
+						map[string]jschema.ASTNode{
+							"id": {
+								JSONType:   jschema.JSONTypeNumber,
+								SchemaType: string(jschema.SchemaTypeInteger),
+								Value:      "5",
+								Properties: &jschema.ASTNodes{},
+								Rules:      &jschema.RuleASTNodes{},
+							},
+							"name": {
+								JSONType:   jschema.JSONTypeString,
+								SchemaType: string(jschema.SchemaTypeString),
+								Value:      "John",
+								Properties: &jschema.ASTNodes{},
+								Rules:      &jschema.RuleASTNodes{},
+							},
+						},
+						[]string{"id", "name"},
+					),
+					Rules: &jschema.RuleASTNodes{},
+				},
+			},
+
+			`{
+  "id": 5,
+  "name": "John"
+  ###
+  block
+  COMMENT
+  ###
+}`: {
+				expected: jschema.ASTNode{
+					JSONType:   jschema.JSONTypeObject,
+					SchemaType: string(jschema.SchemaTypeObject),
+					Properties: jschema.NewASTNodes(
+						map[string]jschema.ASTNode{
+							"id": {
+								JSONType:   jschema.JSONTypeNumber,
+								SchemaType: string(jschema.SchemaTypeInteger),
+								Value:      "5",
+								Properties: &jschema.ASTNodes{},
+								Rules:      &jschema.RuleASTNodes{},
+							},
+							"name": {
+								JSONType:   jschema.JSONTypeString,
+								SchemaType: string(jschema.SchemaTypeString),
+								Value:      "John",
+								Properties: &jschema.ASTNodes{},
+								Rules:      &jschema.RuleASTNodes{},
+							},
+						},
+						[]string{"id", "name"},
+					),
+					Rules: &jschema.RuleASTNodes{},
+				},
+			},
+
+			`{
+  "id": 5,
+  "name": "John" /*
+  # comment
+*/
+}`: {
+				expected: jschema.ASTNode{
+					JSONType:   jschema.JSONTypeObject,
+					SchemaType: string(jschema.SchemaTypeObject),
+					Properties: jschema.NewASTNodes(
+						map[string]jschema.ASTNode{
+							"id": {
+								JSONType:   jschema.JSONTypeNumber,
+								SchemaType: string(jschema.SchemaTypeInteger),
+								Value:      "5",
+								Properties: &jschema.ASTNodes{},
+								Rules:      &jschema.RuleASTNodes{},
+							},
+							"name": {
+								JSONType:   jschema.JSONTypeString,
+								SchemaType: string(jschema.SchemaTypeString),
+								Value:      "John",
+								Properties: &jschema.ASTNodes{},
+								Rules:      &jschema.RuleASTNodes{},
+								Comment:    "# comment",
+							},
+						},
+						[]string{"id", "name"},
+					),
+					Rules: &jschema.RuleASTNodes{},
+				},
+			},
+
+			`{
+  "id": 5,
+  "name": "John" /* {type: "string"} - annotation
+  # comment
+*/
+}`: {
+				expected: jschema.ASTNode{
+					JSONType:   jschema.JSONTypeObject,
+					SchemaType: string(jschema.SchemaTypeObject),
+					Properties: jschema.NewASTNodes(
+						map[string]jschema.ASTNode{
+							"id": {
+								JSONType:   jschema.JSONTypeNumber,
+								SchemaType: string(jschema.SchemaTypeInteger),
+								Value:      "5",
+								Properties: &jschema.ASTNodes{},
+								Rules:      &jschema.RuleASTNodes{},
+							},
+							"name": {
+								JSONType:   jschema.JSONTypeString,
+								SchemaType: string(jschema.SchemaTypeString),
+								Value:      "John",
+								Properties: &jschema.ASTNodes{},
+								Rules: jschema.NewRuleASTNodes(
+									map[string]jschema.RuleASTNode{
+										"type": {
+											JSONType:   jschema.JSONTypeString,
+											Value:      "string",
+											Properties: &jschema.RuleASTNodes{},
+											Source:     jschema.RuleASTNodeSourceManual,
+										},
+									},
+									[]string{"type"},
+								),
+								Comment: `annotation
+  # comment`,
+							},
+						},
+						[]string{"id", "name"},
+					),
+					Rules: &jschema.RuleASTNodes{},
+				},
+			},
+
+			`{
+  "id": 5,
+  "name": "John" /* {type: "string"} - annotation # comment
+*/
+}`: {
+				expected: jschema.ASTNode{
+					JSONType:   jschema.JSONTypeObject,
+					SchemaType: string(jschema.SchemaTypeObject),
+					Properties: jschema.NewASTNodes(
+						map[string]jschema.ASTNode{
+							"id": {
+								JSONType:   jschema.JSONTypeNumber,
+								SchemaType: string(jschema.SchemaTypeInteger),
+								Value:      "5",
+								Properties: &jschema.ASTNodes{},
+								Rules:      &jschema.RuleASTNodes{},
+							},
+							"name": {
+								JSONType:   jschema.JSONTypeString,
+								SchemaType: string(jschema.SchemaTypeString),
+								Value:      "John",
+								Properties: &jschema.ASTNodes{},
+								Rules: jschema.NewRuleASTNodes(
+									map[string]jschema.RuleASTNode{
+										"type": {
+											JSONType:   jschema.JSONTypeString,
+											Value:      "string",
+											Properties: &jschema.RuleASTNodes{},
+											Source:     jschema.RuleASTNodeSourceManual,
+										},
+									},
+									[]string{"type"},
+								),
+								Comment: `annotation # comment`,
+							},
+						},
+						[]string{"id", "name"},
+					),
+					Rules: &jschema.RuleASTNodes{},
+				},
+			},
+
+			`{
+  "id": 5,
+  "name": "John" // {type: "string"} - annotation # comment
+}`: {
+				expected: jschema.ASTNode{
+					JSONType:   jschema.JSONTypeObject,
+					SchemaType: string(jschema.SchemaTypeObject),
+					Properties: jschema.NewASTNodes(
+						map[string]jschema.ASTNode{
+							"id": {
+								JSONType:   jschema.JSONTypeNumber,
+								SchemaType: string(jschema.SchemaTypeInteger),
+								Value:      "5",
+								Properties: &jschema.ASTNodes{},
+								Rules:      &jschema.RuleASTNodes{},
+							},
+							"name": {
+								JSONType:   jschema.JSONTypeString,
+								SchemaType: string(jschema.SchemaTypeString),
+								Value:      "John",
+								Properties: &jschema.ASTNodes{},
+								Rules: jschema.NewRuleASTNodes(
+									map[string]jschema.RuleASTNode{
+										"type": {
+											JSONType:   jschema.JSONTypeString,
+											Value:      "string",
+											Properties: &jschema.RuleASTNodes{},
+											Source:     jschema.RuleASTNodeSourceManual,
+										},
+									},
+									[]string{"type"},
+								),
+								Comment: `annotation`,
+							},
+						},
+						[]string{"id", "name"},
+					),
+					Rules: &jschema.RuleASTNodes{},
+				},
+			},
+
+			`{
+  "id": 5,
+  "name": "John" /*
+  ###
+  block
+  COMMENT
+  ###
+*/
+}`: {
+				expected: jschema.ASTNode{
+					JSONType:   jschema.JSONTypeObject,
+					SchemaType: string(jschema.SchemaTypeObject),
+					Properties: jschema.NewASTNodes(
+						map[string]jschema.ASTNode{
+							"id": {
+								JSONType:   jschema.JSONTypeNumber,
+								SchemaType: string(jschema.SchemaTypeInteger),
+								Value:      "5",
+								Properties: &jschema.ASTNodes{},
+								Rules:      &jschema.RuleASTNodes{},
+							},
+							"name": {
+								JSONType:   jschema.JSONTypeString,
+								SchemaType: string(jschema.SchemaTypeString),
+								Value:      "John",
+								Properties: &jschema.ASTNodes{},
+								Rules:      &jschema.RuleASTNodes{},
+								Comment: `###
+  block
+  COMMENT
+  ###`,
+							},
+						},
+						[]string{"id", "name"},
+					),
+					Rules: &jschema.RuleASTNodes{},
+				},
+			},
+
+			`{
+  "id": 5,
+  "name": "John" /* {type: "string"} - annotation
+  ###
+  block
+  COMMENT
+  ###
+*/
+}`: {
+				expected: jschema.ASTNode{
+					JSONType:   jschema.JSONTypeObject,
+					SchemaType: string(jschema.SchemaTypeObject),
+					Properties: jschema.NewASTNodes(
+						map[string]jschema.ASTNode{
+							"id": {
+								JSONType:   jschema.JSONTypeNumber,
+								SchemaType: string(jschema.SchemaTypeInteger),
+								Value:      "5",
+								Properties: &jschema.ASTNodes{},
+								Rules:      &jschema.RuleASTNodes{},
+							},
+							"name": {
+								JSONType:   jschema.JSONTypeString,
+								SchemaType: string(jschema.SchemaTypeString),
+								Value:      "John",
+								Properties: &jschema.ASTNodes{},
+								Rules: jschema.NewRuleASTNodes(
+									map[string]jschema.RuleASTNode{
+										"type": {
+											JSONType:   jschema.JSONTypeString,
+											Value:      "string",
+											Properties: &jschema.RuleASTNodes{},
+											Source:     jschema.RuleASTNodeSourceManual,
+										},
+									},
+									[]string{"type"},
+								),
+								Comment: `annotation
+  ###
+  block
+  COMMENT
+  ###`,
+							},
+						},
+						[]string{"id", "name"},
+					),
+					Rules: &jschema.RuleASTNodes{},
+				},
+			},
+
+			`# {
+#  "id": 5,
+#  "name": "John"
+# }`: {
+				expected: jschema.ASTNode{
+					Properties: &jschema.ASTNodes{},
+					Rules:      &jschema.RuleASTNodes{},
 				},
 			},
 		}

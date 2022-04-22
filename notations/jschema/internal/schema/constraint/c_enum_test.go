@@ -1,7 +1,6 @@
 package constraint
 
 import (
-	"fmt"
 	"j/schema"
 	"j/schema/bytes"
 	"j/schema/internal/json"
@@ -61,9 +60,9 @@ func TestEnum_Append(t *testing.T) {
 
 	t.Run("negative", func(t *testing.T) {
 		cc := map[string]string{
-			`"foo" value duplicates in "enum"`:  "foo",
-			`" foo" value duplicates in "enum"`: " foo",
-			`"foo " value duplicates in "enum"`: "foo ",
+			`"foo" value duplicates in "enum"`:  `"foo"`,
+			` "foo" value duplicates in "enum"`: ` "foo"`,
+			`"foo"  value duplicates in "enum"`: `"foo" `,
 		}
 
 		for expected, given := range cc {
@@ -71,7 +70,7 @@ func TestEnum_Append(t *testing.T) {
 				assert.PanicsWithError(t, expected, func() {
 					c := NewEnum()
 					c.Append(bytes.Bytes(`"foo"`))
-					c.Append(bytes.Bytes(fmt.Sprintf("%q", given)))
+					c.Append(bytes.Bytes(given))
 				})
 			})
 		}

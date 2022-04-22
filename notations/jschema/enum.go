@@ -1,8 +1,8 @@
 package jschema
 
 import (
+	"j/schema/errors"
 	"j/schema/fs"
-	"j/schema/internal/errors"
 	"j/schema/internal/lexeme"
 	"j/schema/notations/jschema/internal/scanner"
 )

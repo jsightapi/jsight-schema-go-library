@@ -3,7 +3,7 @@ package json
 
 import (
 	"j/schema/bytes"
-	"j/schema/internal/errors"
+	"j/schema/errors"
 )
 
 type Type uint8

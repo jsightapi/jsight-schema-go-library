@@ -2,7 +2,7 @@ package internal
 
 import (
 	"j/schema"
-	"j/schema/internal/errors"
+	"j/schema/errors"
 )
 
 type ValidationError struct {
