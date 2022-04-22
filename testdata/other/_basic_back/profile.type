@@ -1,0 +1,4 @@
+{
+  "sex": "male", // {enum: ["male", "female"]}
+  "age": 25 // {min: 1}
+}

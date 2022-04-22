@@ -1,0 +1,8 @@
+// Schema containing an object example
+{
+  "int": 1,
+  "float": 2.3,
+  "string": "",
+  "null": null,
+  "bool": true
+}

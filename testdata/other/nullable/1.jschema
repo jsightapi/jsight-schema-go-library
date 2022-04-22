@@ -1,0 +1,7 @@
+{
+  "id1": 1, // {type: "@id", nullable: true}
+  "id2": @id, // {nullable: true}
+  "id3": @id1 | @id2, // {nullable: true}
+  "size": 10, // {enum: [10,11,12], nullable: true}
+  "choice": 20 // {or: [{type: "integer"}, {type: "string"}], nullable: true}
+}

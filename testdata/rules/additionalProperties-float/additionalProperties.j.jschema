@@ -1,0 +1,3 @@
+{ // {additionalProperties: "float"}
+	"aaa": 1
+}

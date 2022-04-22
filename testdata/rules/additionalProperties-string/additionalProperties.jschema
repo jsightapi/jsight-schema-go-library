@@ -1,0 +1,3 @@
+{ // {additionalProperties: "string"}
+	"aaa": 1
+}

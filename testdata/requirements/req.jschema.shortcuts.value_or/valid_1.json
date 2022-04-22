@@ -1,0 +1,16 @@
+{
+  "object": {
+    "fizz_key1": 1,
+    "fizz_key2": 2
+  },
+  "array": [
+    {
+      "fizz_key1": 1,
+      "fizz_key2": 2
+    },
+    {
+      "buzz_key1": 1,
+      "buzz_key2": 2
+    }
+  ]
+}

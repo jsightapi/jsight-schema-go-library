@@ -1,0 +1,10 @@
+{
+  "figure1": {
+    "shape": "square",
+    "width": 111
+  },
+  "figure2": {
+    "shape": "circle",
+    "radius": 222
+  }
+}

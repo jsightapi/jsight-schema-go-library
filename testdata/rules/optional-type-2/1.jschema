@@ -1,0 +1,3 @@
+{
+  "k": 123 // {optional: true, type: "@uint"}
+}

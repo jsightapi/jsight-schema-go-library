@@ -1,0 +1,7 @@
+{
+  "id": 1,
+  "name": "123",
+  "age": 5.5,
+  "extra": true,
+  "profile": @profile1 | @profile2
+}

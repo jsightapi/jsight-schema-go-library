@@ -1,0 +1,8 @@
+{
+  "integer": 1,
+  "string": "foo",
+  "float": 3.14,
+  "null": null,
+  "boolean": true,
+  "not_a_const": 42
+}

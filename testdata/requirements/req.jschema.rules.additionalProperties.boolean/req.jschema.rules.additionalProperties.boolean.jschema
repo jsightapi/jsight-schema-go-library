@@ -1,0 +1,8 @@
+{
+  "foo": { // {additionalProperties: true}
+    "bar": 1
+  },
+  "fizz": { // {additionalProperties: false}
+    "buzz": 2
+  }
+}

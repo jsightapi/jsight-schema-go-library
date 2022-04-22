@@ -1,0 +1,6 @@
+{
+  "id": 1,
+  "name": "123", 
+  "age": 5.5,
+  "data": "asd" // {or: [{type: "string", maxLength: 3}, {type: "integer", min: 3}]}
+}

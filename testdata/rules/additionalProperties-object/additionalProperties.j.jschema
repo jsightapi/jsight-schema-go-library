@@ -1,0 +1,3 @@
+{ // {additionalProperties: "object"}
+	"aaa": 1
+}

@@ -1,0 +1,10 @@
+{
+  "object": {},
+  "array": [],
+  "integer": 12,
+  "float": 3.4,
+  "decimal": "WRONG",
+  "boolean": true,
+  "string": "abc",
+  "null": null
+}

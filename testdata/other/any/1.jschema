@@ -1,0 +1,3 @@
+{
+  "any": 456 // {type: "any", optional: true, nullable: true}
+}

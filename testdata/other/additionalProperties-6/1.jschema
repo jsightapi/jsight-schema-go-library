@@ -1,0 +1,3 @@
+{ // {allOf: "@aaa", additionalProperties: "@str"}
+  "bbb": 222
+}

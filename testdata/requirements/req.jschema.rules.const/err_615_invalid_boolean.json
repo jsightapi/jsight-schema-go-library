@@ -1,0 +1,7 @@
+{
+  "integer": 1,
+  "string": "foo",
+  "float": 3.14,
+  "null": null,
+  "boolean": false
+}

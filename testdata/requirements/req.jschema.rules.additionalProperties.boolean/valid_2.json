@@ -1,0 +1,12 @@
+{
+  "foo": {
+    "bar": 1,
+    "fizz": 42,
+    "buzz": {
+      "foo": "bar"
+    }
+  },
+  "fizz": {
+    "buzz": 2
+  }
+}

@@ -1,0 +1,20 @@
+/* Multiline annotation in one line. */
+
+   /* Another multiline annotation, after the whitespace characters. */
+
+{
+  /* Multiline annotation in one line. */
+  "id": 0
+  /* Multiline
+  annotation
+  in several lines. */
+
+}
+
+/* Multiline
+annotation
+in several lines. */
+
+  /* Multiline
+  annotation
+  with whitespace characters. */

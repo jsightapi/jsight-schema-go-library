@@ -1,0 +1,8 @@
+{
+ "ID": 1234,
+ "KIND": { 
+           "Name":  "Tom",
+           "Breed": "Persian"
+         },
+ "Food": "Whiskas"
+}

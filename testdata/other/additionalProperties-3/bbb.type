@@ -1,0 +1,3 @@
+{ // {additionalProperties: "any"}
+  "bbb": 222
+}

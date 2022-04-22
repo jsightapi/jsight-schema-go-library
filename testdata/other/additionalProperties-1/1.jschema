@@ -1,0 +1,3 @@
+{ // {allOf: "@aaa", additionalProperties: "any"}
+  "bbb": 222
+}

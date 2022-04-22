@@ -1,0 +1,6 @@
+{
+	"code": 1,
+	"message": "Some message text",
+	"someData": 99,
+	"filename": "filename.ext"
+}
