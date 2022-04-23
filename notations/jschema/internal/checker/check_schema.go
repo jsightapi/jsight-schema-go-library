@@ -173,10 +173,15 @@ func (c checkSchema) checkArrayItems(node schema.Node) {
 func (checkSchema) checkCompatibilityOfConstraints(node schema.Node) {
 	_, isMixed := node.(*schema.MixedNode)
 	_, isMixedValue := node.(*schema.MixedValueNode)
-	for kv := range node.ConstraintMap().Iterate() {
-		if !kv.Value.IsJsonTypeCompatible(node.Type()) && !isMixed && !isMixedValue {
-			panic(errors.Format(errors.ErrUnexpectedConstraint, kv.Value.Type().String(), node.RealType()))
+
+	err := node.ConstraintMap().Each(func(k constraint.Type, v constraint.Constraint) error {
+		if !v.IsJsonTypeCompatible(node.Type()) && !isMixed && !isMixedValue {
+			return errors.Format(errors.ErrUnexpectedConstraint, v.Type().String(), node.RealType())
 		}
+		return nil
+	})
+	if err != nil {
+		panic(err)
 	}
 }
 
@@ -219,12 +224,12 @@ func (c *checkSchema) ensureShortcutKeysAreValid(node *schema.ObjectNode) {
 		panic(lexeme.NewLexEventError(lex, err))
 	}()
 
-	for kv := range node.Keys().Iterate() {
-		if kv.Value.IsShortcut {
-			lex = kv.Value.Lex
-			c.rootSchema.Type(kv.Key) // can panic
+	node.Keys().EachSafe(func(k string, v schema.InnerObjectNodeKey) {
+		if v.IsShortcut {
+			lex = v.Lex
+			c.rootSchema.Type(k) // can panic
 		}
-	}
+	})
 }
 
 func (c *checkSchema) collectAllowedJsonTypes(node schema.Node, ss map[string]schema.Type) {

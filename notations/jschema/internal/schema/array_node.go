@@ -99,9 +99,9 @@ func (n ArrayNode) IndentedNodeString(depth int) string {
 	var str strings.Builder
 	str.WriteString(indent + "* " + n.Type().String() + "\n")
 
-	for kv := range n.constraints.Iterate() {
-		str.WriteString(indent + "* " + kv.Value.String() + "\n")
-	}
+	n.constraints.EachSafe(func(k constraint.Type, v constraint.Constraint) {
+		str.WriteString(indent + "* " + v.String() + "\n")
+	})
 
 	return str.String()
 }

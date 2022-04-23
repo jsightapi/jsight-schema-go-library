@@ -67,11 +67,11 @@ func (v *arrayValidator) feed(jsonLexeme lexeme.LexEvent) ([]validator, bool) {
 
 	case lexeme.ArrayEnd:
 		if arrayNode, ok := v.node_.(*schema.ArrayNode); ok {
-			for kv := range arrayNode.ConstraintMap().Iterate() {
-				if arrayValidator, ok := kv.Value.(constraint.ArrayValidator); ok {
+			arrayNode.ConstraintMap().EachSafe(func(_ constraint.Type, av constraint.Constraint) {
+				if arrayValidator, ok := av.(constraint.ArrayValidator); ok {
 					arrayValidator.ValidateTheArray(v.itemsCounter)
 				}
-			}
+			})
 		}
 		return nil, true
 	}

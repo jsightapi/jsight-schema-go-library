@@ -1,7 +1,6 @@
 package schema
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"sync"
@@ -10,6 +9,7 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/errors"
 	"github.com/jsightapi/jsight-schema-go-library/internal/json"
 	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
 )
 
 type ObjectNode struct {
@@ -19,7 +19,7 @@ type ObjectNode struct {
 	children []Node
 
 	// keys stores the index of the node on the map for quick search.
-	keys *objectNodeKeys
+	keys *ObjectNodeKeys
 
 	// waitingForChild indicates that the Grow method will create a child node by
 	// getting the next lexeme.
@@ -27,13 +27,13 @@ type ObjectNode struct {
 }
 
 // gen:OrderedMap
-type objectNodeKeys struct {
-	data  map[string]objectNodeKey
+type ObjectNodeKeys struct {
+	data  map[string]InnerObjectNodeKey
 	order []string
 	mx    sync.RWMutex
 }
 
-type objectNodeKey struct {
+type InnerObjectNodeKey struct {
 	Index      int
 	IsShortcut bool
 	Lex        lexeme.LexEvent
@@ -45,7 +45,7 @@ func newObjectNode(lex lexeme.LexEvent) *ObjectNode {
 	n := ObjectNode{
 		baseNode: newBaseNode(lex),
 		children: make([]Node, 0, 10),
-		keys:     &objectNodeKeys{},
+		keys:     &ObjectNodeKeys{},
 	}
 	n.setJsonType(json.TypeObject)
 	return &n
@@ -109,7 +109,7 @@ func (n *ObjectNode) addKey(key string, isShortcut bool, lex lexeme.LexEvent) {
 	}
 
 	// Save child node index into map for faster search.
-	n.keys.Set(key, objectNodeKey{
+	n.keys.Set(key, InnerObjectNodeKey{
 		Index:      len(n.children),
 		IsShortcut: isShortcut,
 		Lex:        lex,
@@ -133,26 +133,22 @@ type ObjectNodeKey struct {
 }
 
 func (n ObjectNode) Key(index int) ObjectNodeKey {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	kv, ok := n.keys.Find(func(k string, v InnerObjectNodeKey) bool {
+		return v.Index == index
+	})
 
-	for kv := range n.keys.IterateContext(ctx) {
-		if kv.Value.Index == index {
-			return ObjectNodeKey{
-				Name:       kv.Key,
-				IsShortcut: kv.Value.IsShortcut,
-				Lex:        kv.Value.Lex,
-			}
-		}
+	if !ok {
+		panic(fmt.Sprintf(`Schema key not found in index %d`, index))
 	}
-	panic(fmt.Sprintf(`Schema key not found in index %d`, index))
+
+	return ObjectNodeKey{
+		Name:       kv.Key,
+		IsShortcut: kv.Value.IsShortcut,
+		Lex:        kv.Value.Lex,
+	}
 }
 
-type ObjectNodeKeysIterator interface {
-	Iterate() <-chan objectNodeKeysItem
-}
-
-func (n ObjectNode) Keys() ObjectNodeKeysIterator {
+func (n ObjectNode) Keys() *ObjectNodeKeys {
 	return n.keys
 }
 
@@ -177,9 +173,9 @@ func (n ObjectNode) IndentedNodeString(depth int) string {
 	var str strings.Builder
 	str.WriteString(indent + "* " + n.Type().String() + "\n")
 
-	for kv := range n.constraints.Iterate() {
-		str.WriteString(indent + "* " + kv.Value.String() + "\n")
-	}
+	n.constraints.EachSafe(func(k constraint.Type, v constraint.Constraint) {
+		str.WriteString(indent + "* " + v.String() + "\n")
+	})
 
 	return str.String()
 }
@@ -198,16 +194,23 @@ func (n *ObjectNode) ASTNode() (jschema.ASTNode, error) {
 
 func (n *ObjectNode) collectASTProperties() (*jschema.ASTNodes, error) {
 	pp := &jschema.ASTNodes{}
-	for kv := range n.keys.Iterate() {
-		c := n.children[kv.Value.Index]
+
+	err := n.keys.Each(func(k string, v InnerObjectNodeKey) error {
+		c := n.children[v.Index]
 		cn, err := c.ASTNode()
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-		cn.IsKeyShortcut = kv.Value.IsShortcut
+		cn.IsKeyShortcut = v.IsShortcut
 
-		pp.Set(kv.Key, cn)
+		pp.Set(k, cn)
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
 	}
+
 	return pp, nil
 }

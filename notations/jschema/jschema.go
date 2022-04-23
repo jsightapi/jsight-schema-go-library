@@ -370,18 +370,18 @@ func collectUserTypesFromAllOfConstraint(node internalSchema.Node, uu map[string
 }
 
 func collectUserTypesObjectNode(node *internalSchema.ObjectNode, uu map[string]struct{}) {
-	for key := range node.Keys().Iterate() {
-		if key.Value.IsShortcut {
-			if key.Key[0] == '@' {
-				uu[key.Key] = struct{}{}
+	node.Keys().EachSafe(func(k string, v internalSchema.InnerObjectNodeKey) {
+		if v.IsShortcut {
+			if k[0] == '@' {
+				uu[k] = struct{}{}
 			}
 		}
 
-		c, ok := node.Child(key.Key)
+		c, ok := node.Child(k)
 		if ok {
 			collectUserTypes(c, uu)
 		}
-	}
+	})
 }
 
 func (s *Schema) buildASTNode() jschema.ASTNode {

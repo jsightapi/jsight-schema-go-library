@@ -7,17 +7,16 @@ package schema
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 )
 
 // Set sets a value with specified key.
-func (m *objectNodeKeys) Set(k string, v objectNodeKey) {
+func (m *ObjectNodeKeys) Set(k string, v InnerObjectNodeKey) {
 	m.mx.Lock()
 	defer m.mx.Unlock()
 
 	if m.data == nil {
-		m.data = map[string]objectNodeKey{}
+		m.data = map[string]InnerObjectNodeKey{}
 	}
 	if !m.has(k) {
 		m.order = append(m.order, k)
@@ -26,7 +25,7 @@ func (m *objectNodeKeys) Set(k string, v objectNodeKey) {
 }
 
 // Update updates a value with specified key.
-func (m *objectNodeKeys) Update(k string, fn func(v objectNodeKey) objectNodeKey) {
+func (m *ObjectNodeKeys) Update(k string, fn func(v InnerObjectNodeKey) InnerObjectNodeKey) {
 	m.mx.Lock()
 	defer m.mx.Unlock()
 
@@ -40,7 +39,7 @@ func (m *objectNodeKeys) Update(k string, fn func(v objectNodeKey) objectNodeKey
 }
 
 // GetValue gets a value by key.
-func (m *objectNodeKeys) GetValue(k string) objectNodeKey {
+func (m *ObjectNodeKeys) GetValue(k string) InnerObjectNodeKey {
 	m.mx.RLock()
 	defer m.mx.RUnlock()
 
@@ -48,7 +47,7 @@ func (m *objectNodeKeys) GetValue(k string) objectNodeKey {
 }
 
 // Get gets a value by key.
-func (m *objectNodeKeys) Get(k string) (objectNodeKey, bool) {
+func (m *ObjectNodeKeys) Get(k string) (InnerObjectNodeKey, bool) {
 	m.mx.RLock()
 	defer m.mx.RUnlock()
 
@@ -57,34 +56,34 @@ func (m *objectNodeKeys) Get(k string) (objectNodeKey, bool) {
 }
 
 // Has checks that specified key is set.
-func (m *objectNodeKeys) Has(k string) bool {
+func (m *ObjectNodeKeys) Has(k string) bool {
 	m.mx.RLock()
 	defer m.mx.RUnlock()
 
 	return m.has(k)
 }
 
-func (m *objectNodeKeys) has(k string) bool {
+func (m *ObjectNodeKeys) has(k string) bool {
 	_, ok := m.data[k]
 	return ok
 }
 
 // Len returns count of values.
-func (m *objectNodeKeys) Len() int {
+func (m *ObjectNodeKeys) Len() int {
 	m.mx.RLock()
 	defer m.mx.RUnlock()
 
 	return len(m.data)
 }
 
-func (m *objectNodeKeys) Delete(k string) {
+func (m *ObjectNodeKeys) Delete(k string) {
 	m.mx.Lock()
 	defer m.mx.Unlock()
 
 	m.delete(k)
 }
 
-func (m *objectNodeKeys) delete(k string) {
+func (m *ObjectNodeKeys) delete(k string) {
 	var kk string
 	i := -1
 
@@ -101,7 +100,7 @@ func (m *objectNodeKeys) delete(k string) {
 }
 
 // Filter iterates and changes values in the map.
-func (m *objectNodeKeys) Filter(fn filterobjectNodeKeysFunc) {
+func (m *ObjectNodeKeys) Filter(fn filterObjectNodeKeysFunc) {
 	m.mx.Lock()
 	defer m.mx.Unlock()
 
@@ -112,47 +111,68 @@ func (m *objectNodeKeys) Filter(fn filterobjectNodeKeysFunc) {
 	}
 }
 
-type filterobjectNodeKeysFunc = func(k string, v objectNodeKey) bool
+type filterObjectNodeKeysFunc = func(k string, v InnerObjectNodeKey) bool
 
-// Iterate acts the same as IterateContext but with background context.
-func (m *objectNodeKeys) Iterate() <-chan objectNodeKeysItem {
-	return m.IterateContext(context.Background())
-}
-
-// IterateContext iterates over map key/values.
-// Will block in case of slow consumer.
-// Context should be canceled in order to avoid infinity lock.
-// Use objectNodeKeys.Map when you have to update value.
-func (m *objectNodeKeys) IterateContext(ctx context.Context) <-chan objectNodeKeysItem {
-	ch := make(chan objectNodeKeysItem)
-	go func() {
-		m.mx.RLock()
-		defer m.mx.RUnlock()
-
-		for _, k := range m.order {
-			select {
-			case <-ctx.Done():
-				break
-			case ch <- objectNodeKeysItem{
+// Find finds first matched item from the map.
+func (m *ObjectNodeKeys) Find(fn findObjectNodeKeysFunc) (ObjectNodeKeysItem, bool) {
+	for _, k := range m.order {
+		if fn(k, m.data[k]) {
+			return ObjectNodeKeysItem{
 				Key:   k,
 				Value: m.data[k],
-			}:
-			}
+			}, true
 		}
-		close(ch)
-	}()
-	return ch
+	}
+	return ObjectNodeKeysItem{}, false
 }
 
-// objectNodeKeysItem represent single data from the objectNodeKeys.
-type objectNodeKeysItem struct {
+type findObjectNodeKeysFunc = func(k string, v InnerObjectNodeKey) bool
+
+func (m *ObjectNodeKeys) Each(fn eachObjectNodeKeysFunc) error {
+	for _, k := range m.order {
+		if err := fn(k, m.data[k]); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+type eachObjectNodeKeysFunc = func(k string, v InnerObjectNodeKey) error
+
+func (m *ObjectNodeKeys) EachSafe(fn eachSafeObjectNodeKeysFunc) {
+	for _, k := range m.order {
+		fn(k, m.data[k])
+	}
+}
+
+type eachSafeObjectNodeKeysFunc = func(k string, v InnerObjectNodeKey)
+
+// Map iterates and changes values in the map.
+func (m *ObjectNodeKeys) Map(fn mapObjectNodeKeysFunc) error {
+	m.mx.Lock()
+	defer m.mx.Unlock()
+
+	for _, k := range m.order {
+		v, err := fn(k, m.data[k])
+		if err != nil {
+			return err
+		}
+		m.data[k] = v
+	}
+	return nil
+}
+
+type mapObjectNodeKeysFunc = func(k string, v InnerObjectNodeKey) (InnerObjectNodeKey, error)
+
+// ObjectNodeKeysItem represent single data from the ObjectNodeKeys.
+type ObjectNodeKeysItem struct {
 	Key   string
-	Value objectNodeKey
+	Value InnerObjectNodeKey
 }
 
-var _ json.Marshaler = &objectNodeKeys{}
+var _ json.Marshaler = &ObjectNodeKeys{}
 
-func (m *objectNodeKeys) MarshalJSON() ([]byte, error) {
+func (m *ObjectNodeKeys) MarshalJSON() ([]byte, error) {
 	m.mx.RLock()
 	defer m.mx.RUnlock()
 

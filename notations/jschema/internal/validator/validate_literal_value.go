@@ -17,9 +17,11 @@ func ValidateLiteralValue(node schema.Node, jsonValue bytes.Bytes) {
 	m := node.ConstraintMap()
 	l := m.Len()
 	keys := make([]int, 0, l)
-	for kv := range m.Iterate() {
-		keys = append(keys, int(kv.Key))
-	}
+
+	m.EachSafe(func(k constraint.Type, _ constraint.Constraint) {
+		keys = append(keys, int(k))
+	})
+
 	sort.Ints(keys)
 
 	var isNullable bool

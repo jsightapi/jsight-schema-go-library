@@ -146,14 +146,15 @@ func (v objectValidator) validateTypeRules(value jbytes.Bytes) (string, bool) {
 			flag := false
 			inside := false
 			i := 0
-			for kv := range node.ConstraintMap().Iterate() {
+
+			node.ConstraintMap().EachSafe(func(_ constraint.Type, v constraint.Constraint) {
 				inside = true
 				if i == 0 {
 					flag = true
 				}
-				flag = flag && checkConstraint(kv.Value, value)
+				flag = flag && checkConstraint(v, value)
 				i++
-			}
+			})
 
 			if !inside {
 				if bytes.Equal(node.Value(), value) {

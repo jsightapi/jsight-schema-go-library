@@ -171,8 +171,8 @@ func (s *orRuleSetLoader) makeTypeASTNode(
 		Source:     source,
 	}
 
-	for kv := range cc.Iterate() {
-		an.Properties.Set(kv.Key.String(), kv.Value.ASTNode())
-	}
+	cc.EachSafe(func(k constraint.Type, v constraint.Constraint) {
+		an.Properties.Set(k.String(), v.ASTNode())
+	})
 	return an
 }
