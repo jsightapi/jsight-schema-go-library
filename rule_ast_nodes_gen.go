@@ -115,6 +115,9 @@ type filterRuleASTNodesFunc = func(k string, v RuleASTNode) bool
 
 // Find finds first matched item from the map.
 func (m *RuleASTNodes) Find(fn findRuleASTNodesFunc) (RuleASTNodesItem, bool) {
+	m.mx.RLock()
+	defer m.mx.RUnlock()
+
 	for _, k := range m.order {
 		if fn(k, m.data[k]) {
 			return RuleASTNodesItem{
@@ -129,6 +132,9 @@ func (m *RuleASTNodes) Find(fn findRuleASTNodesFunc) (RuleASTNodesItem, bool) {
 type findRuleASTNodesFunc = func(k string, v RuleASTNode) bool
 
 func (m *RuleASTNodes) Each(fn eachRuleASTNodesFunc) error {
+	m.mx.RLock()
+	defer m.mx.RUnlock()
+
 	for _, k := range m.order {
 		if err := fn(k, m.data[k]); err != nil {
 			return err
@@ -140,6 +146,9 @@ func (m *RuleASTNodes) Each(fn eachRuleASTNodesFunc) error {
 type eachRuleASTNodesFunc = func(k string, v RuleASTNode) error
 
 func (m *RuleASTNodes) EachSafe(fn eachSafeRuleASTNodesFunc) {
+	m.mx.RLock()
+	defer m.mx.RUnlock()
+
 	for _, k := range m.order {
 		fn(k, m.data[k])
 	}

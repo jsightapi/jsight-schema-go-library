@@ -408,6 +408,9 @@ type filter{{ .CapitalizedName }}Func = func(k {{ .KeyType }}, v {{ .ValueType }
 
 // Find finds first matched item from the map.
 func (m *{{ .Name }}) Find(fn find{{ .CapitalizedName }}Func) ({{ .Name }}Item, bool) {
+	m.mx.RLock()
+	defer m.mx.RUnlock()
+
 	for _, k := range m.order {
 		if fn(k, m.data[k]) {
 			return {{ .Name }}Item{
@@ -422,6 +425,9 @@ func (m *{{ .Name }}) Find(fn find{{ .CapitalizedName }}Func) ({{ .Name }}Item, 
 type find{{ .CapitalizedName }}Func = func(k {{ .KeyType }}, v {{ .ValueType }}) bool
 
 func (m *{{ .Name }}) Each(fn each{{ .CapitalizedName }}Func) error {
+	m.mx.RLock()
+	defer m.mx.RUnlock()
+
 	for _, k := range m.order {
 		if err := fn(k, m.data[k]); err != nil {
 			return err
@@ -433,6 +439,9 @@ func (m *{{ .Name }}) Each(fn each{{ .CapitalizedName }}Func) error {
 type each{{ .CapitalizedName }}Func = func(k {{ .KeyType }}, v {{ .ValueType }}) error
 
 func (m *{{ .Name }}) EachSafe(fn eachSafe{{ .CapitalizedName }}Func) {
+	m.mx.RLock()
+	defer m.mx.RUnlock()
+
 	for _, k := range m.order {
 		fn(k, m.data[k])
 	}

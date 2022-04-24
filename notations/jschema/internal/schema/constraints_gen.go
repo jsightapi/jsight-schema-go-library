@@ -117,6 +117,9 @@ type filterConstraintsFunc = func(k constraint.Type, v constraint.Constraint) bo
 
 // Find finds first matched item from the map.
 func (m *Constraints) Find(fn findConstraintsFunc) (ConstraintsItem, bool) {
+	m.mx.RLock()
+	defer m.mx.RUnlock()
+
 	for _, k := range m.order {
 		if fn(k, m.data[k]) {
 			return ConstraintsItem{
@@ -131,6 +134,9 @@ func (m *Constraints) Find(fn findConstraintsFunc) (ConstraintsItem, bool) {
 type findConstraintsFunc = func(k constraint.Type, v constraint.Constraint) bool
 
 func (m *Constraints) Each(fn eachConstraintsFunc) error {
+	m.mx.RLock()
+	defer m.mx.RUnlock()
+
 	for _, k := range m.order {
 		if err := fn(k, m.data[k]); err != nil {
 			return err
@@ -142,6 +148,9 @@ func (m *Constraints) Each(fn eachConstraintsFunc) error {
 type eachConstraintsFunc = func(k constraint.Type, v constraint.Constraint) error
 
 func (m *Constraints) EachSafe(fn eachSafeConstraintsFunc) {
+	m.mx.RLock()
+	defer m.mx.RUnlock()
+
 	for _, k := range m.order {
 		fn(k, m.data[k])
 	}

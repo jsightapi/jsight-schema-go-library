@@ -115,6 +115,9 @@ type filterObjectNodeKeysFunc = func(k string, v InnerObjectNodeKey) bool
 
 // Find finds first matched item from the map.
 func (m *ObjectNodeKeys) Find(fn findObjectNodeKeysFunc) (ObjectNodeKeysItem, bool) {
+	m.mx.RLock()
+	defer m.mx.RUnlock()
+
 	for _, k := range m.order {
 		if fn(k, m.data[k]) {
 			return ObjectNodeKeysItem{
@@ -129,6 +132,9 @@ func (m *ObjectNodeKeys) Find(fn findObjectNodeKeysFunc) (ObjectNodeKeysItem, bo
 type findObjectNodeKeysFunc = func(k string, v InnerObjectNodeKey) bool
 
 func (m *ObjectNodeKeys) Each(fn eachObjectNodeKeysFunc) error {
+	m.mx.RLock()
+	defer m.mx.RUnlock()
+
 	for _, k := range m.order {
 		if err := fn(k, m.data[k]); err != nil {
 			return err
@@ -140,6 +146,9 @@ func (m *ObjectNodeKeys) Each(fn eachObjectNodeKeysFunc) error {
 type eachObjectNodeKeysFunc = func(k string, v InnerObjectNodeKey) error
 
 func (m *ObjectNodeKeys) EachSafe(fn eachSafeObjectNodeKeysFunc) {
+	m.mx.RLock()
+	defer m.mx.RUnlock()
+
 	for _, k := range m.order {
 		fn(k, m.data[k])
 	}
