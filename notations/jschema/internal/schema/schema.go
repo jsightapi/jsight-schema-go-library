@@ -20,10 +20,9 @@ type Schema struct {
 }
 
 func New() Schema {
-	s := Schema{
+	return Schema{
 		types: make(map[string]Type, 5),
 	}
-	return s
 }
 
 func (s Schema) Version() string {

@@ -205,7 +205,8 @@ func (s *Scanner) Length() uint {
 		}
 
 		if lex.Type() == lexeme.EndTop {
-			// Found character after the end of the schema and spaces. Ex: char "s" in "{} some text"
+			// Found character after the end of the schema and spaces.
+			// Example: char "s" in "{} some text"
 			length = uint(lex.End()) - 1
 			break
 		} else {

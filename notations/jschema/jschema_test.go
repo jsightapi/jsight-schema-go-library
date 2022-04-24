@@ -105,6 +105,28 @@ some extra text`: 26,
 	})
 }
 
+func BenchmarkSchema_Len(b *testing.B) {
+	b.ReportAllocs()
+
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		s := FromFile(fs.NewFile("foo", []byte(`[
+  {
+    "id": 1,
+    "first_name": "Cecilia",
+    "last_name": "Maudson",
+    "email": "cmaudson0@dedecms.com",
+    "gender": "Female",
+    "ip_address": "14.224.72.249"
+  }
+]`)))
+		b.StartTimer()
+		l, err := s.Len()
+		require.NoError(b, err)
+		assert.Equal(b, 177, int(l))
+	}
+}
+
 func TestSchema_Example(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
 		content, err := FromFile(fs.NewFile("schema", []byte(`

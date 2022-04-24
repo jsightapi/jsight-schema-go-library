@@ -10,7 +10,7 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/scanner"
 )
 
-func Test_loadSchema(t *testing.T) {
+func TestLoadSchemaWithoutCompile(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
 		ss := []string{
 			`{"key": 1}`,
@@ -28,7 +28,7 @@ func Test_loadSchema(t *testing.T) {
 			t.Run(s, func(t *testing.T) {
 				assert.NotPanics(t, func() {
 					scan := scanner.NewSchemaScanner(fs.NewFile("", bytes.Bytes(s)), false)
-					loadSchema(scan, nil)
+					LoadSchemaWithoutCompile(scan, nil)
 				})
 			})
 		}
@@ -50,7 +50,7 @@ func Test_loadSchema(t *testing.T) {
 			t.Run(s, func(t *testing.T) {
 				assert.PanicsWithError(t, expected, func() {
 					scan := scanner.NewSchemaScanner(fs.NewFile("", bytes.Bytes(s)), false)
-					loadSchema(scan, nil)
+					LoadSchemaWithoutCompile(scan, nil)
 				})
 			})
 		}
