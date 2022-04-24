@@ -11,7 +11,6 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/errors"
 	"github.com/jsightapi/jsight-schema-go-library/formats/json"
 	"github.com/jsightapi/jsight-schema-go-library/fs"
-	"github.com/jsightapi/jsight-schema-go-library/internal/logger"
 	"github.com/jsightapi/jsight-schema-go-library/notations/internal"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/checker"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/loader"
@@ -228,7 +227,6 @@ func (s *Schema) Validate(document jschema.Document) (err error) {
 func (s *Schema) validate(document jschema.Document) error {
 	tree := validator.NewTree(
 		validator.NodeValidatorList(s.inner.RootNode(), *s.inner, nil),
-		logger.LogToNull{},
 	)
 
 	empty := true
@@ -411,7 +409,7 @@ func (s *Schema) compile() error {
 			return
 		}
 		loader.CompileAllOf(s.inner)
-		checker.CheckRootSchema(s.inner, logger.LogToNull{})
+		checker.CheckRootSchema(s.inner)
 	})
 	return s.compileErr
 }

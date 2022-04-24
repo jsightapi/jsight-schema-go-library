@@ -5,7 +5,6 @@ import (
 
 	"github.com/jsightapi/jsight-schema-go-library/errors"
 	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
-	"github.com/jsightapi/jsight-schema-go-library/internal/logger"
 )
 
 // A tree of validators.
@@ -25,27 +24,20 @@ type Tree struct {
 	// leaves a list of all the leaves of the tree.
 	leaves map[int]validator
 
-	// log a logger for logging and debugging tool.
-	log logger.Logger
-
 	// leavesIndexes the list of indexes for the leaves. Defined in struct (not
 	// in method) to optimize memory allocation.
 	leavesIndexes []int
 }
 
-func NewTree(list []validator, log logger.Logger) Tree {
+func NewTree(list []validator) Tree {
 	t := Tree{
 		nextIndex:     0,
 		leaves:        make(map[int]validator, 5),
-		log:           log,
 		leavesIndexes: make([]int, 0, 5),
 	}
 	for _, v := range list {
 		t.addLeaf(v)
 	}
-
-	t.log.Notice("Tree of validators:")
-	t.log.Default(t.string())
 
 	return t
 }
@@ -57,16 +49,6 @@ func (t *Tree) FeedLeaves(jsonLex lexeme.LexEvent) bool {
 	// The tree will change during the iteration.
 	t.setLeavesIndexes()
 	errorsCount := 0
-
-	t.log.Notice("\tPut json lex:")
-	lexType := jsonLex.Type()
-	switch lexType {
-	case lexeme.LiteralEnd, lexeme.ObjectKeyEnd:
-		t.log.Warning("\t" + lexType.String() + "=" + jsonLex.Value().String())
-	default:
-		t.log.Warning("\t" + lexType.String())
-	}
-	t.log.Default("")
 
 	var err error
 
@@ -109,27 +91,16 @@ func (t *Tree) feedLeaf(leaf validator, jsonLex lexeme.LexEvent, indexOfLeaf int
 			var ok bool
 			err, ok = r.(errors.DocumentError)
 			if ok {
-				t.log.Error(err.Error() + "\n")
 				delete(t.leaves, indexOfLeaf)
-
-				t.log.Notice("Tree of validators:")
-				t.log.Default(t.string())
 			} else {
 				panic(r)
 			}
 		}
 	}()
 
-	t.log.Info("\t\tTo validator of schema node")
-	t.log.Warning(fmt.Sprintf("\t\t[%p]:", leaf.node()))
-	t.log.Default(leaf.node().IndentedNodeString(2))
-
 	children, done := leaf.feed(jsonLex) // can panic
 
 	if done { // validation of node completed
-		t.log.Notice("Trim node")
-		t.log.Warning(fmt.Sprintf("[%p]\n", leaf.node()))
-
 		parent := leaf.parent()
 		leaf.setParent(nil) // remove the pointer to simplify garbage collection in the future
 		if parent == nil {
@@ -137,13 +108,7 @@ func (t *Tree) feedLeaf(leaf validator, jsonLex lexeme.LexEvent, indexOfLeaf int
 		} else {
 			t.leaves[indexOfLeaf] = parent // step back to parent
 		}
-
-		t.log.Notice("Tree of validators:")
-		t.log.Default(t.string())
-	} else if children != nil { // children found
-		t.log.Notice("Append child(ren) to node")
-		t.log.Warning(fmt.Sprintf("[%p]\n", leaf.node()))
-
+	} else { // children found
 		for j, child := range children {
 			if j == 0 {
 				// Forget/replace the current leaf. He becomes branch, parent for
@@ -153,9 +118,6 @@ func (t *Tree) feedLeaf(leaf validator, jsonLex lexeme.LexEvent, indexOfLeaf int
 				t.addLeaf(child) // append new child leaf to tree
 			}
 		}
-
-		t.log.Notice("Tree of validators:")
-		t.log.Default(t.string())
 	}
 
 	return nil
@@ -164,10 +126,6 @@ func (t *Tree) feedLeaf(leaf validator, jsonLex lexeme.LexEvent, indexOfLeaf int
 func (t *Tree) addLeaf(v validator) {
 	t.leaves[t.nextIndex] = v
 	t.nextIndex++
-}
-
-func (t Tree) string() string {
-	return newTreeLog(t).string()
 }
 
 // Truncates all leaves to the specified node.
