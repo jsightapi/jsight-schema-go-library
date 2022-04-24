@@ -22,20 +22,21 @@ import (
 )
 
 type Schema struct {
-	file *fs.File
+	file  *fs.File
+	inner *internalSchema.Schema
 
-	len     uint
-	lenOnce sync.Once
+	loadErr    error
+	compileErr error
 
-	inner         *internalSchema.Schema
-	astNode       jschema.ASTNode
 	usedUserTypes []string
 
-	loadOnce sync.Once
-	loadErr  error
+	astNode jschema.ASTNode
 
+	len uint
+
+	lenOnce     sync.Once
+	loadOnce    sync.Once
 	compileOnce sync.Once
-	compileErr  error
 
 	allowTrailingNonSpaceCharacters bool
 	areKeysOptionalByDefault        bool

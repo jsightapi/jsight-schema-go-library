@@ -13,13 +13,13 @@ import (
 )
 
 type ObjectNode struct {
-	baseNode
-
 	// children node list.
 	children []Node
 
 	// keys stores the index of the node on the map for quick search.
 	keys *ObjectNodeKeys
+
+	baseNode
 
 	// waitingForChild indicates that the Grow method will create a child node by
 	// getting the next lexeme.
@@ -34,9 +34,9 @@ type ObjectNodeKeys struct {
 }
 
 type InnerObjectNodeKey struct {
+	Lex        lexeme.LexEvent
 	Index      int
 	IsShortcut bool
-	Lex        lexeme.LexEvent
 }
 
 var _ Node = &ObjectNode{}
@@ -128,8 +128,8 @@ func (n *ObjectNode) AddChild(key ObjectNodeKey, child Node) {
 
 type ObjectNodeKey struct {
 	Name       string
-	IsShortcut bool
 	Lex        lexeme.LexEvent
+	IsShortcut bool
 }
 
 func (n ObjectNode) Key(index int) ObjectNodeKey {

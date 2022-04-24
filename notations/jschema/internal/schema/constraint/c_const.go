@@ -10,8 +10,8 @@ import (
 )
 
 type Const struct {
-	apply     bool
 	nodeValue bytes.Bytes
+	apply     bool
 }
 
 var _ Constraint = Const{}

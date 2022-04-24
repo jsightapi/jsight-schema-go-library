@@ -13,28 +13,27 @@ import (
 // The resulting message will contain the filename, line number, and where the error
 // occurred.
 type DocumentError struct {
-	code    ErrorCode
-	message string
-
 	// A file containing jSchema or JSON data.
-	file *fs.File
+	file              *fs.File
+	message           string
+	incorrectUserType string
+	code              ErrorCode
 
 	// index of the byte in which the error was found.
-	index bytes.Index
-
-	// hasIndex true if the value for Index have been defined.
-	hasIndex bool
+	index             bytes.Index
 
 	// A length of file content.
-	length bytes.Index
+	length            bytes.Index
 
-	// nl represent new line symbol.
-	nl byte
+	// hasIndex true if the value for Index have been defined.
+	hasIndex          bool
 
 	// prepared is true when preliminary calculations are made, the results of
 	// which are used in some methods.
 	prepared          bool
-	incorrectUserType string
+
+	// nl represent new line symbol.
+	nl                byte
 }
 
 var _ Error = DocumentError{}

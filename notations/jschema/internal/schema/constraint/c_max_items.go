@@ -8,8 +8,8 @@ import (
 )
 
 type MaxItems struct {
-	rawValue bytes.Bytes
 	value    *json.Number
+	rawValue bytes.Bytes
 }
 
 var _ Constraint = MaxItems{}

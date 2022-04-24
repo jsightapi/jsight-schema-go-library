@@ -8,8 +8,8 @@ import (
 )
 
 type Max struct {
-	rawValue  bytes.Bytes
 	max       *json.Number
+	rawValue  bytes.Bytes
 	exclusive bool
 }
 

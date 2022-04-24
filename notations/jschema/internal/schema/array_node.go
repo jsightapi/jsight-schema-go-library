@@ -11,9 +11,10 @@ import (
 )
 
 type ArrayNode struct {
-	baseNode
 	// children a children node list.
 	children []Node
+
+	baseNode
 
 	// waitingForChild indicates that we should add children.
 	// The Grow method will create a child node by getting the next lexical event.

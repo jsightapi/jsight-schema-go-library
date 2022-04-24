@@ -11,8 +11,8 @@ import (
 )
 
 type Regex struct {
-	expression string
 	re         *regexp.Regexp
+	expression string
 }
 
 var _ Constraint = Regex{}

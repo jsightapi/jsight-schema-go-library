@@ -83,12 +83,6 @@ type scanner struct {
 	// data a JSON content.
 	data bytes.Bytes
 
-	// index scanned byte index.
-	index bytes.Index
-
-	// dataSize a size of JSON data in bytes. Count once for optimization.
-	dataSize bytes.Index
-
 	// stack a stack of found lexical event. The stack is needed for the scanner
 	// to take into account the nesting of JSON or SCHEME elements.
 	stack internalScanner.LexemesStack
@@ -96,6 +90,12 @@ type scanner struct {
 	// finds a list of found types of lexical event for the current step. Several
 	// lexical events can be found in one step (example: ArrayItemBegin and LiteralBegin).
 	finds []lexeme.LexEventType
+
+	// index scanned byte index.
+	index bytes.Index
+
+	// dataSize a size of JSON data in bytes. Count once for optimization.
+	dataSize bytes.Index
 
 	// unfinishedLiteral a sign that a literal has been started but not completed.
 	unfinishedLiteral bool

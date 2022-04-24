@@ -16,6 +16,8 @@ import (
 // Validates json according to jSchema's ObjectNode.
 
 type objectValidator struct {
+	requiredKeys map[string]int
+
 	// node_ an object or mixed.
 	node_   schema.Node
 	parent_ validator
@@ -24,7 +26,6 @@ type objectValidator struct {
 	// name.
 	rootSchema      schema.Schema
 	lastFoundKeyLex lexeme.LexEvent
-	requiredKeys    map[string]int
 }
 
 func newObjectValidator(node schema.Node, parent validator, rootSchema schema.Schema) *objectValidator {

@@ -12,10 +12,10 @@ import (
 )
 
 type MixedValueNode struct {
-	baseNode
-
 	schemaType string
 	value      string
+
+	baseNode
 }
 
 var _ Node = &MixedValueNode{}

@@ -329,13 +329,13 @@ func TestNumber_trimLeadingZerosInTheIntegerPart(t *testing.T) {
 		number   Number
 		expected string
 	}{
-		{Number{false, bytes.Bytes("00123"), 2}, "123"},
-		{Number{false, bytes.Bytes("0123"), 2}, "123"},
-		{Number{false, bytes.Bytes("123"), 2}, "123"},
-		{Number{false, bytes.Bytes("023"), 2}, "23"},
-		{Number{false, bytes.Bytes("0023"), 3}, "023"},
-		{Number{false, bytes.Bytes("00023"), 3}, "023"},
-		{Number{false, bytes.Bytes("00023"), 4}, "0023"},
+		{Number{nat: bytes.Bytes("00123"), exp: 2}, "123"},
+		{Number{nat: bytes.Bytes("0123"), exp: 2}, "123"},
+		{Number{nat: bytes.Bytes("123"), exp: 2}, "123"},
+		{Number{nat: bytes.Bytes("023"), exp: 2}, "23"},
+		{Number{nat: bytes.Bytes("0023"), exp: 3}, "023"},
+		{Number{nat: bytes.Bytes("00023"), exp: 3}, "023"},
+		{Number{nat: bytes.Bytes("00023"), exp: 4}, "0023"},
 	}
 
 	for _, c := range cc {
@@ -353,12 +353,12 @@ func TestNumber_trimTrailingZerosInTheFractionalPart(t *testing.T) {
 			number   Number
 			expected string
 		}{
-			{Number{false, bytes.Bytes("123000"), 0}, "123000"},
-			{Number{false, bytes.Bytes("123000"), 1}, "12300"},
-			{Number{false, bytes.Bytes("123000"), 2}, "1230"},
-			{Number{false, bytes.Bytes("123000"), 3}, "123"},
-			{Number{false, bytes.Bytes("123000"), 4}, "123"},
-			{Number{false, bytes.Bytes("123000"), 5}, "123"},
+			{Number{nat: bytes.Bytes("123000"), exp: 0}, "123000"},
+			{Number{nat: bytes.Bytes("123000"), exp: 1}, "12300"},
+			{Number{nat: bytes.Bytes("123000"), exp: 2}, "1230"},
+			{Number{nat: bytes.Bytes("123000"), exp: 3}, "123"},
+			{Number{nat: bytes.Bytes("123000"), exp: 4}, "123"},
+			{Number{nat: bytes.Bytes("123000"), exp: 5}, "123"},
 		}
 
 		for _, c := range cc {
@@ -372,8 +372,8 @@ func TestNumber_trimTrailingZerosInTheFractionalPart(t *testing.T) {
 
 	t.Run("negative", func(t *testing.T) {
 		cc := map[string]Number{
-			"negative exponent":                   {false, bytes.Bytes("000"), -1},
-			"exponent greater than length of nat": {false, bytes.Bytes("000"), 4},
+			"negative exponent":                   {nat: bytes.Bytes("000"), exp: -1},
+			"exponent greater than length of nat": {nat: bytes.Bytes("000"), exp: 4},
 		}
 
 		for name, n := range cc {

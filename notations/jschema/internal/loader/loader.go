@@ -30,15 +30,6 @@ type loader struct {
 	// a schema.
 	scanner *scanner.Scanner
 
-	// mode used for processing inline comment, multi-line comment, or no comment
-	// section.
-	mode mode
-
-	// nodesPerCurrentLineCount the number of nodes in a line. To check because
-	// the rule cannot be added if there is more than one nodes suitable for this
-	// in the row.
-	nodesPerCurrentLineCount uint
-
 	// lastAddedNode the last node added to the internal Schema.
 	lastAddedNode schema.Node
 
@@ -49,6 +40,15 @@ type loader struct {
 	// The node class is responsible for loading the JSON elements in the nodes
 	// of the internal representation of the SCHEMA.
 	node *nodeLoader
+
+	// mode used for processing inline comment, multi-line comment, or no comment
+	// section.
+	mode mode
+
+	// nodesPerCurrentLineCount the number of nodes in a line. To check because
+	// the rule cannot be added if there is more than one nodes suitable for this
+	// in the row.
+	nodesPerCurrentLineCount uint
 }
 
 func LoadSchema(scan *scanner.Scanner, rootSchema *schema.Schema, areKeysOptionalByDefault bool) *schema.Schema {

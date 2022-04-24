@@ -18,15 +18,15 @@ import (
 // validation.
 
 type Tree struct {
-	// nextIndex the index for next leaf.
-	nextIndex int
-
 	// leaves a list of all the leaves of the tree.
 	leaves map[int]validator
 
 	// leavesIndexes the list of indexes for the leaves. Defined in struct (not
 	// in method) to optimize memory allocation.
 	leavesIndexes []int
+
+	// nextIndex the index for next leaf.
+	nextIndex int
 }
 
 func NewTree(list []validator) Tree {

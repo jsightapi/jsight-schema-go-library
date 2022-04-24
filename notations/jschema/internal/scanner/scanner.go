@@ -110,15 +110,6 @@ type Scanner struct {
 	// data jSchema content.
 	data bytes.Bytes
 
-	// index scanned byte index.
-	index bytes.Index
-
-	// dataSize a size of schema data in bytes. Count once for optimization.
-	dataSize bytes.Index
-
-	// boundary the character of the bounding lines.
-	boundary byte
-
 	// stack a stack of found lexical event. The stack is needed for the scanner
 	// to take into account the nesting of SCHEME elements.
 	stack scanner.LexemesStack
@@ -126,6 +117,19 @@ type Scanner struct {
 	// finds a list of found types of lexical event for the current step. Several
 	// lexical events can be found in one step (example: ArrayItemBegin and LiteralBegin).
 	finds []lexeme.LexEventType
+
+	// prevContextsStack a stack of previous scanner contexts.
+	// Used for restoring a previous context after finishing current one.
+	prevContextsStack contextStack
+
+	// context indicates which type of entity we process right now.
+	context context
+
+	// index scanned byte index.
+	index bytes.Index
+
+	// dataSize a size of schema data in bytes. Count once for optimization.
+	dataSize bytes.Index
 
 	// annotation one of the possible States of annotation processing (annotationNone,
 	// annotationInline, annotationMultiLine).
@@ -138,12 +142,8 @@ type Scanner struct {
 	// the schema (for example, in jApi).
 	allowNonSpaceByteAfterTopLevelValue bool
 
-	// context indicates which type of entity we process right now.
-	context context
-
-	// prevContextsStack a stack of previous scanner contexts.
-	// Used for restoring a previous context after finishing current one.
-	prevContextsStack contextStack
+	// boundary the character of the bounding lines.
+	boundary byte
 
 	// allowAnnotation indicates is annotation is allowed or not.
 	allowAnnotation bool

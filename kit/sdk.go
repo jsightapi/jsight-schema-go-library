@@ -42,16 +42,6 @@ func LengthOfJson(f *fs.File) (uint, Error) {
 	return l, nil
 }
 
-// SchemaExample generates an example for specified schema.
-// Deprecated: Use Example method of jschema.Schema instead.
-func SchemaExample(f *fs.File) ([]byte, Error) {
-	b, err := jschema.FromFile(f).Example()
-	if err != nil {
-		return nil, convertError(f, err)
-	}
-	return b, nil
-}
-
 // ValidateJson the key of extraTypes parameter is the name of the type.
 // The file name is used only for display in case of an error.
 // They may not be the same.
@@ -81,41 +71,6 @@ func ValidateJson(
 	err := sc.Validate(json.FromFile(jsonFile))
 	if err != nil {
 		return convertError(schemaFile, err)
-	}
-	return nil
-}
-
-// CheckSchema checks provided schema.
-// Deprecated: Use Check method of jschema.Schema instead.
-func CheckSchema(schemaFile *fs.File, extraTypes map[string]*fs.File) (err Error) {
-	sc := jschema.FromFile(schemaFile)
-
-	for name, f := range extraTypes {
-		if err := sc.AddType(name, jschema.FromFile(f)); err != nil {
-			return convertError(f, err)
-		}
-	}
-
-	if err := sc.Check(); err != nil {
-		return convertError(schemaFile, err)
-	}
-	return nil
-}
-
-// CheckJson checks provided JSON.
-// Deprecated: Use Check method of json.Document instead.
-func CheckJson(f *fs.File) Error {
-	if err := json.FromFile(f, json.AllowTrailingNonSpaceCharacters()).Check(); err != nil {
-		return convertError(f, err)
-	}
-	return nil
-}
-
-// CheckEnum checks provided JSchema Enum.
-// Deprecated: Use Check method of jschema.Enum instead.
-func CheckEnum(f *fs.File) (err Error) {
-	if err := jschema.EnumFromFile(f).Check(); err != nil {
-		return convertError(f, err)
 	}
 	return nil
 }
@@ -156,10 +111,10 @@ func convertError(f *fs.File, err error) Error {
 
 type sdkError struct {
 	filename          string
-	position          uint
 	message           string
-	errCode           int
 	incorrectUserType string
+	position          uint
+	errCode           int
 }
 
 func (s sdkError) Filename() string          { return s.filename }

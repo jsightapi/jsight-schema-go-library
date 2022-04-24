@@ -6,8 +6,8 @@ import (
 )
 
 type Errorf struct { //nolint:errname // This is okay.
-	code ErrorCode
 	args []interface{}
+	code ErrorCode
 }
 
 func Format(code ErrorCode, args ...interface{}) Errorf {

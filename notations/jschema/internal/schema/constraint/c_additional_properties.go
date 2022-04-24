@@ -19,10 +19,10 @@ const (
 )
 
 type AdditionalProperties struct {
-	mode       AdditionalPropertiesMode
 	schemaType jschema.SchemaType // only for AdditionalPropertiesMustBeSchemaType
 	typeName   bytes.Bytes        // only for AdditionalPropertiesMustBeType
 	astNode    jschema.RuleASTNode
+	mode       AdditionalPropertiesMode
 }
 
 var _ Constraint = AdditionalProperties{}

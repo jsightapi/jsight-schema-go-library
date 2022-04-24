@@ -116,6 +116,7 @@ linters-settings:
       - cgocall
       - copylocks
       - errorsas
+      - fieldalignment
       - httpresponse
       - ifaceassert
       - loopclosure
@@ -459,6 +460,10 @@ issues:
     - text: "string `(: true|: false|null)` has \\d+ occurrences, make it a constant"
       linters:
         - goconst
+
+    # Skip for now, should refactor in the future
+    - text: "fieldalignment: struct with"
+      path: (_test\.go|internal/cmd|test/)
 
 severity:
   default-severity: error

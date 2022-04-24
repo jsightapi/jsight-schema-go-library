@@ -5,8 +5,8 @@ import (
 )
 
 type GuessData struct {
-	bytes  bytes.Bytes
 	number *Number
+	bytes  bytes.Bytes
 }
 
 func Guess(b bytes.Bytes) *GuessData {

@@ -10,10 +10,15 @@ import (
 
 type enumValueLoader struct {
 	enumConstraint *constraint.Enum
-	lastIdx        int
 
-	stateFunc  func(lexeme.LexEvent) // A function for running a state machine (the current state of the state machine)
-	inProgress bool                  // true - if loading in progress, false - if loading finisher
+	// stateFunc a function for running a state machine (the current state of the
+	// state machine).
+	stateFunc func(lexeme.LexEvent)
+
+	lastIdx int
+
+	// inProgress true - if loading in progress, false - if loading finisher.
+	inProgress bool
 }
 
 func newEnumValueLoader(enumConstraint *constraint.Enum) embeddedLoader {

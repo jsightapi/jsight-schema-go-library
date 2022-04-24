@@ -68,22 +68,21 @@ type Schema interface {
 
 // ASTNode an AST node.
 type ASTNode struct {
-	// IsKeyShortcut will be true if this property key is shortcut.
-	// Make sense only for AST nodes which are represents object property.
-	IsKeyShortcut bool
-
 	// JSONType corresponding JSON type for this AST node's value.
 	JSONType JSONType
 
 	// SchemaType corresponding schema type for this AST node's value.
 	SchemaType string
 
-	// Rules a map of attached rules.
-	Rules *RuleASTNodes
-
 	// Value a node value.
 	// Make sense only for scalars and shortcuts.
 	Value string
+
+	// Comment a ast node comment.
+	Comment string
+
+	// Rules a map of attached rules.
+	Rules *RuleASTNodes
 
 	// Properties contains all object properties.
 	// Make sense only for objects.
@@ -93,8 +92,9 @@ type ASTNode struct {
 	// Make sense only for arrays.
 	Items []ASTNode
 
-	// Comment a ast node comment.
-	Comment string
+	// IsKeyShortcut will be true if this property key is shortcut.
+	// Make sense only for AST nodes which are represents object property.
+	IsKeyShortcut bool
 }
 
 // ASTNodes an ordered map of AST nodes.
@@ -120,6 +120,9 @@ type RuleASTNode struct {
 	// Make sense only for scalars and shortcuts.
 	Value string
 
+	// Comment a ast node comment.
+	Comment string
+
 	// Properties contains all object properties.
 	// Make sense only for objects.
 	Properties *RuleASTNodes
@@ -127,9 +130,6 @@ type RuleASTNode struct {
 	// Items contains all array items.
 	// Make sense only for arrays.
 	Items []RuleASTNode
-
-	// Comment a ast node comment.
-	Comment string
 
 	// Source a source of this rule.
 	Source RuleASTNodeSource

@@ -7,18 +7,18 @@ import (
 )
 
 type nodeCheckerListConstructor struct {
-	// A rootSchema from which it is possible to receive type by their name.
-	rootSchema *schema.Schema
-
 	// types the map of used types.
 	types map[string]schema.Type
-
-	// A list of checkers for the node.
-	list []nodeChecker
 
 	// addedTypeNames a set of already added types. Exists for excluding
 	// recursive addition of type to the list.
 	addedTypeNames map[string]struct{}
+
+	// A rootSchema from which it is possible to receive type by their name.
+	rootSchema *schema.Schema
+
+	// A list of checkers for the node.
+	list []nodeChecker
 }
 
 func (l *nodeCheckerListConstructor) buildList(node schema.Node) {

@@ -289,8 +289,8 @@ func GuessSchemaType(b []byte) (SchemaType, error) {
 }
 
 type typeGuesser struct {
-	data   []byte
 	number *json.Number
+	data   []byte
 }
 
 func (g *typeGuesser) Guess() (SchemaType, error) {
