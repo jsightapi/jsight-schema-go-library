@@ -209,22 +209,16 @@ func (s *Scanner) Length() uint {
 			// Example: char "s" in "{} some text"
 			length = uint(lex.End()) - 1
 			break
-		} else {
-			if lex.End() == s.dataSize {
-				length = uint(lex.End())
-			} else {
-				length = uint(lex.End()) + 1
-			}
+		}
+
+		length = uint(lex.End()) + 1
+		if lex.End() == s.dataSize {
+			length--
 		}
 	}
-	for {
-		if length == 0 {
-			break
-		}
+	for ; length > 0; length-- {
 		c := s.data[length-1]
-		if s.isSpace(c) {
-			length--
-		} else {
+		if !s.isSpace(c) {
 			break
 		}
 	}

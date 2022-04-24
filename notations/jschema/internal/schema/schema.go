@@ -10,10 +10,6 @@ import (
 )
 
 type Schema struct {
-	version     string
-	title       string
-	description string
-
 	// types the map where key is the name of the type (or included Schema).
 	types    map[string]Type
 	rootNode Node
@@ -25,30 +21,8 @@ func New() Schema {
 	}
 }
 
-func (s Schema) Version() string {
-	return s.version
-}
-
-func (s Schema) Title() string {
-	return s.title
-}
-
-func (s Schema) Description() string {
-	return s.description
-}
-
-func (s Schema) NumberOfTypes() int {
-	return len(s.types)
-}
-
 func (s Schema) TypesList() map[string]Type {
 	return s.types
-}
-
-func (s Schema) AppendTypes(mm map[string]Type) {
-	for n, ss := range mm {
-		s.types[n] = ss
-	}
 }
 
 // Type returns *Schema or panic if not found.
@@ -62,18 +36,6 @@ func (s Schema) Type(name string) *Schema { // todo confuses that here is return
 
 func (s Schema) RootNode() Node {
 	return s.rootNode
-}
-
-func (s *Schema) SetVersion(str string) {
-	s.version = str
-}
-
-func (s *Schema) SetTitle(str string) {
-	s.title = str
-}
-
-func (s *Schema) SetDescription(str string) {
-	s.description = str
 }
 
 func (s *Schema) AddNamedType(name string, typ *Schema, rootFile *fs.File, begin bytes.Index) {
@@ -97,11 +59,6 @@ func (s *Schema) AddUnnamedType(typ *Schema, rootFile *fs.File, begin bytes.Inde
 	return name
 }
 
-// AddScalarType adds a scalar TYPE to the SCHEMA.
-func (s *Schema) AddScalarType(name string, typ *Schema, rootFile *fs.File, begin bytes.Index) {
-	s.addType(name, typ, rootFile, begin)
-}
-
 func (s *Schema) SetRootNode(node Node) {
 	s.rootNode = node
 }
@@ -109,15 +66,6 @@ func (s *Schema) SetRootNode(node Node) {
 func (s Schema) String() string {
 	var str strings.Builder
 
-	if s.version != "" {
-		str.WriteString("Version: " + s.version + "\n")
-	}
-	if s.title != "" {
-		str.WriteString("Title: " + s.title + "\n")
-	}
-	if s.description != "" {
-		str.WriteString("Description: " + s.description + "\n")
-	}
 	if len(s.types) != 0 {
 		str.WriteString("Types:\n")
 		for name, typ := range s.types {
