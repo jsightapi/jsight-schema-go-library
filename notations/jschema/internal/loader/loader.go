@@ -1,6 +1,8 @@
 package loader
 
 import (
+	"sync"
+
 	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/scanner"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema"
@@ -53,15 +55,26 @@ type loader struct {
 
 func LoadSchema(scan *scanner.Scanner, rootSchema *schema.Schema, areKeysOptionalByDefault bool) *schema.Schema {
 	s := LoadSchemaWithoutCompile(scan, rootSchema)
-	CompileBasic(s, areKeysOptionalByDefault)
-	return s
+	CompileBasic(&s, areKeysOptionalByDefault)
+	return &s
 }
 
-func LoadSchemaWithoutCompile(scan *scanner.Scanner, rootSchema *schema.Schema) *schema.Schema {
-	l := &loader{
-		schema:  schema.New(),
-		scanner: scan,
-	}
+var loaderPool = sync.Pool{
+	New: func() interface{} {
+		return &loader{
+			schema: schema.New(),
+		}
+	},
+}
+
+func LoadSchemaWithoutCompile(scan *scanner.Scanner, rootSchema *schema.Schema) schema.Schema {
+	l := loaderPool.Get().(*loader) //nolint:errcheck // We're sure about this type.
+	defer func() {
+		l.reset()
+		loaderPool.Put(l)
+	}()
+
+	l.scanner = scan
 
 	l.rootSchema = rootSchema
 	if rootSchema == nil {
@@ -71,7 +84,18 @@ func LoadSchemaWithoutCompile(scan *scanner.Scanner, rootSchema *schema.Schema) 
 	l.node = newNodeLoader(&l.schema, &l.nodesPerCurrentLineCount)
 	l.doLoad()
 
-	return &(l.schema)
+	return l.schema
+}
+
+func (l *loader) reset() {
+	l.schema = schema.New()
+	l.rootSchema = nil
+	l.scanner = nil
+	l.lastAddedNode = nil
+	l.rule = nil
+	l.node = nil
+	l.mode = readDefault
+	l.nodesPerCurrentLineCount = 0
 }
 
 // doLoad the main function, in which there is a cycle of scanning and loading schemas.

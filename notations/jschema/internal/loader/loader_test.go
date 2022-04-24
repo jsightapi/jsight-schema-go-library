@@ -56,3 +56,16 @@ func TestLoadSchemaWithoutCompile(t *testing.T) {
 		}
 	})
 }
+
+func BenchmarkLoadSchemaWithoutCompile(b *testing.B) {
+	scan := scanner.NewSchemaScanner(fs.NewFile("", bytes.Bytes(`{
+	"foo": "bar"
+}`)), false)
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		LoadSchemaWithoutCompile(scan, nil)
+	}
+}

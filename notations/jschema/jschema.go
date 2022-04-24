@@ -284,10 +284,11 @@ func (s *Schema) load() error {
 		defer func() {
 			s.loadErr = handlePanic(recover(), s.loadErr)
 		}()
-		s.inner = loader.LoadSchemaWithoutCompile(
+		sc := loader.LoadSchemaWithoutCompile(
 			scanner.NewSchemaScanner(s.file, s.allowTrailingNonSpaceCharacters),
 			nil,
 		)
+		s.inner = &sc
 		s.astNode = s.buildASTNode()
 		s.collectUserTypes()
 		loader.CompileBasic(s.inner, s.areKeysOptionalByDefault)
