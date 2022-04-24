@@ -15,17 +15,17 @@ type checkSchema struct {
 
 	// foundTypeNames the names of the type encountered during checking. Are used
 	// to control recursion.
-	foundTypeNames map[string]bool
+	foundTypeNames map[string]struct{}
 
 	// allowedJsonTypes the list of available json-types from types.
-	allowedJsonTypes map[json.Type]bool
+	allowedJsonTypes map[json.Type]struct{}
 }
 
 func CheckRootSchema(rootSchema *schema.Schema) {
 	c := checkSchema{
 		rootSchema:       rootSchema,
-		foundTypeNames:   make(map[string]bool, 10),
-		allowedJsonTypes: make(map[json.Type]bool, 10),
+		foundTypeNames:   make(map[string]struct{}, 10),
+		allowedJsonTypes: make(map[json.Type]struct{}, 10),
 	}
 
 	if rootSchema.RootNode() != nil { // the root schema may contain no nodes
@@ -211,7 +211,7 @@ func (c *checkSchema) collectAllowedJsonTypes(node schema.Node, ss map[string]sc
 	if _, ok := node.(*schema.MixedValueNode); ok {
 		// This node can be anything.
 		for _, t := range json.AllTypes {
-			c.allowedJsonTypes[t] = true
+			c.allowedJsonTypes[t] = struct{}{}
 		}
 
 		// Check all user types are defined.
@@ -226,7 +226,7 @@ func (c *checkSchema) collectAllowedJsonTypes(node schema.Node, ss map[string]sc
 	typesConstraint := node.Constraint(constraint.TypesListConstraintType)
 
 	if typesConstraint == nil {
-		c.allowedJsonTypes[node.Type()] = true
+		c.allowedJsonTypes[node.Type()] = struct{}{}
 		return
 	}
 
@@ -234,7 +234,7 @@ func (c *checkSchema) collectAllowedJsonTypes(node schema.Node, ss map[string]sc
 		if _, ok := c.foundTypeNames[typeName]; ok {
 			panic(errors.Format(errors.ErrImpossibleToDetermineTheJsonTypeDueToRecursion, typeName))
 		}
-		c.foundTypeNames[typeName] = true
+		c.foundTypeNames[typeName] = struct{}{}
 		c.collectAllowedJsonTypes(getType(typeName, c.rootSchema, ss).RootNode(), ss) // can panic
 	}
 }

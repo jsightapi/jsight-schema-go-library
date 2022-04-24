@@ -13,11 +13,11 @@ type allOfConstraintCompiler struct {
 	// processingTypes a list of schema names that are in the process of compilation
 	// (i.e., schemas that contain at least one "allow" rule somewhere inside).
 	// Recursive schema processing can occur during compilation.
-	processingTypes map[string]bool
+	processingTypes map[string]struct{}
 
 	// compiledTypes a list of compiled schemas, or schemas that do not need to
 	// be compiled (within which the "all Of" rule is not used).
-	compiledTypes map[string]bool
+	compiledTypes map[string]struct{}
 }
 
 // CompileAllOf compile "allOf" rules in root schema, and in all types.
@@ -25,8 +25,8 @@ type allOfConstraintCompiler struct {
 func CompileAllOf(rootSchema *schema.Schema) {
 	c := allOfConstraintCompiler{
 		rootSchema:      rootSchema,
-		processingTypes: make(map[string]bool),
-		compiledTypes:   make(map[string]bool),
+		processingTypes: make(map[string]struct{}),
+		compiledTypes:   make(map[string]struct{}),
 	}
 
 	c.processSchema(rootSchema)
@@ -122,15 +122,15 @@ func (c *allOfConstraintCompiler) processType(name string) *schema.Schema {
 
 	typ := c.rootSchema.Type(name) // can panic
 
-	if c.compiledTypes[name] {
+	if _, ok := c.compiledTypes[name]; ok {
 		return typ
 	}
 
-	c.processingTypes[name] = true
+	c.processingTypes[name] = struct{}{}
 	c.processSchema(typ)
 	delete(c.processingTypes, name)
 
-	c.compiledTypes[name] = true
+	c.compiledTypes[name] = struct{}{}
 
 	return typ
 }
