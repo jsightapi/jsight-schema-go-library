@@ -379,13 +379,14 @@ func (*Scanner) isSpace(c byte) bool {
 }
 
 func (s *Scanner) isNewLine(c byte) bool {
-	if c == '\n' || c == '\r' {
-		if s.annotation == annotationInline {
-			panic(s.newDocumentErrorAtCharacter("inside inline annotation"))
-		}
-		return true
+	if c != '\n' && c != '\r' {
+		return false
 	}
-	return false
+
+	if s.annotation == annotationInline {
+		panic(s.newDocumentErrorAtCharacter("inside inline annotation"))
+	}
+	return true
 }
 
 func (*Scanner) isAnnotationStart(c byte) bool {
@@ -1456,23 +1457,15 @@ func stateMultiLineAnnotationText(s *Scanner, c byte) state {
 }
 
 func (s *Scanner) isCommentStart(c byte) bool {
-	if s.annotation == annotationNone || s.annotation == annotationInline {
-		if c == '#' {
-			return true
-		}
-	}
-	return false
+	return (s.annotation == annotationNone || s.annotation == annotationInline) && c == '#'
 }
 
 func (s *Scanner) switchToComment() {
-	switch s.annotation {
-	case annotationNone, annotationInline:
-		s.returnToStep.Push(s.step)
-		s.step = stateAnyCommentStart
-	default:
-		// panic("Incorrect comment mode")
+	if s.annotation != annotationNone && s.annotation != annotationInline {
 		panic(s.newDocumentErrorAtCharacter("inside user inline comment"))
 	}
+	s.returnToStep.Push(s.step)
+	s.step = stateAnyCommentStart
 }
 
 func stateAnyCommentStart(s *Scanner, c byte) state {

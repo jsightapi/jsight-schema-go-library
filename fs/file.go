@@ -3,9 +3,8 @@ package fs
 import "github.com/jsightapi/jsight-schema-go-library/bytes"
 
 type File struct {
-	name     string
-	content  bytes.Bytes
-	bookmark bytes.Index // for JAPI, in case of INCLUDE file can be read up to a certain point, than left out, then continued
+	name    string
+	content bytes.Bytes
 }
 
 func NewFile(name string, content bytes.Bytes) *File {
@@ -13,18 +12,6 @@ func NewFile(name string, content bytes.Bytes) *File {
 		name:    name,
 		content: content,
 	}
-}
-
-func (f *File) LastIndex() bytes.Index {
-	return bytes.Index(f.Content().Len())
-}
-
-func (f *File) Position() bytes.Index {
-	return f.bookmark
-}
-
-func (f *File) SetPosition(position bytes.Index) {
-	f.bookmark = position
 }
 
 func (f File) Name() string {

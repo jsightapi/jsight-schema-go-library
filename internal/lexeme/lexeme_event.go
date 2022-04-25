@@ -46,22 +46,6 @@ func (lex LexEvent) End() bytes.Index {
 	return lex.end
 }
 
-func (lex *LexEvent) SetType(t LexEventType) {
-	lex.lexEventType = t
-}
-
-func (lex *LexEvent) SetBegin(begin bytes.Index) {
-	lex.begin = begin
-}
-
-func (lex *LexEvent) SetEnd(end bytes.Index) {
-	lex.end = end
-}
-
-func (lex *LexEvent) SetFile(file *fs.File) {
-	lex.file = file
-}
-
 func (lex LexEvent) String() string {
 	return fmt.Sprintf("%s [%d:%d]", lex.lexEventType.String(), lex.begin, lex.end)
 }
