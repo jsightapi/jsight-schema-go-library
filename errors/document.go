@@ -20,20 +20,20 @@ type DocumentError struct {
 	code              ErrorCode
 
 	// index of the byte in which the error was found.
-	index             bytes.Index
+	index bytes.Index
 
 	// A length of file content.
-	length            bytes.Index
+	length bytes.Index
 
 	// hasIndex true if the value for Index have been defined.
-	hasIndex          bool
+	hasIndex bool
 
 	// prepared is true when preliminary calculations are made, the results of
 	// which are used in some methods.
-	prepared          bool
+	prepared bool
 
 	// nl represent new line symbol.
-	nl                byte
+	nl byte
 }
 
 var _ Error = DocumentError{}
