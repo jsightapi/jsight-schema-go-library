@@ -1,12 +1,13 @@
 package constraint
 
 import (
-	"j/schema"
-	"j/schema/bytes"
-	"j/schema/internal/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	jschema "github.com/jsightapi/jsight-schema-go-library"
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
+	"github.com/jsightapi/jsight-schema-go-library/internal/json"
 )
 
 func TestNewEnum(t *testing.T) {

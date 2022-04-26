@@ -1,10 +1,11 @@
 package json
 
 import (
-	"j/schema/bytes"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
 )
 
 func BenchmarkIsNull(b *testing.B) {

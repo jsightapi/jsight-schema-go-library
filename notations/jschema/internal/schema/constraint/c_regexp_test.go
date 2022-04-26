@@ -1,11 +1,12 @@
 package constraint
 
 import (
-	jschema "j/schema"
-	"j/schema/bytes"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	jschema "github.com/jsightapi/jsight-schema-go-library"
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
 )
 
 func TestRegexp_Type(t *testing.T) {

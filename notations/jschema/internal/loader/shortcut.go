@@ -1,13 +1,14 @@
 package loader
 
 import (
-	"j/schema"
-	"j/schema/bytes"
-	"j/schema/errors"
-	"j/schema/internal/lexeme"
-	"j/schema/notations/jschema/internal/schema"
-	"j/schema/notations/jschema/internal/schema/constraint"
 	"strings"
+
+	jschema "github.com/jsightapi/jsight-schema-go-library"
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
+	"github.com/jsightapi/jsight-schema-go-library/errors"
+	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
 )
 
 func addShortcutConstraint(node schema.Node, rootSchema *schema.Schema, lex lexeme.LexEvent) error {

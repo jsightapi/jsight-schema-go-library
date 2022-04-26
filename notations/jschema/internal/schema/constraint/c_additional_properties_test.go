@@ -1,13 +1,14 @@
 package constraint
 
 import (
-	"j/schema"
-	jbytes "j/schema/bytes"
-	"j/schema/internal/json"
 	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	jschema "github.com/jsightapi/jsight-schema-go-library"
+	jbytes "github.com/jsightapi/jsight-schema-go-library/bytes"
+	"github.com/jsightapi/jsight-schema-go-library/internal/json"
 )
 
 func TestNewAdditionalProperties(t *testing.T) {

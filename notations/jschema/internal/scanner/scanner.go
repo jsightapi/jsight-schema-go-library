@@ -2,11 +2,12 @@ package scanner
 
 import (
 	"fmt"
-	"j/schema/bytes"
-	"j/schema/errors"
-	"j/schema/fs"
-	"j/schema/internal/lexeme"
-	"j/schema/internal/scanner"
+
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
+	"github.com/jsightapi/jsight-schema-go-library/errors"
+	"github.com/jsightapi/jsight-schema-go-library/fs"
+	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
+	"github.com/jsightapi/jsight-schema-go-library/internal/scanner"
 )
 
 type state uint8

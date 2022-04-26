@@ -1,12 +1,13 @@
 package constraint
 
 import (
-	"j/schema/bytes"
-	"j/schema/fs"
-	"j/schema/internal/lexeme"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
+	"github.com/jsightapi/jsight-schema-go-library/fs"
+	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
 )
 
 func TestNewConstraintFromRule(t *testing.T) {

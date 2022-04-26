@@ -1,6 +1,6 @@
 package fs
 
-import "j/schema/bytes"
+import "github.com/jsightapi/jsight-schema-go-library/bytes"
 
 type File struct {
 	name     string

@@ -1,7 +1,7 @@
 package scanner
 
 import (
-	"j/schema/internal/lexeme"
+	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
 )
 
 // LexemesStack a stack of lexemes.

@@ -1,10 +1,11 @@
 package scanner
 
 import (
-	"j/schema/reader"
-	"j/schema/test"
 	"path/filepath"
 	"testing"
+
+	"github.com/jsightapi/jsight-schema-go-library/reader"
+	"github.com/jsightapi/jsight-schema-go-library/test"
 )
 
 func BenchmarkSchemaScanner(b *testing.B) {

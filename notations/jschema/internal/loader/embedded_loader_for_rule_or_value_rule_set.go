@@ -1,11 +1,11 @@
 package loader
 
 import (
-	"j/schema"
-	"j/schema/errors"
-	"j/schema/internal/lexeme"
-	"j/schema/notations/jschema/internal/schema"
-	"j/schema/notations/jschema/internal/schema/constraint"
+	jschema "github.com/jsightapi/jsight-schema-go-library"
+	"github.com/jsightapi/jsight-schema-go-library/errors"
+	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
 )
 
 // orRuleSetLoader loads data from rule-set into the type. Specifies the name of

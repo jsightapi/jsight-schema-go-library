@@ -2,10 +2,11 @@ package schema
 
 import (
 	"fmt"
-	"j/schema/internal/lexeme"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
 )
 
 func TestNewNode(t *testing.T) {

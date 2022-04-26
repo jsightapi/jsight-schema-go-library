@@ -1,10 +1,11 @@
 package schema
 
 import (
-	jschema "j/schema"
-	"j/schema/internal/json"
-	"j/schema/internal/lexeme"
 	"strings"
+
+	jschema "github.com/jsightapi/jsight-schema-go-library"
+	"github.com/jsightapi/jsight-schema-go-library/internal/json"
+	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
 )
 
 type LiteralNode struct {

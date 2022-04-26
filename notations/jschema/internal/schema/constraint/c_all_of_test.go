@@ -2,13 +2,14 @@ package constraint
 
 import (
 	"fmt"
-	"j/schema"
-	"j/schema/bytes"
-	"j/schema/errors"
-	"j/schema/internal/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	jschema "github.com/jsightapi/jsight-schema-go-library"
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
+	"github.com/jsightapi/jsight-schema-go-library/errors"
+	"github.com/jsightapi/jsight-schema-go-library/internal/json"
 )
 
 func Test_NewAllOf(t *testing.T) {

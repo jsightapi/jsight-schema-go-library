@@ -1,16 +1,17 @@
 package checker
 
 import (
-	"j/schema/bytes"
-	"j/schema/errors"
-	"j/schema/fs"
-	"j/schema/internal/logger"
-	"j/schema/notations/jschema/internal/loader"
-	"j/schema/notations/jschema/internal/scanner"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
+	"github.com/jsightapi/jsight-schema-go-library/errors"
+	"github.com/jsightapi/jsight-schema-go-library/fs"
+	"github.com/jsightapi/jsight-schema-go-library/internal/logger"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/loader"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/scanner"
 )
 
 func TestCheckRules(t *testing.T) {

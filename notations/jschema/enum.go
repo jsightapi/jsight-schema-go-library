@@ -1,10 +1,10 @@
 package jschema
 
 import (
-	"j/schema/errors"
-	"j/schema/fs"
-	"j/schema/internal/lexeme"
-	"j/schema/notations/jschema/internal/scanner"
+	"github.com/jsightapi/jsight-schema-go-library/errors"
+	"github.com/jsightapi/jsight-schema-go-library/fs"
+	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/scanner"
 )
 
 type Enum struct {

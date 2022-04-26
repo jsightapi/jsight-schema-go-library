@@ -1,12 +1,13 @@
 package reader
 
 import (
-	"j/schema/bytes"
-	"j/schema/fs"
-	"j/schema/test"
 	"path/filepath"
 	"reflect"
 	"testing"
+
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
+	"github.com/jsightapi/jsight-schema-go-library/fs"
+	"github.com/jsightapi/jsight-schema-go-library/test"
 )
 
 func TestReadFile(t *testing.T) {

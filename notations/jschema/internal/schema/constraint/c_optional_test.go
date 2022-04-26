@@ -1,11 +1,13 @@
 package constraint
 
 import (
-	"github.com/stretchr/testify/assert"
-	jschema "j/schema"
-	"j/schema/bytes"
 	"strconv"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	jschema "github.com/jsightapi/jsight-schema-go-library"
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
 )
 
 func TestOptional_Type(t *testing.T) {

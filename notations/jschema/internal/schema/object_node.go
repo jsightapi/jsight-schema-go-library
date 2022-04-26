@@ -3,12 +3,13 @@ package schema
 import (
 	"context"
 	"fmt"
-	"j/schema"
-	"j/schema/errors"
-	"j/schema/internal/json"
-	"j/schema/internal/lexeme"
 	"strings"
 	"sync"
+
+	jschema "github.com/jsightapi/jsight-schema-go-library"
+	"github.com/jsightapi/jsight-schema-go-library/errors"
+	"github.com/jsightapi/jsight-schema-go-library/internal/json"
+	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
 )
 
 type ObjectNode struct {

@@ -2,11 +2,12 @@ package constraint
 
 import (
 	"encoding/json"
-	"j/schema"
-	"j/schema/bytes"
-	"j/schema/errors"
-	internalJSON "j/schema/internal/json"
 	"regexp"
+
+	jschema "github.com/jsightapi/jsight-schema-go-library"
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
+	"github.com/jsightapi/jsight-schema-go-library/errors"
+	internalJSON "github.com/jsightapi/jsight-schema-go-library/internal/json"
 )
 
 type Regex struct {

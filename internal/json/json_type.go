@@ -2,8 +2,8 @@
 package json
 
 import (
-	"j/schema/bytes"
-	"j/schema/errors"
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
+	"github.com/jsightapi/jsight-schema-go-library/errors"
 )
 
 type Type uint8

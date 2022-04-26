@@ -1,8 +1,9 @@
 package json
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var foo stepFunc = func(scanner *scanner, b byte) state {

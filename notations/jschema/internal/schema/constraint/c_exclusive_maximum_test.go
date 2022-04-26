@@ -1,12 +1,13 @@
 package constraint
 
 import (
-	"j/schema"
-	"j/schema/bytes"
 	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	jschema "github.com/jsightapi/jsight-schema-go-library"
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
 )
 
 func TestExclusiveMaximum_Type(t *testing.T) {

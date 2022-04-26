@@ -1,13 +1,14 @@
 package json
 
 import (
-	"j/schema/bytes"
-	"j/schema/fs"
-	"j/schema/internal/lexeme"
 	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
+	"github.com/jsightapi/jsight-schema-go-library/fs"
+	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
 )
 
 func TestScanner_Next(t *testing.T) {

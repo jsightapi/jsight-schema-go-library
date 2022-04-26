@@ -1,9 +1,11 @@
 package constraint
 
 import (
-	"github.com/stretchr/testify/assert"
-	"j/schema/bytes"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
 )
 
 func TestUri_Type(t *testing.T) {

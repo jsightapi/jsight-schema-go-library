@@ -2,14 +2,15 @@ package kit
 
 import (
 	"fmt"
-	"j/schema/errors"
-	"j/schema/fs"
-	"j/schema/reader"
-	"j/schema/test"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/jsightapi/jsight-schema-go-library/errors"
+	"github.com/jsightapi/jsight-schema-go-library/fs"
+	"github.com/jsightapi/jsight-schema-go-library/reader"
+	"github.com/jsightapi/jsight-schema-go-library/test"
 )
 
 func ExampleLengthOfSchema() {

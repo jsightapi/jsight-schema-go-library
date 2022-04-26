@@ -2,20 +2,21 @@ package jschema
 
 import (
 	"fmt"
-	"github.com/davecgh/go-spew/spew"
-	"j/schema"
-	"j/schema/errors"
-	"j/schema/formats/json"
-	"j/schema/fs"
-	"j/schema/notations/jschema/internal/loader"
-	"j/schema/notations/jschema/internal/mocks"
-	internalSchema "j/schema/notations/jschema/internal/schema"
-	"j/schema/notations/jschema/internal/schema/constraint"
-	"j/schema/notations/regex"
 	"testing"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	jschema "github.com/jsightapi/jsight-schema-go-library"
+	"github.com/jsightapi/jsight-schema-go-library/errors"
+	"github.com/jsightapi/jsight-schema-go-library/formats/json"
+	"github.com/jsightapi/jsight-schema-go-library/fs"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/loader"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/mocks"
+	internalSchema "github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
+	"github.com/jsightapi/jsight-schema-go-library/notations/regex"
 )
 
 func ExampleSchema() {

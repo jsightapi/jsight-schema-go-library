@@ -2,14 +2,15 @@ package regex
 
 import (
 	stdErrors "errors"
-	"j/schema"
-	"j/schema/bytes"
-	"j/schema/errors"
-	"j/schema/fs"
-	"j/schema/internal/scanner"
 	"sync"
 
 	"github.com/lucasjones/reggen"
+
+	jschema "github.com/jsightapi/jsight-schema-go-library"
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
+	"github.com/jsightapi/jsight-schema-go-library/errors"
+	"github.com/jsightapi/jsight-schema-go-library/fs"
+	"github.com/jsightapi/jsight-schema-go-library/internal/scanner"
 )
 
 type Schema struct {

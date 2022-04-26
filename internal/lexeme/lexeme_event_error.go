@@ -2,7 +2,8 @@ package lexeme
 
 import (
 	"fmt"
-	"j/schema/errors"
+
+	"github.com/jsightapi/jsight-schema-go-library/errors"
 )
 
 func CatchLexEventError(lex LexEvent) {

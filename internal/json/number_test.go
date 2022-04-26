@@ -2,11 +2,12 @@ package json
 
 import (
 	"fmt"
-	"j/schema/bytes"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
 )
 
 func BenchmarkNewNumber(b *testing.B) {

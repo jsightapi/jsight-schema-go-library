@@ -2,11 +2,12 @@ package constraint
 
 import (
 	"bytes"
-	"j/schema"
-	jbytes "j/schema/bytes"
-	"j/schema/errors"
-	"j/schema/internal/json"
 	"strings"
+
+	jschema "github.com/jsightapi/jsight-schema-go-library"
+	jbytes "github.com/jsightapi/jsight-schema-go-library/bytes"
+	"github.com/jsightapi/jsight-schema-go-library/errors"
+	"github.com/jsightapi/jsight-schema-go-library/internal/json"
 )
 
 type Enum struct {

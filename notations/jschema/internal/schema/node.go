@@ -3,12 +3,13 @@ package schema
 //go:generate mockery --name Node --output ../mocks
 
 import (
-	jschema "j/schema"
-	"j/schema/bytes"
-	"j/schema/internal/json"
-	"j/schema/internal/lexeme"
-	"j/schema/notations/jschema/internal/schema/constraint"
 	"sync"
+
+	jschema "github.com/jsightapi/jsight-schema-go-library"
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
+	"github.com/jsightapi/jsight-schema-go-library/internal/json"
+	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
 )
 
 // The node of the internal representation of the scheme.

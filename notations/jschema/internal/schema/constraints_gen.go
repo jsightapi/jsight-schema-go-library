@@ -10,7 +10,7 @@ import (
 	"context"
 	"encoding/json"
 
-	"j/schema/notations/jschema/internal/schema/constraint"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
 )
 
 // Set sets a value with specified key.

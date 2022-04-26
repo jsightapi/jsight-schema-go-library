@@ -1,8 +1,8 @@
 package loader
 
 import (
-	"j/schema/internal/lexeme"
-	"j/schema/notations/jschema/internal/schema"
+	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema"
 )
 
 // This class is responsible for loading the JSON elements in the nodes of the internal representation of the SCHEMA.
