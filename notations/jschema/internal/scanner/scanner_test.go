@@ -946,6 +946,28 @@ func Test_stateFoundArrayItemBeginOrEmpty(t *testing.T) {
 	}
 }
 
+func Test_isCommentStart(t *testing.T) {
+	cc := map[string]struct {
+		annotation annotation
+		c          byte
+		expected   bool
+	}{
+		"none, comment sign":          {annotationNone, '#', true},
+		"none, non-comment sign":      {annotationNone, '1', false},
+		"inline, comment sign":        {annotationInline, '#', true},
+		"inline, non-comment sign":    {annotationInline, '1', false},
+		"multiline, comment sign":     {annotationMultiLine, '#', false},
+		"multiline, non-comment sign": {annotationMultiLine, '1', false},
+	}
+
+	for n, c := range cc {
+		t.Run(n, func(t *testing.T) {
+			actual := (&Scanner{annotation: c.annotation}).isCommentStart(c.c)
+			assert.Equal(t, c.expected, actual)
+		})
+	}
+}
+
 type validResults struct {
 	content string
 	results []lexeme.LexEventType

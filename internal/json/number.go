@@ -10,12 +10,13 @@ import (
 // Number provides a method to work with numbers in the understanding of JSON (for
 // example -1.2 e+3).
 type Number struct {
-	neg bool
 	nat bytes.Bytes
 
 	// exp an absolute value of exponent. In fact, a negative value is assumed,
 	// but for optimization it is stored without a minus sign.
 	exp int
+
+	neg bool
 }
 
 func NewNumberFromUint(u uint) *Number {

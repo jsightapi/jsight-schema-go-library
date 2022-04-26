@@ -21,13 +21,13 @@ type orRuleSetLoader struct {
 	// state machine).
 	stateFunc func(lexeme.LexEvent)
 
-	// ruleNameLex the last found key in rule-set.
-	ruleNameLex lexeme.LexEvent
-
 	// typeRoot a node (type mixed) to which constraints from rule-set are
 	// added. This node will become the root node for the type created from
 	// the rule-set.
 	typeRoot *schema.MixedNode
+
+	// ruleNameLex the last found key in rule-set.
+	ruleNameLex lexeme.LexEvent
 
 	// inProgress indicates are we already done or not.
 	inProgress bool
@@ -171,8 +171,8 @@ func (s *orRuleSetLoader) makeTypeASTNode(
 		Source:     source,
 	}
 
-	for kv := range cc.Iterate() {
-		an.Properties.Set(kv.Key.String(), kv.Value.ASTNode())
-	}
+	cc.EachSafe(func(k constraint.Type, v constraint.Constraint) {
+		an.Properties.Set(k.String(), v.ASTNode())
+	})
 	return an
 }

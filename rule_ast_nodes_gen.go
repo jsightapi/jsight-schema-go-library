@@ -7,7 +7,6 @@ package jschema
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 )
 
@@ -114,35 +113,65 @@ func (m *RuleASTNodes) Filter(fn filterRuleASTNodesFunc) {
 
 type filterRuleASTNodesFunc = func(k string, v RuleASTNode) bool
 
-// Iterate acts the same as IterateContext but with background context.
-func (m *RuleASTNodes) Iterate() <-chan RuleASTNodesItem {
-	return m.IterateContext(context.Background())
-}
+// Find finds first matched item from the map.
+func (m *RuleASTNodes) Find(fn findRuleASTNodesFunc) (RuleASTNodesItem, bool) {
+	m.mx.RLock()
+	defer m.mx.RUnlock()
 
-// IterateContext iterates over map key/values.
-// Will block in case of slow consumer.
-// Context should be canceled in order to avoid infinity lock.
-// Use RuleASTNodes.Map when you have to update value.
-func (m *RuleASTNodes) IterateContext(ctx context.Context) <-chan RuleASTNodesItem {
-	ch := make(chan RuleASTNodesItem)
-	go func() {
-		m.mx.RLock()
-		defer m.mx.RUnlock()
-
-		for _, k := range m.order {
-			select {
-			case <-ctx.Done():
-				break
-			case ch <- RuleASTNodesItem{
+	for _, k := range m.order {
+		if fn(k, m.data[k]) {
+			return RuleASTNodesItem{
 				Key:   k,
 				Value: m.data[k],
-			}:
-			}
+			}, true
 		}
-		close(ch)
-	}()
-	return ch
+	}
+	return RuleASTNodesItem{}, false
 }
+
+type findRuleASTNodesFunc = func(k string, v RuleASTNode) bool
+
+func (m *RuleASTNodes) Each(fn eachRuleASTNodesFunc) error {
+	m.mx.RLock()
+	defer m.mx.RUnlock()
+
+	for _, k := range m.order {
+		if err := fn(k, m.data[k]); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+type eachRuleASTNodesFunc = func(k string, v RuleASTNode) error
+
+func (m *RuleASTNodes) EachSafe(fn eachSafeRuleASTNodesFunc) {
+	m.mx.RLock()
+	defer m.mx.RUnlock()
+
+	for _, k := range m.order {
+		fn(k, m.data[k])
+	}
+}
+
+type eachSafeRuleASTNodesFunc = func(k string, v RuleASTNode)
+
+// Map iterates and changes values in the map.
+func (m *RuleASTNodes) Map(fn mapRuleASTNodesFunc) error {
+	m.mx.Lock()
+	defer m.mx.Unlock()
+
+	for _, k := range m.order {
+		v, err := fn(k, m.data[k])
+		if err != nil {
+			return err
+		}
+		m.data[k] = v
+	}
+	return nil
+}
+
+type mapRuleASTNodesFunc = func(k string, v RuleASTNode) (RuleASTNode, error)
 
 // RuleASTNodesItem represent single data from the RuleASTNodes.
 type RuleASTNodesItem struct {

@@ -14,18 +14,18 @@ type baseNode struct {
 
 	realType string
 
-	// jsonType a JSON type for this node.
-	jsonType json.Type
+	// comment a node comment.
+	comment string
+
+	// constraints a list of this node constraints.
+	constraints *Constraints
 
 	// schemaLexEvent used to check and display an error if the node value does
 	// not match the constraints.
 	schemaLexEvent lexeme.LexEvent
 
-	// constraints a list of this node constraints.
-	constraints *Constraints
-
-	// comment a node comment.
-	comment string
+	// jsonType a JSON type for this node.
+	jsonType json.Type
 }
 
 func newBaseNode(lex lexeme.LexEvent) baseNode {

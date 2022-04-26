@@ -20,3 +20,21 @@ func TestQuoteChar(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkQuoteChar(b *testing.B) {
+	cc := []byte{
+		'\'',
+		'"',
+		'c',
+	}
+
+	b.ReportAllocs()
+
+	for _, c := range cc {
+		b.Run(string(c), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				QuoteChar(c)
+			}
+		})
+	}
+}

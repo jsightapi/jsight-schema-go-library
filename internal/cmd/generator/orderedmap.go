@@ -14,6 +14,9 @@ import (
 	"strings"
 	"text/template"
 	"unicode"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // orderedMapGenerator generator will search for `// gen:OrderedMap` comments for
@@ -94,11 +97,12 @@ func (g orderedMapGenerator) generate(pkgName string, dd []ast.Decl, dirPath str
 }
 
 type orderedMap struct {
-	Name        string
-	PkgName     string
-	KeyType     string
-	ValueType   string
-	UsedImports map[string]struct{}
+	Name            string
+	CapitalizedName string
+	PkgName         string
+	KeyType         string
+	ValueType       string
+	UsedImports     map[string]struct{}
 }
 
 func (orderedMapGenerator) shouldProcess(d *ast.GenDecl) bool {
@@ -147,9 +151,10 @@ func (g orderedMapGenerator) collectOrderMap(
 	}
 
 	om := orderedMap{
-		Name:        spec.Name.Name,
-		PkgName:     pkgName,
-		UsedImports: map[string]struct{}{},
+		Name:            spec.Name.Name,
+		CapitalizedName: cases.Title(language.English, cases.NoLower).String(spec.Name.Name),
+		PkgName:         pkgName,
+		UsedImports:     map[string]struct{}{},
 	}
 
 	if err := g.checkMutexField(mutexField); err != nil {
@@ -292,7 +297,6 @@ package {{ .PkgName }}
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 {{ range $k, $v := .UsedImports }}
 	"{{ $k }}"
@@ -389,7 +393,7 @@ var kk {{ .KeyType }}
 }
 
 // Filter iterates and changes values in the map.
-func (m *{{ .Name }}) Filter(fn filter{{ .Name }}Func) {
+func (m *{{ .Name }}) Filter(fn filter{{ .CapitalizedName }}Func) {
 	m.mx.Lock()
 	defer m.mx.Unlock()
 
@@ -400,37 +404,67 @@ func (m *{{ .Name }}) Filter(fn filter{{ .Name }}Func) {
 	}
 }
 
-type filter{{ .Name }}Func = func(k {{ .KeyType }}, v {{ .ValueType }}) bool
+type filter{{ .CapitalizedName }}Func = func(k {{ .KeyType }}, v {{ .ValueType }}) bool
 
-// Iterate acts the same as IterateContext but with background context.
-func (m *{{ .Name }}) Iterate() <-chan {{ .Name }}Item {
-	return m.IterateContext(context.Background())
-}
+// Find finds first matched item from the map.
+func (m *{{ .Name }}) Find(fn find{{ .CapitalizedName }}Func) ({{ .Name }}Item, bool) {
+	m.mx.RLock()
+	defer m.mx.RUnlock()
 
-// IterateContext iterates over map key/values.
-// Will block in case of slow consumer.
-// Context should be canceled in order to avoid infinity lock.
-// Use {{ .Name }}.Map when you have to update value.
-func (m *{{ .Name }}) IterateContext(ctx context.Context) <-chan {{ .Name }}Item {
-	ch := make(chan {{ .Name }}Item)
-	go func() {
-		m.mx.RLock()
-		defer m.mx.RUnlock()
-
-		for _, k := range m.order {
-			select {
-			case <-ctx.Done():
-				break
-			case ch <- {{ .Name }}Item{
+	for _, k := range m.order {
+		if fn(k, m.data[k]) {
+			return {{ .Name }}Item{
 				Key:   k,
 				Value: m.data[k],
-			}:
-			}
+			}, true
 		}
-		close(ch)
-	}()
-	return ch
+	}
+	return {{ .Name }}Item{}, false
 }
+
+type find{{ .CapitalizedName }}Func = func(k {{ .KeyType }}, v {{ .ValueType }}) bool
+
+func (m *{{ .Name }}) Each(fn each{{ .CapitalizedName }}Func) error {
+	m.mx.RLock()
+	defer m.mx.RUnlock()
+
+	for _, k := range m.order {
+		if err := fn(k, m.data[k]); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+type each{{ .CapitalizedName }}Func = func(k {{ .KeyType }}, v {{ .ValueType }}) error
+
+func (m *{{ .Name }}) EachSafe(fn eachSafe{{ .CapitalizedName }}Func) {
+	m.mx.RLock()
+	defer m.mx.RUnlock()
+
+	for _, k := range m.order {
+		fn(k, m.data[k])
+	}
+}
+
+type eachSafe{{ .CapitalizedName }}Func = func(k {{ .KeyType }}, v {{ .ValueType }})
+
+// Map iterates and changes values in the map.
+func (m *{{ .Name }}) Map(fn map{{ .CapitalizedName }}Func) error {
+	m.mx.Lock()
+	defer m.mx.Unlock()
+
+	for _, k := range m.order {
+		v, err := fn(k, m.data[k])
+		if err != nil {
+			return err
+		}
+		m.data[k] = v
+	}
+	return nil
+}
+
+type map{{ .CapitalizedName }}Func = func(k {{ .KeyType }}, v {{ .ValueType }}) ({{ .ValueType }}, error)
 
 // {{ .Name }}Item represent single data from the {{ .Name }}.
 type {{ .Name }}Item struct {

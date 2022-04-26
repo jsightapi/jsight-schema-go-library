@@ -9,7 +9,6 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/bytes"
 	"github.com/jsightapi/jsight-schema-go-library/errors"
 	"github.com/jsightapi/jsight-schema-go-library/fs"
-	"github.com/jsightapi/jsight-schema-go-library/internal/logger"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/loader"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/scanner"
 )
@@ -33,7 +32,7 @@ func TestCheckRootSchema(t *testing.T) {
 
 		loader.CompileAllOf(rootSchema)
 
-		CheckRootSchema(rootSchema, logger.LogToNull{})
+		CheckRootSchema(rootSchema)
 	}
 
 	t.Run("positive", func(t *testing.T) {

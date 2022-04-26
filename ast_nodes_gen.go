@@ -7,7 +7,6 @@ package jschema
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 )
 
@@ -114,35 +113,65 @@ func (m *ASTNodes) Filter(fn filterASTNodesFunc) {
 
 type filterASTNodesFunc = func(k string, v ASTNode) bool
 
-// Iterate acts the same as IterateContext but with background context.
-func (m *ASTNodes) Iterate() <-chan ASTNodesItem {
-	return m.IterateContext(context.Background())
-}
+// Find finds first matched item from the map.
+func (m *ASTNodes) Find(fn findASTNodesFunc) (ASTNodesItem, bool) {
+	m.mx.RLock()
+	defer m.mx.RUnlock()
 
-// IterateContext iterates over map key/values.
-// Will block in case of slow consumer.
-// Context should be canceled in order to avoid infinity lock.
-// Use ASTNodes.Map when you have to update value.
-func (m *ASTNodes) IterateContext(ctx context.Context) <-chan ASTNodesItem {
-	ch := make(chan ASTNodesItem)
-	go func() {
-		m.mx.RLock()
-		defer m.mx.RUnlock()
-
-		for _, k := range m.order {
-			select {
-			case <-ctx.Done():
-				break
-			case ch <- ASTNodesItem{
+	for _, k := range m.order {
+		if fn(k, m.data[k]) {
+			return ASTNodesItem{
 				Key:   k,
 				Value: m.data[k],
-			}:
-			}
+			}, true
 		}
-		close(ch)
-	}()
-	return ch
+	}
+	return ASTNodesItem{}, false
 }
+
+type findASTNodesFunc = func(k string, v ASTNode) bool
+
+func (m *ASTNodes) Each(fn eachASTNodesFunc) error {
+	m.mx.RLock()
+	defer m.mx.RUnlock()
+
+	for _, k := range m.order {
+		if err := fn(k, m.data[k]); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+type eachASTNodesFunc = func(k string, v ASTNode) error
+
+func (m *ASTNodes) EachSafe(fn eachSafeASTNodesFunc) {
+	m.mx.RLock()
+	defer m.mx.RUnlock()
+
+	for _, k := range m.order {
+		fn(k, m.data[k])
+	}
+}
+
+type eachSafeASTNodesFunc = func(k string, v ASTNode)
+
+// Map iterates and changes values in the map.
+func (m *ASTNodes) Map(fn mapASTNodesFunc) error {
+	m.mx.Lock()
+	defer m.mx.Unlock()
+
+	for _, k := range m.order {
+		v, err := fn(k, m.data[k])
+		if err != nil {
+			return err
+		}
+		m.data[k] = v
+	}
+	return nil
+}
+
+type mapASTNodesFunc = func(k string, v ASTNode) (ASTNode, error)
 
 // ASTNodesItem represent single data from the ASTNodes.
 type ASTNodesItem struct {

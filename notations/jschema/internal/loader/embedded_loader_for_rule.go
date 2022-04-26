@@ -18,20 +18,20 @@ type ruleLoader struct {
 	// rootSchema a scheme into which types can be added from the "or" rule.
 	rootSchema *schema.Schema
 
-	// nodesPerCurrentLineCount the number of nodes in a line. To check because
-	// the rule cannot be added if there is more than one nodes suitable for this
-	// in the row.
-	nodesPerCurrentLineCount uint
-
-	// ruleNameLex the last found object key.
-	ruleNameLex lexeme.LexEvent
-
 	// stateFunc a function for running a state machine (the current state of the
 	// state machine) to parse RULE that occur in the schema.
 	stateFunc func(lexeme.LexEvent)
 
 	// embeddedValueLoader a loader for "or" and "enum" value.
 	embeddedValueLoader embeddedLoader
+
+	// ruleNameLex the last found object key.
+	ruleNameLex lexeme.LexEvent
+
+	// nodesPerCurrentLineCount the number of nodes in a line. To check because
+	// the rule cannot be added if there is more than one node suitable for this
+	// in the row.
+	nodesPerCurrentLineCount uint
 }
 
 func newRuleLoader(node schema.Node, nodesPerCurrentLineCount uint, rootSchema *schema.Schema) *ruleLoader {

@@ -16,7 +16,7 @@ type validatorListConstructor struct {
 	parent validator
 
 	// addedTypeNames used for excluding recursive addition of type to the list.
-	addedTypeNames map[string]bool
+	addedTypeNames map[string]struct{}
 
 	// The list of validators for the node.
 	list []validator
@@ -48,12 +48,12 @@ func (c *validatorListConstructor) buildList(node schema.Node) {
 
 func (c *validatorListConstructor) appendTypeValidators(names []string) {
 	if c.list == nil {
-		c.addedTypeNames = make(map[string]bool, len(names)) // optimizing memory allocation
-		c.list = make([]validator, 0, len(names))            // optimizing memory allocation
+		c.addedTypeNames = make(map[string]struct{}, len(names)) // optimizing memory allocation
+		c.list = make([]validator, 0, len(names))                // optimizing memory allocation
 	}
 	for _, name := range names {
 		if _, ok := c.addedTypeNames[name]; !ok {
-			c.addedTypeNames[name] = true
+			c.addedTypeNames[name] = struct{}{}
 			c.buildList(c.rootSchema.Type(name).RootNode()) // can panic
 		}
 	}

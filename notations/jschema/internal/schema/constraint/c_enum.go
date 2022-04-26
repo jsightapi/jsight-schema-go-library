@@ -16,8 +16,8 @@ type Enum struct {
 }
 
 type enumItem struct {
-	value   jbytes.Bytes
 	comment string
+	value   jbytes.Bytes
 }
 
 var _ Constraint = Enum{}

@@ -7,7 +7,6 @@ package schema
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
@@ -116,35 +115,65 @@ func (m *Constraints) Filter(fn filterConstraintsFunc) {
 
 type filterConstraintsFunc = func(k constraint.Type, v constraint.Constraint) bool
 
-// Iterate acts the same as IterateContext but with background context.
-func (m *Constraints) Iterate() <-chan ConstraintsItem {
-	return m.IterateContext(context.Background())
-}
+// Find finds first matched item from the map.
+func (m *Constraints) Find(fn findConstraintsFunc) (ConstraintsItem, bool) {
+	m.mx.RLock()
+	defer m.mx.RUnlock()
 
-// IterateContext iterates over map key/values.
-// Will block in case of slow consumer.
-// Context should be canceled in order to avoid infinity lock.
-// Use Constraints.Map when you have to update value.
-func (m *Constraints) IterateContext(ctx context.Context) <-chan ConstraintsItem {
-	ch := make(chan ConstraintsItem)
-	go func() {
-		m.mx.RLock()
-		defer m.mx.RUnlock()
-
-		for _, k := range m.order {
-			select {
-			case <-ctx.Done():
-				break
-			case ch <- ConstraintsItem{
+	for _, k := range m.order {
+		if fn(k, m.data[k]) {
+			return ConstraintsItem{
 				Key:   k,
 				Value: m.data[k],
-			}:
-			}
+			}, true
 		}
-		close(ch)
-	}()
-	return ch
+	}
+	return ConstraintsItem{}, false
 }
+
+type findConstraintsFunc = func(k constraint.Type, v constraint.Constraint) bool
+
+func (m *Constraints) Each(fn eachConstraintsFunc) error {
+	m.mx.RLock()
+	defer m.mx.RUnlock()
+
+	for _, k := range m.order {
+		if err := fn(k, m.data[k]); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+type eachConstraintsFunc = func(k constraint.Type, v constraint.Constraint) error
+
+func (m *Constraints) EachSafe(fn eachSafeConstraintsFunc) {
+	m.mx.RLock()
+	defer m.mx.RUnlock()
+
+	for _, k := range m.order {
+		fn(k, m.data[k])
+	}
+}
+
+type eachSafeConstraintsFunc = func(k constraint.Type, v constraint.Constraint)
+
+// Map iterates and changes values in the map.
+func (m *Constraints) Map(fn mapConstraintsFunc) error {
+	m.mx.Lock()
+	defer m.mx.Unlock()
+
+	for _, k := range m.order {
+		v, err := fn(k, m.data[k])
+		if err != nil {
+			return err
+		}
+		m.data[k] = v
+	}
+	return nil
+}
+
+type mapConstraintsFunc = func(k constraint.Type, v constraint.Constraint) (constraint.Constraint, error)
 
 // ConstraintsItem represent single data from the Constraints.
 type ConstraintsItem struct {

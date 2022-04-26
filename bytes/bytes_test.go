@@ -2,6 +2,7 @@ package bytes
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"testing"
 
@@ -178,13 +179,13 @@ func TestBytes_TrimSpacesFromLeft(t *testing.T) {
 func TestBytes_ParseInt(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
 		cc := map[string]int{
-			"3":                        3,
-			"23":                       23,
-			"123":                      123,
-			"00123":                    123,
-			"-123":                     -123,
-			strconv.Itoa(maxInt):       maxInt,
-			"-" + strconv.Itoa(maxInt): -maxInt,
+			"3":                             3,
+			"23":                            23,
+			"123":                           123,
+			"00123":                         123,
+			"-123":                          -123,
+			strconv.Itoa(math.MaxInt):       math.MaxInt,
+			"-" + strconv.Itoa(math.MaxInt): -math.MaxInt,
 		}
 		for given, expected := range cc {
 			t.Run(given, func(t *testing.T) {
@@ -197,8 +198,8 @@ func TestBytes_ParseInt(t *testing.T) {
 
 	t.Run("negative", func(t *testing.T) {
 		cc := map[string]string{
-			"3.2":                      "invalid byte (.) found in ParseUint (3.2)",
-			strconv.Itoa(maxInt) + "0": "too much data for int",
+			"3.2":                           "invalid byte (.) found in ParseUint (3.2)",
+			strconv.Itoa(math.MaxInt) + "0": "too much data for int",
 		}
 		for given, expected := range cc {
 			t.Run(given, func(t *testing.T) {

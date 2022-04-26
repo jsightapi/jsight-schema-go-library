@@ -11,7 +11,6 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/errors"
 	"github.com/jsightapi/jsight-schema-go-library/formats/json"
 	"github.com/jsightapi/jsight-schema-go-library/fs"
-	"github.com/jsightapi/jsight-schema-go-library/internal/logger"
 	"github.com/jsightapi/jsight-schema-go-library/notations/internal"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/checker"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/loader"
@@ -23,20 +22,21 @@ import (
 )
 
 type Schema struct {
-	file *fs.File
+	file  *fs.File
+	inner *internalSchema.Schema
 
-	len     uint
-	lenOnce sync.Once
+	loadErr    error
+	compileErr error
 
-	inner         *internalSchema.Schema
-	astNode       jschema.ASTNode
 	usedUserTypes []string
 
-	loadOnce sync.Once
-	loadErr  error
+	astNode jschema.ASTNode
 
+	len uint
+
+	lenOnce     sync.Once
+	loadOnce    sync.Once
 	compileOnce sync.Once
-	compileErr  error
 
 	allowTrailingNonSpaceCharacters bool
 	areKeysOptionalByDefault        bool
@@ -228,7 +228,6 @@ func (s *Schema) Validate(document jschema.Document) (err error) {
 func (s *Schema) validate(document jschema.Document) error {
 	tree := validator.NewTree(
 		validator.NodeValidatorList(s.inner.RootNode(), *s.inner, nil),
-		logger.LogToNull{},
 	)
 
 	empty := true
@@ -285,10 +284,11 @@ func (s *Schema) load() error {
 		defer func() {
 			s.loadErr = handlePanic(recover(), s.loadErr)
 		}()
-		s.inner = loader.LoadSchemaWithoutCompile(
+		sc := loader.LoadSchemaWithoutCompile(
 			scanner.NewSchemaScanner(s.file, s.allowTrailingNonSpaceCharacters),
 			nil,
 		)
+		s.inner = &sc
 		s.astNode = s.buildASTNode()
 		s.collectUserTypes()
 		loader.CompileBasic(s.inner, s.areKeysOptionalByDefault)
@@ -370,18 +370,18 @@ func collectUserTypesFromAllOfConstraint(node internalSchema.Node, uu map[string
 }
 
 func collectUserTypesObjectNode(node *internalSchema.ObjectNode, uu map[string]struct{}) {
-	for key := range node.Keys().Iterate() {
-		if key.Value.IsShortcut {
-			if key.Key[0] == '@' {
-				uu[key.Key] = struct{}{}
+	node.Keys().EachSafe(func(k string, v internalSchema.InnerObjectNodeKey) {
+		if v.IsShortcut {
+			if k[0] == '@' {
+				uu[k] = struct{}{}
 			}
 		}
 
-		c, ok := node.Child(key.Key)
+		c, ok := node.Child(k)
 		if ok {
 			collectUserTypes(c, uu)
 		}
-	}
+	})
 }
 
 func (s *Schema) buildASTNode() jschema.ASTNode {
@@ -411,7 +411,7 @@ func (s *Schema) compile() error {
 			return
 		}
 		loader.CompileAllOf(s.inner)
-		checker.CheckRootSchema(s.inner, logger.LogToNull{})
+		checker.CheckRootSchema(s.inner)
 	})
 	return s.compileErr
 }

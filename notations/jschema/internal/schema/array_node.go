@@ -8,12 +8,14 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/errors"
 	"github.com/jsightapi/jsight-schema-go-library/internal/json"
 	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
 )
 
 type ArrayNode struct {
-	baseNode
 	// children a children node list.
 	children []Node
+
+	baseNode
 
 	// waitingForChild indicates that we should add children.
 	// The Grow method will create a child node by getting the next lexical event.
@@ -99,9 +101,9 @@ func (n ArrayNode) IndentedNodeString(depth int) string {
 	var str strings.Builder
 	str.WriteString(indent + "* " + n.Type().String() + "\n")
 
-	for kv := range n.constraints.Iterate() {
-		str.WriteString(indent + "* " + kv.Value.String() + "\n")
-	}
+	n.constraints.EachSafe(func(k constraint.Type, v constraint.Constraint) {
+		str.WriteString(indent + "* " + v.String() + "\n")
+	})
 
 	return str.String()
 }

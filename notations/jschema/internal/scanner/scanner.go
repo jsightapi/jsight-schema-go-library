@@ -110,15 +110,6 @@ type Scanner struct {
 	// data jSchema content.
 	data bytes.Bytes
 
-	// index scanned byte index.
-	index bytes.Index
-
-	// dataSize a size of schema data in bytes. Count once for optimization.
-	dataSize bytes.Index
-
-	// boundary the character of the bounding lines.
-	boundary byte
-
 	// stack a stack of found lexical event. The stack is needed for the scanner
 	// to take into account the nesting of SCHEME elements.
 	stack scanner.LexemesStack
@@ -126,6 +117,19 @@ type Scanner struct {
 	// finds a list of found types of lexical event for the current step. Several
 	// lexical events can be found in one step (example: ArrayItemBegin and LiteralBegin).
 	finds []lexeme.LexEventType
+
+	// prevContextsStack a stack of previous scanner contexts.
+	// Used for restoring a previous context after finishing current one.
+	prevContextsStack contextStack
+
+	// context indicates which type of entity we process right now.
+	context context
+
+	// index scanned byte index.
+	index bytes.Index
+
+	// dataSize a size of schema data in bytes. Count once for optimization.
+	dataSize bytes.Index
 
 	// annotation one of the possible States of annotation processing (annotationNone,
 	// annotationInline, annotationMultiLine).
@@ -138,12 +142,8 @@ type Scanner struct {
 	// the schema (for example, in jApi).
 	allowNonSpaceByteAfterTopLevelValue bool
 
-	// context indicates which type of entity we process right now.
-	context context
-
-	// prevContextsStack a stack of previous scanner contexts.
-	// Used for restoring a previous context after finishing current one.
-	prevContextsStack contextStack
+	// boundary the character of the bounding lines.
+	boundary byte
 
 	// allowAnnotation indicates is annotation is allowed or not.
 	allowAnnotation bool
@@ -205,25 +205,20 @@ func (s *Scanner) Length() uint {
 		}
 
 		if lex.Type() == lexeme.EndTop {
-			// Found character after the end of the schema and spaces. Ex: char "s" in "{} some text"
+			// Found character after the end of the schema and spaces.
+			// Example: char "s" in "{} some text"
 			length = uint(lex.End()) - 1
 			break
-		} else {
-			if lex.End() == s.dataSize {
-				length = uint(lex.End())
-			} else {
-				length = uint(lex.End()) + 1
-			}
+		}
+
+		length = uint(lex.End()) + 1
+		if lex.End() == s.dataSize {
+			length--
 		}
 	}
-	for {
-		if length == 0 {
-			break
-		}
+	for ; length > 0; length-- {
 		c := s.data[length-1]
-		if s.isSpace(c) {
-			length--
-		} else {
+		if !s.isSpace(c) {
 			break
 		}
 	}
@@ -384,13 +379,14 @@ func (*Scanner) isSpace(c byte) bool {
 }
 
 func (s *Scanner) isNewLine(c byte) bool {
-	if c == '\n' || c == '\r' {
-		if s.annotation == annotationInline {
-			panic(s.newDocumentErrorAtCharacter("inside inline annotation"))
-		}
-		return true
+	if c != '\n' && c != '\r' {
+		return false
 	}
-	return false
+
+	if s.annotation == annotationInline {
+		panic(s.newDocumentErrorAtCharacter("inside inline annotation"))
+	}
+	return true
 }
 
 func (*Scanner) isAnnotationStart(c byte) bool {
@@ -1461,23 +1457,15 @@ func stateMultiLineAnnotationText(s *Scanner, c byte) state {
 }
 
 func (s *Scanner) isCommentStart(c byte) bool {
-	if s.annotation == annotationNone || s.annotation == annotationInline {
-		if c == '#' {
-			return true
-		}
-	}
-	return false
+	return (s.annotation == annotationNone || s.annotation == annotationInline) && c == '#'
 }
 
 func (s *Scanner) switchToComment() {
-	switch s.annotation {
-	case annotationNone, annotationInline:
-		s.returnToStep.Push(s.step)
-		s.step = stateAnyCommentStart
-	default:
-		// panic("Incorrect comment mode")
+	if s.annotation != annotationNone && s.annotation != annotationInline {
 		panic(s.newDocumentErrorAtCharacter("inside user inline comment"))
 	}
+	s.returnToStep.Push(s.step)
+	s.step = stateAnyCommentStart
 }
 
 func stateAnyCommentStart(s *Scanner, c byte) state {

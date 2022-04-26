@@ -8,8 +8,8 @@ import (
 )
 
 type Min struct {
-	rawValue  bytes.Bytes
 	min       *json.Number
+	rawValue  bytes.Bytes
 	exclusive bool
 }
 

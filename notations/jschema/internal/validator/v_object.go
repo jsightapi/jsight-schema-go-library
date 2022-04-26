@@ -16,6 +16,8 @@ import (
 // Validates json according to jSchema's ObjectNode.
 
 type objectValidator struct {
+	requiredKeys map[string]int
+
 	// node_ an object or mixed.
 	node_   schema.Node
 	parent_ validator
@@ -24,7 +26,6 @@ type objectValidator struct {
 	// name.
 	rootSchema      schema.Schema
 	lastFoundKeyLex lexeme.LexEvent
-	requiredKeys    map[string]int
 }
 
 func newObjectValidator(node schema.Node, parent validator, rootSchema schema.Schema) *objectValidator {
@@ -146,14 +147,15 @@ func (v objectValidator) validateTypeRules(value jbytes.Bytes) (string, bool) {
 			flag := false
 			inside := false
 			i := 0
-			for kv := range node.ConstraintMap().Iterate() {
+
+			node.ConstraintMap().EachSafe(func(_ constraint.Type, v constraint.Constraint) {
 				inside = true
 				if i == 0 {
 					flag = true
 				}
-				flag = flag && checkConstraint(kv.Value, value)
+				flag = flag && checkConstraint(v, value)
 				i++
-			}
+			})
 
 			if !inside {
 				if bytes.Equal(node.Value(), value) {

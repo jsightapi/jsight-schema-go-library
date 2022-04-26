@@ -12,15 +12,17 @@ import (
 )
 
 type Document struct {
-	file                            *fs.File
-	allowTrailingNonSpaceCharacters bool
-	scanner                         *scanner
+	file    *fs.File
+	scanner *scanner
 
-	len     uint
-	lenOnce sync.Once
+	checkErr error
 
-	checkErr  error
+	len uint
+
+	lenOnce   sync.Once
 	checkOnce sync.Once
+
+	allowTrailingNonSpaceCharacters bool
 }
 
 var _ jschema.Document = &Document{}

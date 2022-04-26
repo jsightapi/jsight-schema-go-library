@@ -3,13 +3,11 @@ package bytes
 import (
 	"bytes"
 	"errors"
+	"math"
 )
 
 type Index uint
 type Bytes []byte
-
-const maxUint = ^uint(0)
-const maxInt = int(maxUint >> 1)
 
 func (b Bytes) Equals(bb Bytes) bool {
 	return bytes.Equal(b, bb)
@@ -154,7 +152,7 @@ func (b Bytes) ParseInt() (int, error) {
 		return 0, err
 	}
 
-	if u > maxUint/2 {
+	if u > math.MaxUint/2 {
 		return 0, errors.New("too much data for int")
 	}
 

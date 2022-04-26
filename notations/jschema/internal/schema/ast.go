@@ -1,6 +1,8 @@
 package schema
 
 import (
+	"errors"
+
 	jschema "github.com/jsightapi/jsight-schema-go-library"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
 )
@@ -48,14 +50,15 @@ func getASTNodeSchemaType(n Node) string {
 func collectASTRules(cc *Constraints) *jschema.RuleASTNodes {
 	nn := &jschema.RuleASTNodes{}
 
-	for kv := range cc.Iterate() {
-		switch kv.Key {
+	err := cc.Each(func(k constraint.Type, v constraint.Constraint) error {
+		switch k {
 		// The `Or` constraint doesn't contain all required values, but they are placed
 		// in the `type` constraint.
 		case constraint.OrConstraintType:
 			types, ok := cc.Get(constraint.TypesListConstraintType)
 			if !ok {
-				panic(`Can't collect rules: "types" constraint is required with "or"" constraint`)
+				//goland:noinspection GoErrorStringFormat
+				return errors.New(`Can't collect rules: "types" constraint is required with "or"" constraint`) //nolint:stylecheck // It's okay.
 			}
 
 			nn.Set(constraint.OrConstraintType.String(), types.ASTNode())
@@ -64,8 +67,12 @@ func collectASTRules(cc *Constraints) *jschema.RuleASTNodes {
 			// do nothing
 
 		default:
-			nn.Set(kv.Key.String(), kv.Value.ASTNode())
+			nn.Set(k.String(), v.ASTNode())
 		}
+		return nil
+	})
+	if err != nil {
+		panic(err)
 	}
 	return nn
 }

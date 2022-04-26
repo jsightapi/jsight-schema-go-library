@@ -8,8 +8,8 @@ import (
 )
 
 type MinLength struct {
-	rawValue bytes.Bytes
 	value    *json.Number
+	rawValue bytes.Bytes
 }
 
 var _ Constraint = MinLength{}

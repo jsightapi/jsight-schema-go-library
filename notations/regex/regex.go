@@ -16,9 +16,9 @@ import (
 type Schema struct {
 	file *fs.File
 
+	compileErr  error
 	pattern     string
 	compileOnce sync.Once
-	compileErr  error
 }
 
 var _ jschema.Schema = &Schema{}

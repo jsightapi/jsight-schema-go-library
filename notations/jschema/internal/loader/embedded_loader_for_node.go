@@ -14,10 +14,10 @@ type nodeLoader struct {
 }
 
 func newNodeLoader(schem *schema.Schema, nodesPerCurrentLineCount *uint) *nodeLoader {
-	nl := new(nodeLoader)
-	nl.schema = schem
-	nl.nodesPerCurrentLineCount = nodesPerCurrentLineCount
-	return nl
+	return &nodeLoader{
+		schema:                   schem,
+		nodesPerCurrentLineCount: nodesPerCurrentLineCount,
+	}
 }
 
 // returns the newly added node or nil
