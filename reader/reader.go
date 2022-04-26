@@ -2,8 +2,9 @@ package reader
 
 import (
 	"io/ioutil"
-	"j/schema/errors"
-	"j/schema/fs"
+
+	"github.com/jsightapi/jsight-schema-go-library/errors"
+	"github.com/jsightapi/jsight-schema-go-library/fs"
 )
 
 // Read reads the contents of the file, returns a slice of bytes.

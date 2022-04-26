@@ -1,9 +1,10 @@
 package scanner
 
 import (
-	"j/schema/fs"
-	"j/schema/internal/lexeme"
 	"testing"
+
+	"github.com/jsightapi/jsight-schema-go-library/fs"
+	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
 
 	"github.com/stretchr/testify/assert"
 )

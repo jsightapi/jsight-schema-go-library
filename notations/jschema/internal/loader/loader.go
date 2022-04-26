@@ -1,9 +1,9 @@
 package loader
 
 import (
-	"j/schema/internal/lexeme"
-	"j/schema/notations/jschema/internal/scanner"
-	"j/schema/notations/jschema/internal/schema"
+	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/scanner"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema"
 )
 
 // Contains information about the mode in which the loader is located.

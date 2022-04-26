@@ -1,12 +1,12 @@
 package checker
 
 import (
-	"j/schema/errors"
-	"j/schema/internal/json"
-	"j/schema/internal/lexeme"
-	"j/schema/internal/logger"
-	"j/schema/notations/jschema/internal/schema"
-	"j/schema/notations/jschema/internal/schema/constraint"
+	"github.com/jsightapi/jsight-schema-go-library/errors"
+	"github.com/jsightapi/jsight-schema-go-library/internal/json"
+	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
+	"github.com/jsightapi/jsight-schema-go-library/internal/logger"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
 )
 
 // Checks the SAMPLE SCHEMA and all TYPES for compliance with all RULES.

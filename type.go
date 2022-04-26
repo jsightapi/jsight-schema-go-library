@@ -2,7 +2,8 @@ package jschema
 
 import (
 	"errors"
-	"j/schema/internal/json"
+
+	"github.com/jsightapi/jsight-schema-go-library/internal/json"
 )
 
 type JSONType = string

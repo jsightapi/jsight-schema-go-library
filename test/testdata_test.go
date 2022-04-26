@@ -1,13 +1,14 @@
 package test
 
 import (
-	"j/schema/fs"
-	"j/schema/kit"
-	"j/schema/reader"
 	"path"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/jsightapi/jsight-schema-go-library/fs"
+	"github.com/jsightapi/jsight-schema-go-library/kit"
+	"github.com/jsightapi/jsight-schema-go-library/reader"
 )
 
 func TestData(t *testing.T) {

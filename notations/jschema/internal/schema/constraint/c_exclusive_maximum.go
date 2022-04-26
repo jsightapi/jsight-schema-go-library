@@ -1,11 +1,12 @@
 package constraint //nolint:dupl // Duplicates exclusive minimum with small differences.
 
 import (
-	"j/schema"
-	"j/schema/bytes"
-	"j/schema/errors"
-	"j/schema/internal/json"
 	"strconv"
+
+	jschema "github.com/jsightapi/jsight-schema-go-library"
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
+	"github.com/jsightapi/jsight-schema-go-library/errors"
+	"github.com/jsightapi/jsight-schema-go-library/internal/json"
 )
 
 type ExclusiveMaximum struct {

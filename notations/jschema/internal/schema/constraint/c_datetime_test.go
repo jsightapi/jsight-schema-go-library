@@ -1,11 +1,12 @@
 package constraint
 
 import (
-	"j/schema/bytes"
-	"j/schema/internal/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
+	"github.com/jsightapi/jsight-schema-go-library/internal/json"
 )
 
 func TestDateTime_IsJsonTypeCompatible(t *testing.T) {

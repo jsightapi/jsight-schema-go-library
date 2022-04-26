@@ -1,6 +1,8 @@
 package constraint
 
-import "j/schema"
+import (
+	jschema "github.com/jsightapi/jsight-schema-go-library"
+)
 
 func newEmptyRuleASTNode() jschema.RuleASTNode {
 	return jschema.RuleASTNode{

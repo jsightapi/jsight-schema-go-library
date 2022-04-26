@@ -1,8 +1,9 @@
 package jschema
 
 import (
-	"j/schema/internal/lexeme"
 	"sync"
+
+	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
 )
 
 // Document represents a document.

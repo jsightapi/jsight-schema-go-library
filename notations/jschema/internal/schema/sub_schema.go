@@ -1,8 +1,8 @@
 package schema
 
 import (
-	"j/schema/bytes"
-	"j/schema/fs"
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
+	"github.com/jsightapi/jsight-schema-go-library/fs"
 )
 
 type Type struct {

@@ -1,10 +1,11 @@
 package constraint
 
 import (
-	"j/schema"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	jschema "github.com/jsightapi/jsight-schema-go-library"
 )
 
 func TestOr_Type(t *testing.T) {

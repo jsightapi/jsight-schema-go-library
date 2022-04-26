@@ -1,9 +1,9 @@
 package loader
 
 import (
-	"j/schema/fs"
-	"j/schema/notations/jschema/internal/scanner"
-	"j/schema/notations/jschema/internal/schema"
+	"github.com/jsightapi/jsight-schema-go-library/fs"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/scanner"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema"
 )
 
 // NewSchemaForSdk reads the Schema from a file without adding to the collection.

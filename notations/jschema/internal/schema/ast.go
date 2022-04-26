@@ -1,8 +1,8 @@
 package schema
 
 import (
-	"j/schema"
-	"j/schema/notations/jschema/internal/schema/constraint"
+	jschema "github.com/jsightapi/jsight-schema-go-library"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
 )
 
 func newASTNode() jschema.ASTNode {

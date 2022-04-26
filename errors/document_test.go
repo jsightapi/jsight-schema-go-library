@@ -1,10 +1,11 @@
 package errors
 
 import (
-	"j/schema/bytes"
-	"j/schema/fs"
 	"strings"
 	"testing"
+
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
+	"github.com/jsightapi/jsight-schema-go-library/fs"
 )
 
 func TestDetectNewLineSymbol(t *testing.T) {

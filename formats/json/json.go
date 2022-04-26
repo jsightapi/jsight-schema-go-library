@@ -3,11 +3,12 @@ package json
 import (
 	stdErrors "errors"
 	"io"
-	"j/schema"
-	"j/schema/errors"
-	"j/schema/fs"
-	"j/schema/internal/lexeme"
 	"sync"
+
+	jschema "github.com/jsightapi/jsight-schema-go-library"
+	"github.com/jsightapi/jsight-schema-go-library/errors"
+	"github.com/jsightapi/jsight-schema-go-library/fs"
+	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
 )
 
 type Document struct {

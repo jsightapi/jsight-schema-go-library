@@ -1,7 +1,7 @@
 package loader
 
 import (
-	"j/schema/internal/lexeme"
+	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
 )
 
 type embeddedLoader interface {

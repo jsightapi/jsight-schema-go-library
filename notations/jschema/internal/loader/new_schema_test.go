@@ -1,12 +1,13 @@
 package loader
 
 import (
-	"j/schema/bytes"
-	"j/schema/fs"
-	"j/schema/notations/jschema/internal/scanner"
-	"j/schema/notations/jschema/internal/schema"
-	"j/schema/notations/jschema/internal/schema/constraint"
 	"testing"
+
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
+	"github.com/jsightapi/jsight-schema-go-library/fs"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/scanner"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
 )
 
 func testSchema(areKeysOptionalByDefault bool) *schema.Schema {

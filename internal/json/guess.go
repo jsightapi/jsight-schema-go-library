@@ -1,7 +1,7 @@
 package json
 
 import (
-	"j/schema/bytes"
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
 )
 
 type GuessData struct {

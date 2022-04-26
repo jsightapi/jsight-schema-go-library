@@ -2,22 +2,38 @@ package errors
 
 import (
 	"fmt"
-	"j/schema/bytes"
-	"j/schema/fs"
 	"strings"
+
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
+	"github.com/jsightapi/jsight-schema-go-library/fs"
 )
 
-// It contains methods for forming a detailed description of the error for a person.
-// The resulting message will contain the filename, line number, and where the error occurred.
+// DocumentError contains methods for forming a detailed description of the error
+// for a person.
+// The resulting message will contain the filename, line number, and where the error
+// occurred.
 type DocumentError struct {
-	code              ErrorCode   // error code
-	message           string      // error message
-	file              *fs.File    // File containing jSchema or JSON data
-	index             bytes.Index // index of the byte in which the error was found
-	hasIndex          bool        // has the value for Index been defined
-	length            bytes.Index // Service field. Length of file content.
-	nl                byte        // Service field. New line symbol.
-	prepared          bool        // Preliminary calculations are made, the results of which are used in some methods.
+	code    ErrorCode
+	message string
+
+	// A file containing jSchema or JSON data.
+	file *fs.File
+
+	// index of the byte in which the error was found.
+	index bytes.Index
+
+	// hasIndex true if the value for Index have been defined.
+	hasIndex bool
+
+	// A length of file content.
+	length bytes.Index
+
+	// nl represent new line symbol.
+	nl byte
+
+	// prepared is true when preliminary calculations are made, the results of
+	// which are used in some methods.
+	prepared          bool
 	incorrectUserType string
 }
 
@@ -148,7 +164,7 @@ func (e DocumentError) lineEnd() bytes.Index {
 	return i
 }
 
-// return 0 if cannot determine the line number, or 1+ if it can
+// Line returns 0, if cannot determine the line number, or 1+ if it can.
 func (e *DocumentError) Line() uint {
 	if e.file == nil || len(e.file.Content()) == 0 {
 		return 0
@@ -176,7 +192,7 @@ func (e *DocumentError) Line() uint {
 	return n + 1
 }
 
-// return "" if cannot determine the source sub-string
+// SourceSubString returns empty string, if cannot determine the source sub-string.
 func (e *DocumentError) SourceSubString() string {
 	if e.file == nil || len(e.file.Content()) == 0 {
 		return ""

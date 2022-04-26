@@ -4,10 +4,11 @@ import (
 	"bytes"
 	stdErrors "errors"
 	"fmt"
-	"j/schema"
-	jbytes "j/schema/bytes"
-	"j/schema/errors"
-	"j/schema/internal/json"
+
+	jschema "github.com/jsightapi/jsight-schema-go-library"
+	jbytes "github.com/jsightapi/jsight-schema-go-library/bytes"
+	"github.com/jsightapi/jsight-schema-go-library/errors"
+	"github.com/jsightapi/jsight-schema-go-library/internal/json"
 )
 
 type Uuid struct{}

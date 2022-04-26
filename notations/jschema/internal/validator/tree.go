@@ -2,9 +2,10 @@ package validator
 
 import (
 	"fmt"
-	"j/schema/errors"
-	"j/schema/internal/lexeme"
-	"j/schema/internal/logger"
+
+	"github.com/jsightapi/jsight-schema-go-library/errors"
+	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
+	"github.com/jsightapi/jsight-schema-go-library/internal/logger"
 )
 
 // A tree of validators.

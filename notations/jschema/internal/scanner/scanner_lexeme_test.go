@@ -1,9 +1,10 @@
 package scanner
 
 import (
-	"j/schema/bytes"
-	"j/schema/fs"
 	"testing"
+
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
+	"github.com/jsightapi/jsight-schema-go-library/fs"
 )
 
 func TestScannerObjectLexeme(t *testing.T) {

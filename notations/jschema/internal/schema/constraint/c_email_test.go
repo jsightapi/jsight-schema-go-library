@@ -1,10 +1,11 @@
 package constraint
 
 import (
-	"j/schema/bytes"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
 )
 
 func TestEmail_Type(t *testing.T) {

@@ -1,8 +1,8 @@
 package internal
 
 import (
-	"j/schema"
-	"j/schema/errors"
+	jschema "github.com/jsightapi/jsight-schema-go-library"
+	"github.com/jsightapi/jsight-schema-go-library/errors"
 )
 
 type ValidationError struct {

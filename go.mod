@@ -1,4 +1,4 @@
-module j/schema
+module github.com/jsightapi/jsight-schema-go-library
 
 go 1.17
 

@@ -1,9 +1,9 @@
 package validator
 
 import (
-	"j/schema/internal/json"
-	"j/schema/notations/jschema/internal/schema"
-	"j/schema/notations/jschema/internal/schema/constraint"
+	"github.com/jsightapi/jsight-schema-go-library/internal/json"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
 )
 
 // Constructor for validator list for a single node. A single node can have multiple validators if, for example, the schema had an "OR" rule.

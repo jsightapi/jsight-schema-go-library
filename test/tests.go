@@ -1,10 +1,11 @@
 package test
 
 import (
-	"j/schema/errors"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/jsightapi/jsight-schema-go-library/errors"
 )
 
 func tests() []test {

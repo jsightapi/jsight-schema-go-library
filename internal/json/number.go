@@ -2,8 +2,9 @@ package json
 
 import (
 	"errors"
-	"j/schema/bytes"
 	"strconv"
+
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
 )
 
 // Number provides a method to work with numbers in the understanding of JSON (for

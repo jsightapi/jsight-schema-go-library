@@ -1,9 +1,10 @@
 package constraint
 
 import (
-	"j/schema"
-	"j/schema/internal/json"
 	"strings"
+
+	jschema "github.com/jsightapi/jsight-schema-go-library"
+	"github.com/jsightapi/jsight-schema-go-library/internal/json"
 )
 
 type TypesList struct {

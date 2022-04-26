@@ -1,9 +1,10 @@
 package test
 
 import (
-	"j/schema/errors"
 	"path/filepath"
 	"strings"
+
+	"github.com/jsightapi/jsight-schema-go-library/errors"
 )
 
 type test struct {

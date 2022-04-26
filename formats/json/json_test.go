@@ -3,11 +3,12 @@ package json
 import (
 	"errors"
 	"io"
-	"j/schema/reader"
-	"j/schema/test"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/jsightapi/jsight-schema-go-library/reader"
+	"github.com/jsightapi/jsight-schema-go-library/test"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

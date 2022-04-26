@@ -2,8 +2,9 @@ package validator
 
 import (
 	"fmt"
-	"j/schema/internal/lexeme"
-	"j/schema/notations/jschema/internal/schema"
+
+	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema"
 )
 
 // validator to process any nested structures.

@@ -2,11 +2,12 @@ package kit
 
 import (
 	"fmt"
-	lib "j/schema"
-	"j/schema/errors"
-	"j/schema/formats/json"
-	"j/schema/fs"
-	"j/schema/notations/jschema"
+
+	lib "github.com/jsightapi/jsight-schema-go-library"
+	"github.com/jsightapi/jsight-schema-go-library/errors"
+	"github.com/jsightapi/jsight-schema-go-library/formats/json"
+	"github.com/jsightapi/jsight-schema-go-library/fs"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema"
 )
 
 type Error interface {

@@ -1,11 +1,11 @@
 package loader
 
 import (
-	jschema "j/schema"
 	"testing"
 
-	"j/schema/notations/jschema/internal/mocks"
-	"j/schema/notations/jschema/internal/schema/constraint"
+	jschema "github.com/jsightapi/jsight-schema-go-library"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/mocks"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
 
 	"github.com/stretchr/testify/assert"
 )
