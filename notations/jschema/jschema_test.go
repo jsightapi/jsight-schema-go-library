@@ -991,6 +991,24 @@ func TestSchema_Check(t *testing.T) {
 	---------------------------------^`: {
 				given: `"foo" // {enum: ["foo", "bar", "bar"]}`,
 			},
+
+			`ERROR (code 302): Invalid character '2' in object key (inside comment)
+	in line 2 on file 
+	> "one": 1 // {min 25}
+	-------------------^`: {
+				given: `{
+	"one": 1 // {min 25}
+}`,
+			},
+
+			`ERROR (code 301): Invalid character "1" after object key
+	in line 2 on file 
+	> "one" 1
+	--------^`: {
+				given: `{
+	"one" 1
+}`,
+			},
 		}
 
 		for expected, c := range cc {
