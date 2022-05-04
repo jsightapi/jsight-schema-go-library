@@ -432,6 +432,16 @@ func TestSchema_Check(t *testing.T) {
 	"foo": 2 // {nullable: false, optional: true}
 }`: nil,
 			`"5" // {enum: ["5", 5]}`: nil,
+			`{ // {allOf: "@bar"}
+	"foo": 1
+}`: {
+				"@bar": `{ // {allOf: "@fizz"}
+	"bar": 2 // {or: ["integer", "string"]}
+}`,
+				"@fizz": `{
+	"fizz": 3 // {or: ["integer", "string"]}
+}`,
+			},
 		}
 
 		for content, types := range cc {
