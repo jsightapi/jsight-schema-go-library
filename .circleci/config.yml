@@ -1,6 +1,6 @@
 version: 2.1
 orbs:
-  common: jsight/common-ci@1.2.10
+  common: jsight/common-ci@1.3.5
 
 parameters:
   go-version:
@@ -13,8 +13,8 @@ workflows:
       - common/go-lint:
           context: online-editor-development
           go-version: << pipeline.parameters.go-version >>
-          run-mod-vendor: true
-          golangci-lint-version: 1.46.2
+          # run-mod-vendor: true
+          # golangci-lint-version: 1.46.2
 
       - common/go-test:
           context: online-editor-development
