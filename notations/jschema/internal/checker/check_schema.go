@@ -58,6 +58,12 @@ func (c *checkSchema) checkType(name string, typ schema.Type, ss map[string]sche
 }
 
 func mergeTypes(tt1, tt2 map[string]schema.Type) map[string]schema.Type {
+	if len(tt1) == 0 {
+		return tt2
+	}
+	if len(tt2) == 0 {
+		return tt1
+	}
 	for k, v := range tt1 {
 		tt2[k] = v
 	}
