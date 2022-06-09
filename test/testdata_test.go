@@ -6,8 +6,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/jsightapi/jsight-schema-go-library/errors"
+	"github.com/jsightapi/jsight-schema-go-library/formats/json"
 	"github.com/jsightapi/jsight-schema-go-library/fs"
 	"github.com/jsightapi/jsight-schema-go-library/kit"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema"
 	"github.com/jsightapi/jsight-schema-go-library/reader"
 )
 
@@ -37,9 +40,23 @@ func validate(t test) kit.Error {
 	jsonFile := reader.Read(path.Join(GetProjectRoot(), t.relativePath, t.json))
 	types := readTypes(t.relativePath, t.types)
 
-	err := kit.ValidateJson(schemaFile, types, jsonFile, false)
+	//err := kit.ValidateJson(schemaFile, types, jsonFile, false)
+	sc := jschema.FromFile(schemaFile)
 
-	return err
+	for name, f := range types {
+		if len(f.Content()) == 0 {
+			return errors.NewDocumentError(schemaFile, errors.Format(errors.ErrEmptyType, name))
+		}
+		if err := sc.AddType(name, jschema.FromFile(f)); err != nil {
+			return kit.ConvertError(f, err)
+		}
+	}
+
+	err := sc.Validate(json.FromFile(jsonFile))
+	if err != nil {
+		return kit.ConvertError(schemaFile, err)
+	}
+	return nil
 }
 
 func readTypes(relativePath string, filenames []string) map[string]*fs.File {
