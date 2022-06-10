@@ -31,7 +31,7 @@ func TestCheckRootSchema(t *testing.T) {
 		}
 
 		loader.CompileAllOf(rootSchema)
-
+		loader.AddUnnamedTypes(rootSchema)
 		CheckRootSchema(rootSchema)
 	}
 
@@ -799,8 +799,8 @@ func TestCheckRootSchema(t *testing.T) {
 			{`2 // {or: [ {type: "@type"} ]}`, []typ{}, errors.ErrOneElementInArrayInOrRule},
 			{`2 // {or: [ "@type" ]}`, []typ{}, errors.ErrOneElementInArrayInOrRule},
 
-			//{`2 // {or: [ {type: "integer"}, {minLength:1} ]}`, []typ{}, errors.ErrIncompatibleJsonType},
-			//{`2 // {or: [ {type: "integer"}, {min:1, minLength:1} ]}`, []typ{}, errors.ErrIncompatibleJsonType},
+			// {`2 // {or: [ {type: "integer"}, {minLength:1} ]}`, []typ{}, errors.ErrIncompatibleJsonType},
+			// {`2 // {or: [ {type: "integer"}, {min:1, minLength:1} ]}`, []typ{}, errors.ErrIncompatibleJsonType},
 
 			{`2 // {or: [ "some_string" ]}`, []typ{}, errors.ErrUnknownType},
 			{`2 // {or: [ {type: "integer", min: 0, min: 0}, {type: "string"} ]}`, []typ{}, errors.ErrDuplicateRule},

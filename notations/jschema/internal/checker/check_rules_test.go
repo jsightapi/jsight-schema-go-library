@@ -44,7 +44,7 @@ func TestCheckRules(t *testing.T) {
 		}
 
 		loader.CompileAllOf(rootSchema)
-
+		loader.AddUnnamedTypes(rootSchema)
 		CheckRootSchema(rootSchema)
 	}
 
