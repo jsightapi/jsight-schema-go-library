@@ -1,0 +1,3 @@
+{
+  "cat_name": "Tom" // {or: [{type: "integer"}, {type: "string"}]}
+}

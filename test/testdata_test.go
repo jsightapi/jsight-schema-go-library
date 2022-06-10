@@ -18,7 +18,7 @@ func TestData(t *testing.T) {
 
 			if tt.want == nil {
 				if err != nil {
-					t.Errorf("Unexpected error\n\tFile: %s\n\tCode: %v\n\tMessage: %s", err.Filename(), err.ErrCode(), err.Message())
+					t.Errorf("Unexpected error\n\tFile: %s\n\tPosition: %d\n\tCode: %v\n\tMessage: %s", err.Filename(), err.Position(), err.ErrCode(), err.Message())
 				}
 			} else {
 				want := (int)(tt.want.Code())
