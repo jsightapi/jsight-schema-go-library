@@ -10,6 +10,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestIsSpace(t *testing.T) {
+	for c := byte(0); c < 255; c++ {
+		t.Run(string(c), func(t *testing.T) {
+			actual := IsSpace(c)
+			assert.Equal(t, c == ' ' || c == '\t' || c == '\n' || c == '\r', actual)
+		})
+	}
+}
+
 func TestBytes_OneOf(t *testing.T) {
 	b := Bytes("foo")
 

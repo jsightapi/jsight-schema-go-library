@@ -103,6 +103,24 @@ func TestEnum_SetComment(t *testing.T) {
 	})
 }
 
+func TestEnum_SetRuleName(t *testing.T) {
+	t.Run("positive", func(t *testing.T) {
+		e := &Enum{}
+
+		e.SetRuleName("foo")
+
+		assert.Equal(t, "foo", e.ruleName)
+		assert.Equal(t, "foo", e.RuleName())
+	})
+
+	t.Run("negative", func(t *testing.T) {
+		assert.Panics(t, func() {
+			var e *Enum
+			e.SetRuleName("panic")
+		})
+	})
+}
+
 func TestEnum_Validate(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
 		Enum{

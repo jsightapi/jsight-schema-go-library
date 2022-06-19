@@ -31,12 +31,11 @@ func testSchema(areKeysOptionalByDefault bool) *schema.Schema {
 		"type": @sub
 	}`
 
-	file := new(fs.File)
-	file.SetContent(bytes.Bytes(testRootSchema))
+	file := fs.NewFile("", bytes.Bytes(testRootSchema))
 	rootSchema := NewSchemaForSdk(file, areKeysOptionalByDefault) // required by default
 
 	f := fs.NewFile("", bytes.Bytes(testTypeSchema))
-	typeSchema := LoadSchema(scanner.NewSchemaScanner(f, false), rootSchema, areKeysOptionalByDefault)
+	typeSchema := LoadSchema(scanner.New(f), rootSchema, areKeysOptionalByDefault, nil)
 	rootSchema.AddNamedType(testTypeName, typeSchema, f, 0)
 
 	return rootSchema

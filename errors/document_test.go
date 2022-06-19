@@ -1,47 +1,60 @@
 package errors
 
 import (
+	"fmt"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/jsightapi/jsight-schema-go-library/bytes"
 	"github.com/jsightapi/jsight-schema-go-library/fs"
 )
 
-func TestDetectNewLineSymbol(t *testing.T) {
-	f := fs.NewFile("", bytes.Bytes("abc"))
-	e := DocumentError{file: f}
-	e.preparation()
-	if e.nl != '\n' {
-		t.Errorf("Incorrect new line symbol %#v", e.nl)
+func TestDocumentError_preparation(t *testing.T) {
+	t.Run("positive", func(t *testing.T) {
+		t.Run("not prepared", func(t *testing.T) {
+			e := DocumentError{file: fs.NewFile("", []byte("123456"))}
+			e.preparation()
+
+			assert.EqualValues(t, 6, e.length)
+			assert.EqualValues(t, '\n', e.nl)
+		})
+
+		t.Run("already prepared", func(t *testing.T) {
+			e := DocumentError{prepared: true}
+			e.preparation()
+
+			assert.EqualValues(t, 0, e.length)
+			assert.EqualValues(t, 0, e.nl)
+		})
+	})
+
+	t.Run("negative", func(t *testing.T) {
+		assert.PanicsWithValue(t, "The file is not specified", func() {
+			(&DocumentError{}).preparation()
+		})
+	})
+}
+
+func TestDocumentError_detectNewLineSymbol(t *testing.T) {
+	cc := map[string]byte{
+		"abc":     '\n',
+		"abc\n":   '\n',
+		"abc\r\n": '\n',
+		"abc\r":   '\r',
+		"abc\n\r": '\r',
 	}
 
-	f = fs.NewFile("", bytes.Bytes("abc\n"))
-	e = DocumentError{file: f}
-	e.preparation()
-	if e.nl != '\n' {
-		t.Errorf("Incorrect new line symbol %#v", e.nl)
-	}
+	nameReplacer := strings.NewReplacer("\n", "\\n", "\r", "\\r")
 
-	f = fs.NewFile("", bytes.Bytes("abc\r\n"))
-	e = DocumentError{file: f}
-	e.preparation()
-	if e.nl != '\n' {
-		t.Errorf("Incorrect new line symbol %#v", e.nl)
-	}
+	for given, expected := range cc {
+		t.Run(nameReplacer.Replace(given), func(t *testing.T) {
+			e := DocumentError{file: fs.NewFile("", []byte(given))}
+			e.detectNewLineSymbol()
 
-	f = fs.NewFile("", bytes.Bytes("abc\r"))
-	e = DocumentError{file: f}
-	e.preparation()
-	if e.nl != '\r' {
-		t.Errorf("Incorrect new line symbol %#v", e.nl)
-	}
-
-	f = fs.NewFile("", bytes.Bytes("abc\n\r"))
-	e = DocumentError{file: f}
-	e.preparation()
-	if e.nl != '\r' {
-		t.Errorf("Incorrect new line symbol %#v", e.nl)
+			assert.Equal(t, string(expected), string(e.nl))
+		})
 	}
 }
 
@@ -140,94 +153,78 @@ var data = []testData{
 	},
 }
 
-func TestLineBegin(t *testing.T) {
+func TestDocumentError_lineBeginning(t *testing.T) {
 	for _, d := range data {
 		for _, v := range d.valid {
-			file := new(fs.File)
-			file.SetContent(bytes.Bytes(d.source))
+			t.Run(fmt.Sprintf("%s %d", d.source, v.index), func(t *testing.T) {
+				file := fs.NewFile("", bytes.Bytes(d.source))
 
-			e := DocumentError{}
-			e.SetFile(file)
-			e.SetIndex(v.index)
-			e.preparation()
+				e := newFakeDocumentError(file, v.index)
 
-			begin := e.lineBeginning()
-			if begin != v.begin {
-				t.Errorf("Incorrect line beginning [%d] for index [%d] (the expected value is [%d]) on source %#v", begin, v.index, v.begin, d.source)
-			}
+				begin := e.lineBeginning()
+				assert.Equal(t, v.begin, begin)
+			})
 		}
 	}
 }
 
-func TestLineEnd(t *testing.T) {
+func TestDocumentError_lineEnd(t *testing.T) {
 	for _, d := range data {
 		for _, v := range d.valid {
-			file := new(fs.File)
-			file.SetContent(bytes.Bytes(d.source))
+			t.Run(fmt.Sprintf("%s %d", d.source, v.index), func(t *testing.T) {
+				file := fs.NewFile("", bytes.Bytes(d.source))
 
-			e := DocumentError{}
-			e.SetFile(file)
-			e.SetIndex(v.index)
-			e.preparation()
+				e := newFakeDocumentError(file, v.index)
 
-			end := e.lineEnd()
-			if end != v.end {
-				t.Errorf("Incorrect line end [%d] for index [%d] (the expected value is [%d]) on source %#v", end, v.index, v.end, d.source)
-			}
+				end := e.lineEnd()
+				assert.Equal(t, v.end, end)
+			})
 		}
 	}
 }
 
-func TestLineNumber(t *testing.T) {
+func TestNewDocumentError_Line(t *testing.T) {
 	for _, d := range data {
 		for _, v := range d.valid {
-			file := new(fs.File)
-			file.SetContent(bytes.Bytes(d.source))
+			t.Run(fmt.Sprintf("%s %d", d.source, v.index), func(t *testing.T) {
+				file := fs.NewFile("", bytes.Bytes(d.source))
 
-			e := DocumentError{}
-			e.SetFile(file)
-			e.SetIndex(v.index)
-			e.preparation()
+				e := newFakeDocumentError(file, v.index)
 
-			n := e.Line()
-			if n != v.lineNumber {
-				t.Errorf("Incorrect line number [%d] for index [%d] (the expected value is [%d]) on source %#v", n, v.index, v.lineNumber, d.source)
-			}
+				n := e.Line()
+				assert.Equal(t, v.lineNumber, n)
+			})
 		}
 	}
 }
 
-func TestSourceString(t *testing.T) {
+func TestDocumentError_SourceSubString(t *testing.T) {
 	for _, d := range data {
 		for _, v := range d.valid {
-			file := new(fs.File)
-			file.SetContent(bytes.Bytes(d.source))
+			t.Run(fmt.Sprintf("%s %d", d.source, v.index), func(t *testing.T) {
+				file := fs.NewFile("", bytes.Bytes(d.source))
 
-			e := DocumentError{}
-			e.SetFile(file)
-			e.SetIndex(v.index)
-			e.preparation()
+				e := newFakeDocumentError(file, v.index)
 
-			str := e.SourceSubString()
-			if str != v.str {
-				t.Errorf("Incorrect string %#v for index [%d] (the expected value is \"%s\") on source %#v", str, v.index, v.str, d.source)
-			}
+				str := e.SourceSubString()
+				assert.Equal(t, v.str, str)
+			})
 		}
 	}
+
+	t.Run("too long source substring", func(t *testing.T) {
+		file := fs.NewFile("", bytes.Bytes(strings.Repeat("123456789 ", 100)))
+
+		e := newFakeDocumentError(file, 0)
+
+		assert.Len(t, e.SourceSubString(), 200)
+	})
 }
 
-func TestTooLongSourceSubstringLength(t *testing.T) {
-	data := bytes.Bytes(strings.Repeat("123456789 ", 100))
-
-	file := new(fs.File)
-	file.SetContent(data)
-
+func newFakeDocumentError(f *fs.File, idx bytes.Index) DocumentError {
 	e := DocumentError{}
-	e.SetFile(file)
-	e.SetIndex(0)
+	e.SetFile(f)
+	e.SetIndex(idx)
 	e.preparation()
-
-	if len(e.SourceSubString()) != 200 {
-		t.Error("Incorrect length of substring for too long source")
-	}
+	return e
 }

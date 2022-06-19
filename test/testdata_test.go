@@ -40,7 +40,6 @@ func validate(t test) kit.Error {
 	jsonFile := reader.Read(path.Join(GetProjectRoot(), t.relativePath, t.json))
 	types := readTypes(t.relativePath, t.types)
 
-	//err := kit.ValidateJson(schemaFile, types, jsonFile, false)
 	sc := jschema.FromFile(schemaFile)
 
 	for name, f := range types {
@@ -68,8 +67,7 @@ func readTypes(relativePath string, filenames []string) map[string]*fs.File {
 		ext := filepath.Ext(filename)
 		typeName := "@" + strings.TrimSuffix(filename, ext)
 
-		file := reader.Read(absolutePath)
-		file.SetName(typeName)
+		file := reader.ReadWithName(absolutePath, typeName)
 
 		types[typeName] = file
 	}
