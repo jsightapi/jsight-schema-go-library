@@ -83,7 +83,7 @@ func (c Enum) ASTNode() jschema.RuleASTNode {
 
 	for _, b := range c.items {
 		an := newRuleASTNode(
-			json.Guess(b.value).JsonType().ToJSONType(),
+			json.Guess(b.value).JsonType().ToTokenType(),
 			b.value.Unquote().String(),
 			source,
 		)

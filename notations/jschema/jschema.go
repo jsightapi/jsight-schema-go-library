@@ -126,7 +126,7 @@ func buildExample(node internalSchema.Node) []byte {
 		for i, childNode := range children {
 			key := objectNode.Key(i)
 			b = append(b, '"')
-			b = append(b, []byte(key.Name)...)
+			b = append(b, []byte(key.Key)...)
 			b = append(b, '"', ':')
 			b = append(b, buildExample(childNode)...)
 			if i+1 != length {
@@ -370,7 +370,9 @@ func collectUserTypesFromAllOfConstraint(node internalSchema.Node, uu map[string
 }
 
 func collectUserTypesObjectNode(node *internalSchema.ObjectNode, uu map[string]struct{}) {
-	node.Keys().EachSafe(func(k string, v internalSchema.InnerObjectNodeKey) {
+	for _, v := range node.Keys().Data {
+		k := v.Key
+
 		if v.IsShortcut {
 			if k[0] == '@' {
 				uu[k] = struct{}{}
@@ -381,7 +383,7 @@ func collectUserTypesObjectNode(node *internalSchema.ObjectNode, uu map[string]s
 		if ok {
 			collectUserTypes(c, uu)
 		}
-	})
+	}
 }
 
 func (s *Schema) buildASTNode() jschema.ASTNode {
@@ -389,8 +391,7 @@ func (s *Schema) buildASTNode() jschema.ASTNode {
 	if root == nil {
 		// This case will be handled in loader.CompileBasic.
 		return jschema.ASTNode{
-			Properties: &jschema.ASTNodes{},
-			Rules:      &jschema.RuleASTNodes{},
+			Rules: &jschema.RuleASTNodes{},
 		}
 	}
 
