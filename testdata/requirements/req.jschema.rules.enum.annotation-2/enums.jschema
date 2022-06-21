@@ -1,8 +1,2 @@
-[
-    //pets
-    "CAT", 
-    "DOG", 
-    //wild
-    "FROG"
-]
+"AAA" // {enum: @foo}
 

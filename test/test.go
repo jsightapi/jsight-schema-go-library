@@ -12,6 +12,7 @@ type test struct {
 	schema       string
 	json         string
 	types        []string
+	enums        []string
 	want         errors.Err
 }
 

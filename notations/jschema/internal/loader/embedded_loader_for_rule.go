@@ -101,7 +101,6 @@ func (rl *ruleLoader) commentTextEnd(lex lexeme.LexEvent) {
 func (rl *ruleLoader) ruleKeyOrObjectEnd(lex lexeme.LexEvent) {
 	switch lex.Type() {
 	case lexeme.ObjectKeyBegin, lexeme.NewLine:
-		return
 	case lexeme.ObjectKeyEnd:
 		rl.ruleNameLex = lex
 		rl.stateFunc = rl.ruleValueBegin
@@ -114,7 +113,10 @@ func (rl *ruleLoader) ruleKeyOrObjectEnd(lex lexeme.LexEvent) {
 
 func (rl *ruleLoader) objectEndAfterRuleName(lex lexeme.LexEvent) {
 	switch lex.Type() {
-	case lexeme.ObjectValueEnd:
+	case lexeme.ObjectKeyBegin, lexeme.ObjectValueEnd, lexeme.NewLine:
+	case lexeme.ObjectKeyEnd:
+		rl.ruleNameLex = lex
+		rl.stateFunc = rl.ruleValueBegin
 	case lexeme.ObjectEnd:
 		rl.stateFunc = rl.commentTextBegin
 	default:
