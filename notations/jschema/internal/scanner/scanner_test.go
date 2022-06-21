@@ -17,7 +17,7 @@ func Test_newScanner(t *testing.T) {
 
 	f := fs.NewFile("foo", bytes.Bytes(content))
 
-	s := newScanner(f)
+	s := New(f)
 
 	assert.NotNil(t, s.step)
 	assert.Equal(t, f, s.file)
@@ -50,7 +50,7 @@ some text
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		NewSchemaScanner(file, true).Length()
+		New(file, ComputeLength).Length()
 	}
 }
 
@@ -67,7 +67,7 @@ func TestScanner_Length(t *testing.T) {
 	for given, expected := range tests {
 		t.Run(given, func(t *testing.T) {
 			assert.NotPanics(t, func() {
-				actual := NewSchemaScanner(fs.NewFile("", bytes.Bytes(given)), true).
+				actual := New(fs.NewFile("", bytes.Bytes(given)), ComputeLength).
 					Length()
 				assert.Equal(t, expected, actual)
 			})
@@ -701,10 +701,8 @@ func TestScanner_Next(t *testing.T) {
 
 		for _, tst := range cc {
 			t.Run(tst.content, func(t *testing.T) {
-				file := new(fs.File)
-				file.SetContent(bytes.Bytes(tst.content))
-
-				s := newScanner(file)
+				file := fs.NewFile("", bytes.Bytes(tst.content))
+				s := New(file)
 				processingValid(t, s, tst)
 			})
 		}
@@ -768,47 +766,13 @@ bbb"}`,
 		for _, content := range cc {
 			t.Run(content, func(t *testing.T) {
 				assert.Panics(t, func() {
-					s := newScanner(fs.NewFile("", bytes.Bytes(content)))
+					s := New(fs.NewFile("", bytes.Bytes(content)))
 					for {
 						if _, ok := s.Next(); ok == false {
 							break
 						}
 					}
 				})
-			})
-		}
-	})
-}
-
-func TestScanner_isSpace(t *testing.T) {
-	t.Run("positive", func(t *testing.T) {
-		cc := []byte{
-			' ',
-			'\t',
-			'\n',
-			'\r',
-		}
-
-		for _, c := range cc {
-			t.Run(string(c), func(t *testing.T) {
-				assert.True(t, (&Scanner{}).isSpace(c))
-			})
-		}
-	})
-
-	t.Run("negative", func(t *testing.T) {
-		cc := make([]byte, 0, 255)
-
-		for i := 0; i <= 255; i++ {
-			if i == ' ' || i == '\t' || i == '\n' || i == '\r' {
-				continue
-			}
-			cc = append(cc, byte(i))
-		}
-
-		for _, c := range cc {
-			t.Run(string(c), func(t *testing.T) {
-				assert.False(t, (&Scanner{}).isSpace(c))
 			})
 		}
 	})
@@ -850,7 +814,7 @@ func Test_stateFoundRootValue(t *testing.T) {
 	for b, c := range cc {
 		t.Run(string(b), func(t *testing.T) {
 			f := &fs.File{}
-			s := newScanner(f)
+			s := New(f)
 
 			st := stateFoundRootValue(s, b)
 
@@ -894,7 +858,7 @@ func Test_stateFoundObjectValueBegin(t *testing.T) {
 
 	for n, c := range cc {
 		t.Run(n, func(t *testing.T) {
-			s := newScanner(&fs.File{})
+			s := New(&fs.File{})
 			st := stateFoundObjectValueBegin(s, c.char)
 			assert.Equal(t, c.expectedState, st)
 			assert.Len(t, s.finds, len(c.expectedLexEvents))
@@ -937,7 +901,7 @@ func Test_stateFoundArrayItemBeginOrEmpty(t *testing.T) {
 
 	for n, c := range cc {
 		t.Run(n, func(t *testing.T) {
-			s := newScanner(&fs.File{})
+			s := New(&fs.File{})
 			st := stateFoundArrayItemBeginOrEmpty(s, c.char)
 			assert.Equal(t, c.expectedState, st)
 			assert.Len(t, s.finds, len(c.expectedLexEvents))

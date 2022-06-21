@@ -9,14 +9,15 @@ type dir struct {
 	schema       string
 	json         []string
 	types        []string
+	enums        []string
 }
 
 func newDir(relativePath string) dir {
 	return dir{
 		relativePath: relativePath,
-		schema:       "",
 		json:         make([]string, 0, 5),
 		types:        make([]string, 0, 5),
+		enums:        make([]string, 0, 5),
 	}
 }
 
@@ -35,6 +36,8 @@ func (d *dir) appendFilename(filename string) {
 		d.appendJson(filename)
 	case ".type":
 		d.appendType(filename)
+	case ".enum":
+		d.appendEnum(filename)
 	default:
 		panic("Unknown file type: " + filename)
 	}
@@ -53,6 +56,10 @@ func (d *dir) appendJson(filename string) {
 
 func (d *dir) appendType(filename string) {
 	d.types = append(d.types, filename)
+}
+
+func (d *dir) appendEnum(filename string) {
+	d.enums = append(d.enums, filename)
 }
 
 func (d dir) String() string {

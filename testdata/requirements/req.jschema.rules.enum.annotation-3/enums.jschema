@@ -1,2 +1,7 @@
-"AAA" // { enum: ["AAA", "BBB"] }
+{
+    "foo": "AAA" /* {
+        enum: @foo,
+        optional: true
+    } */
+}
 

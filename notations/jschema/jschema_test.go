@@ -1,6 +1,7 @@
 package jschema
 
 import (
+	stdErrors "errors"
 	"fmt"
 	"testing"
 
@@ -12,10 +13,12 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/errors"
 	"github.com/jsightapi/jsight-schema-go-library/formats/json"
 	"github.com/jsightapi/jsight-schema-go-library/fs"
+	"github.com/jsightapi/jsight-schema-go-library/internal/mocks"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/loader"
-	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/mocks"
+	schemaMocks "github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/mocks"
 	internalSchema "github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/rules"
 	"github.com/jsightapi/jsight-schema-go-library/notations/regex"
 )
 
@@ -77,11 +80,14 @@ some extra text`: 26,
 			"[]  // {minItems: 0} - Description  ":                                34,
 			"[]  // {minItems: 0} - Description \n some data":                     34,
 			`"userType2": 12 // {type: "@catId", optional: true, nullable: true}`: 11,
+			`[
+	{} // {type: @json}
+]`: 24,
 		}
 
 		for given, expected := range cc {
 			t.Run(given, func(t *testing.T) {
-				l, err := FromFile(fs.NewFile("foo", []byte(given))).Len()
+				l, err := New("foo", []byte(given)).Len()
 				require.NoError(t, err)
 				assert.Equal(t, int(expected), int(l))
 			})
@@ -89,19 +95,11 @@ some extra text`: 26,
 	})
 
 	t.Run("negative", func(t *testing.T) {
-		cc := map[string]string{
-			"invalid": `ERROR (code 301): Invalid character "i" looking for beginning of value
+		_, err := New("foo", []byte("invalid")).Len()
+		assert.EqualError(t, err, `ERROR (code 301): Invalid character "i" looking for beginning of value
 	in line 1 on file foo
 	> invalid
-	--^`,
-		}
-
-		for given, expected := range cc {
-			t.Run(given, func(t *testing.T) {
-				_, err := FromFile(fs.NewFile("foo", []byte(given))).Len()
-				assert.EqualError(t, err, expected)
-			})
-		}
+	--^`)
 	})
 }
 
@@ -110,7 +108,7 @@ func BenchmarkSchema_Len(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		b.StopTimer()
-		s := FromFile(fs.NewFile("foo", []byte(`[
+		s := New("foo", []byte(`[
   {
     "id": 1,
     "first_name": "Cecilia",
@@ -119,7 +117,7 @@ func BenchmarkSchema_Len(b *testing.B) {
     "gender": "Female",
     "ip_address": "14.224.72.249"
   }
-]`)))
+]`))
 		b.StartTimer()
 		l, err := s.Len()
 		require.NoError(b, err)
@@ -129,7 +127,7 @@ func BenchmarkSchema_Len(b *testing.B) {
 
 func TestSchema_Example(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
-		content, err := FromFile(fs.NewFile("schema", []byte(`
+		content, err := New("schema", []byte(`
 {
 	"i": 123, // {min: 1}
 	"s": "str",
@@ -140,7 +138,7 @@ func TestSchema_Example(t *testing.T) {
 		"ii": 999 // {max: 999}
 	}
 }
-`))).
+`)).
 			Example()
 		require.NoError(t, err)
 		assert.Equal(t,
@@ -150,7 +148,7 @@ func TestSchema_Example(t *testing.T) {
 	})
 
 	t.Run("negative", func(t *testing.T) {
-		_, err := FromFile(fs.NewFile("schema", []byte("invalid"))).
+		_, err := New("schema", []byte("invalid")).
 			Example()
 		assert.EqualError(t, err, `ERROR (code 301): Invalid character "i" looking for beginning of value
 	in line 1 on file schema
@@ -208,7 +206,7 @@ func Test_buildExample(t *testing.T) {
 
 		t.Run("have TypesListConstraintType constraint", func(t *testing.T) {
 			assert.PanicsWithValue(t, errors.ErrUserTypeFound, func() {
-				n := &mocks.Node{}
+				n := &schemaMocks.Node{}
 				n.
 					On("Constraint", constraint.TypesListConstraintType).
 					Return(constraint.NewType(nil, jschema.RuleASTNodeSourceManual))
@@ -261,101 +259,177 @@ func TestSchema_AddType(t *testing.T) {
 }
 
 func TestSchema_AddRule(t *testing.T) {
-	err := (&Schema{}).AddRule("", nil)
-	assert.EqualError(t, err, "not supported yet")
+	t.Run("positive", func(t *testing.T) {
+		const name = "foo"
+		r := mocks.NewRule(t)
+		r.On("Check").Return(nil)
+		s := New("", nil)
+
+		err := s.AddRule(name, r)
+
+		require.NoError(t, err)
+		assert.Len(t, s.rules, 1)
+		assert.Contains(t, s.rules, name)
+		assert.Same(t, r, s.rules[name])
+	})
+
+	t.Run("negative", func(t *testing.T) {
+		t.Run("already compiled", func(t *testing.T) {
+			s := New("foo", nil)
+			s.inner = &internalSchema.Schema{}
+
+			err := s.AddRule("foo", mocks.NewRule(t))
+
+			assert.EqualError(t, err, "schema is already compiled")
+			assert.Len(t, s.rules, 0)
+		})
+
+		t.Run("nil rule", func(t *testing.T) {
+			s := New("", nil)
+
+			err := s.AddRule("", nil)
+
+			assert.EqualError(t, err, "rule is nil")
+			assert.Len(t, s.rules, 0)
+		})
+
+		t.Run("invalid rule", func(t *testing.T) {
+			r := mocks.NewRule(t)
+			r.On("Check").Return(stdErrors.New("fake error"))
+			s := New("", nil)
+
+			err := s.AddRule("", r)
+
+			assert.EqualError(t, err, "fake error")
+			assert.Len(t, s.rules, 0)
+		})
+	})
 }
 
 //goland:noinspection HttpUrlsUsage
 func TestSchema_Check(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
-		cc := map[string]map[string]string{
-			`{"foo": "bar"}`:         nil,
-			`{} // {type: "object"}`: nil,
-			`[] // {type: "array"}`:  nil,
+		cc := map[string]struct {
+			types map[string]string
+			enums map[string]string
+		}{
+			`{"foo": "bar"}`:         {},
+			`{} // {type: "object"}`: {},
+			`[] // {type: "array"}`:  {},
 			"@foo": {
-				"@foo": `{"foo": "bar"}`,
+				types: map[string]string{
+					"@foo": `{"foo": "bar"}`,
+				},
 			},
-			`{} // {or: [{type: "object"}, {type: "array"}]}`:     nil,
-			`[] // {or: [{type: "object"}, {type: "array"}]}`:     nil,
-			`{} // {or: [{type: "object"}, {type: "string"}]}`:    nil,
-			`"foo" // {or: [{type: "object"}, {type: "string"}]}`: nil,
-			`[] // {or: [{type: "array"}, {type: "string"}]}`:     nil,
-			`"foo" // {or: [{type: "array"}, {type: "string"}]}`:  nil,
+			`{} // {or: [{type: "object"}, {type: "array"}]}`:     {},
+			`[] // {or: [{type: "object"}, {type: "array"}]}`:     {},
+			`{} // {or: [{type: "object"}, {type: "string"}]}`:    {},
+			`"foo" // {or: [{type: "object"}, {type: "string"}]}`: {},
+			`[] // {or: [{type: "array"}, {type: "string"}]}`:     {},
+			`"foo" // {or: [{type: "array"}, {type: "string"}]}`:  {},
 			`"CAT-123" // {type: "@catId"}`: {
-				"@catId": `"CAT-123"`,
+				types: map[string]string{
+					"@catId": `"CAT-123"`,
+				},
 			},
 			`"foo" // {or: [{type: "string"}, {type: "@foo"}]}`: {
-				"@foo": `{"key": "value"}`,
+				types: map[string]string{
+					"@foo": `{"key": "value"}`,
+				},
 			},
 			"@foo | @bar": {
-				"@foo": `{"foo": "bar"}`,
-				"@bar": `{"foo": "bar"}`,
+				types: map[string]string{
+					"@foo": `{"foo": "bar"}`,
+					"@bar": `{"foo": "bar"}`,
+				},
 			},
 			`{"myCat": @cat}`: {
-				"@cat": `{"foo": "bar"}`,
+				types: map[string]string{
+					"@cat": `{"foo": "bar"}`,
+				},
 			},
 			`{
 				"myCatList": [
 					@cat
 				]
 			}`: {
-				"@cat": `{"foo": "bar"}`,
+				types: map[string]string{
+					"@cat": `{"foo": "bar"}`,
+				},
 			},
 			`{
 				"myCat": @cat // {optional: true}
 			}`: {
-				"@cat": "42",
+				types: map[string]string{
+					"@cat": "42",
+				},
 			},
 			`[
 				@cat | @dog | @frog
 			]`: {
-				"@cat":  `{"foo": "bar"}`,
-				"@dog":  `{"foo": "bar"}`,
-				"@frog": `{"foo": "bar"}`,
+				types: map[string]string{
+					"@cat":  `{"foo": "bar"}`,
+					"@dog":  `{"foo": "bar"}`,
+					"@frog": `{"foo": "bar"}`,
+				},
 			},
 			`{
 				"myPet": @cat | @dog // {optional: true}
 			}`: {
-				"@cat": `{"foo": "bar"}`,
-				"@dog": `{"foo": "bar"}`,
+				types: map[string]string{
+					"@cat": `{"foo": "bar"}`,
+					"@dog": `{"foo": "bar"}`,
+				},
 			},
 			`{
 				"myPetId": "CAT-123" // {or: ["@catId", "@dogId"]}
 			}`: {
-				"@catId": `"CAT-123"`,
-				"@dogId": `"DOG-123"`,
+				types: map[string]string{
+					"@catId": `"CAT-123"`,
+					"@dogId": `"DOG-123"`,
+				},
 			},
 			`{
 				"@catsEmail" : @cat
 			}`: {
-				"@cat": `{"foo": "bar"}`,
+				types: map[string]string{
+					"@cat": `{"foo": "bar"}`,
+				},
 			},
 			`{
 				@catsEmail : @cat
 			}`: {
-				"@cat":       `{"foo": "bar"}`,
-				"@catsEmail": `"email@address.com"`,
+				types: map[string]string{
+					"@cat":       `{"foo": "bar"}`,
+					"@catsEmail": `"email@address.com"`,
+				},
 			},
-			"42 // {const: true}":  nil,
-			"{} // {const: false}": nil,
+			"42 // {const: true}":  {},
+			"{} // {const: false}": {},
 			`{ // {const: false}
 				"foo": "bar"
-			}`: nil,
-			"[] // {const: false}": nil,
+			}`: {},
+			"[] // {const: false}": {},
 			`[ // {const: false}
 				1,
 				2,
 				3
-			]`: nil,
+			]`: {},
 			`42 // {type: "@foo", const: false}`: {
-				"@foo": "42",
+				types: map[string]string{
+					"@foo": "42",
+				},
 			},
 			"@foo // {const: false}": {
-				"@foo": `{"foo": "bar"}`,
+				types: map[string]string{
+					"@foo": `{"foo": "bar"}`,
+				},
 			},
 			"@foo | @bar // {const: false}": {
-				"@foo": `{"foo": "bar"}`,
-				"@bar": `{"foo": "bar"}`,
+				types: map[string]string{
+					"@foo": `{"foo": "bar"}`,
+					"@bar": `{"foo": "bar"}`,
+				},
 			},
 			`{
 				"data": "abc" /* {
@@ -364,19 +438,23 @@ func TestSchema_Check(t *testing.T) {
 						{type: "integer", min: 0}
 					]
 				} */
-			}`: nil,
+			}`: {},
 			`[ // {type: "array", maxItems: 100}
 		1, // {type: "mixed", or: [{type: "integer"}, {type: "string"}]}
 		2 // {or: [{type: "integer"}, {type: "string"}]}
 ]`: {
-				"@dog": `{"foo": "bar"}`,
-				"@pig": `{"foo": "bar"}`,
+				types: map[string]string{
+					"@dog": `{"foo": "bar"}`,
+					"@pig": `{"foo": "bar"}`,
+				},
 			},
 			`[ // {type: "array", maxItems: 100}
 		@dog | @pig
 ]`: {
-				"@dog": `{"foo": "bar"}`,
-				"@pig": `{"foo": "bar"}`,
+				types: map[string]string{
+					"@dog": `{"foo": "bar"}`,
+					"@pig": `{"foo": "bar"}`,
+				},
 			},
 			`{
 	"tags": [
@@ -385,25 +463,27 @@ func TestSchema_Check(t *testing.T) {
 	"query"  : @query,
 	"request": @httpRequest
 }`: {
-				"@query":       `{"foo": "bar"}`,
-				"@httpRequest": `{"foo": "bar"}`,
+				types: map[string]string{
+					"@query":       `{"foo": "bar"}`,
+					"@httpRequest": `{"foo": "bar"}`,
+				},
 			},
 
-			`"2021-01-08" // {type: "date"}`: nil,
+			`"2021-01-08" // {type: "date"}`: {},
 			`[
 	"2021-01-08" // {type: "date"}
-]`: nil,
+]`: {},
 			`{
 	"foo": "2021-01-08" // {type: "date"}
-}`: nil,
+}`: {},
 
-			`"2021-01-08T12:50:45+06:00" // {type: "datetime"}`: nil,
+			`"2021-01-08T12:50:45+06:00" // {type: "datetime"}`: {},
 			`[
 	"2021-01-08T12:50:45+06:00" // {type: "datetime"}
-]`: nil,
+]`: {},
 			`{
 	"foo": "2021-01-08T12:50:45+06:00" // {type: "datetime"}
-}`: nil,
+}`: {},
 
 			`{
   "id1": 1, // {type: "@id", nullable: true}
@@ -412,43 +492,67 @@ func TestSchema_Check(t *testing.T) {
   "size": 1, // {enum: [1,2,3], nullable: true}
   "choice": 1 // {or: [{type: "integer"}, {type: "string"}]}
 }`: {
-				"@id":  "123",
-				"@id1": "[]",
-				"@id2": "{}",
+				types: map[string]string{
+					"@id":  "123",
+					"@id1": "[]",
+					"@id2": "{}",
+				},
 			},
-			`42 // {type: "any", nullable: true}`: nil,
+			`42 // {type: "any", nullable: true}`: {},
 			`{
 	"foo": 123 /* {or: [
 		{min: 100},
 		{type: "string"}
 	]} */
-}`: nil,
-			`42 // {or: ["integer", "string"]}`: nil,
+}`: {},
+			`42 // {or: ["integer", "string"]}`: {},
 			"@bar": {
-				"@bar": `42 // {or: ["integer", "string"]}`,
+				types: map[string]string{
+					"@bar": `42 // {or: ["integer", "string"]}`,
+				},
 			},
-			"1 // {enum : [1]}": nil,
+			"1 // {enum : [1]}": {},
 			`{
 	"foo": 2 // {nullable: false, optional: true}
-}`: nil,
-			`"5" // {enum: ["5", 5]}`: nil,
+}`: {},
+			`"5" // {enum: ["5", 5]}`: {},
 			`{ // {allOf: "@bar"}
 	"foo": 1
 }`: {
-				"@bar": `{ // {allOf: "@fizz"}
+				types: map[string]string{
+					"@bar": `{ // {allOf: "@fizz"}
 	"bar": 2 // {or: ["integer", "string"]}
 }`,
-				"@fizz": `{
+					"@fizz": `{
 	"fizz": 3 // {or: ["integer", "string"]}
 }`,
+				},
+			},
+
+			`"foo" // {enum: @enum}`: {
+				enums: map[string]string{
+					"@enum": `["foo", "bar"]`,
+				},
+			},
+
+			`{
+	"foo": "foo" // {enum: @enum}
+}`: {
+				enums: map[string]string{
+					"@enum": `["foo", "bar"]`,
+				},
 			},
 		}
 
-		for content, types := range cc {
+		for content, c := range cc {
 			t.Run(content, func(t *testing.T) {
 				s := New("", []byte(content))
 
-				for n, c := range types {
+				for n, c := range c.enums {
+					require.NoError(t, s.AddRule(n, rules.NewEnum(n, []byte(c))))
+				}
+
+				for n, c := range c.types {
 					require.NoError(t, s.AddType(n, New(n, []byte(c))))
 				}
 
@@ -460,6 +564,7 @@ func TestSchema_Check(t *testing.T) {
 	t.Run("negative", func(t *testing.T) {
 		cc := map[string]struct {
 			types map[string]string
+			rules map[string]string
 			given string
 		}{
 			`ERROR (code 301): Invalid character "i" looking for beginning of value
@@ -603,7 +708,7 @@ func TestSchema_Check(t *testing.T) {
 }`,
 			},
 
-			`ERROR (code 301): Invalid character "@" shortcut not allowed in annotation
+			`ERROR (code 802): Incorrect rule value type
 	in line 2 on file 
 	> {} // {type: @json}
 	---------------^`: {
@@ -1019,11 +1124,51 @@ func TestSchema_Check(t *testing.T) {
 	"one" 1
 }`,
 			},
+
+			`ERROR (code 1602): Enum rule "@enum" not found
+	in line 1 on file 
+	> "foo" // {enum: @enum}
+	------------------^`: {
+				given: `"foo" // {enum: @enum}`,
+			},
+
+			`ERROR (code 610): Does not match any of the enumeration values
+	in line 1 on file 
+	> 42 // {enum: @enum}
+	--^`: {
+				given: `42 // {enum: @enum}`,
+				rules: map[string]string{
+					"@enum": `["foo", "bar"]`,
+				},
+			},
+
+			`ERROR (code 610): Does not match any of the enumeration values
+	in line 2 on file 
+	> "foo": 42 // {enum: @enum}
+	---------^`: {
+				given: `{
+	"foo": 42 // {enum: @enum}
+}`,
+				rules: map[string]string{
+					"@enum": `["foo", "bar"]`,
+				},
+			},
+
+			`ERROR (code 806): An array or rule name was expected as a value for the "enum"
+	in line 1 on file 
+	> 42 // {enum: "@enum"}
+	---------------^`: {
+				given: `42 // {enum: "@enum"}`,
+			},
 		}
 
 		for expected, c := range cc {
 			t.Run(expected, func(t *testing.T) {
 				s := New("", []byte(c.given))
+
+				for n, b := range c.rules {
+					require.NoError(t, s.AddRule(n, rules.NewEnum(n, []byte(b))))
+				}
 
 				for n, b := range c.types {
 					require.NoError(t, s.AddType(n, New(n, []byte(b))))
@@ -1387,6 +1532,11 @@ func TestSchema_Validate(t *testing.T) {
 				assert.EqualError(t, err, expected)
 			})
 		}
+
+		t.Run("not a JSON document", func(t *testing.T) {
+			err := New("schema", []byte("42")).Validate(&mocks.Document{})
+			assert.EqualError(t, err, "support only JSON documents, but got *mocks.Document")
+		})
 	})
 }
 
@@ -1395,6 +1545,7 @@ func TestSchema_GetAST(t *testing.T) {
 		cc := map[string]struct {
 			expected jschema.ASTNode
 			types    map[string]string
+			rules    map[string]string
 		}{
 			"@foo": {
 				expected: jschema.ASTNode{
@@ -3415,15 +3566,46 @@ func TestSchema_GetAST(t *testing.T) {
 					Rules:      &jschema.RuleASTNodes{},
 				},
 			},
+
+			`"foo" // {enum: @enum}`: {
+				expected: jschema.ASTNode{
+					JSONType:   jschema.JSONTypeString,
+					SchemaType: string(jschema.SchemaTypeEnum),
+					Value:      "foo",
+					Properties: &jschema.ASTNodes{},
+					Rules: jschema.NewRuleASTNodes(
+						map[string]jschema.RuleASTNode{
+							"enum": {
+								JSONType:   jschema.JSONTypeShortcut,
+								Value:      "@enum",
+								Properties: &jschema.RuleASTNodes{},
+								Source:     jschema.RuleASTNodeSourceManual,
+							},
+						},
+						[]string{"enum"},
+					),
+				},
+				rules: map[string]string{
+					"@enum": `[
+"foo",
+"bar"
+]`,
+				},
+			},
 		}
 
 		for given, c := range cc {
 			t.Run(given, func(t *testing.T) {
 				s := New("", []byte(given))
 
+				for n, r := range c.rules {
+					require.NoError(t, s.AddRule(n, rules.NewEnum(n, []byte(r))))
+				}
+
 				for n, c := range c.types {
 					require.NoError(t, s.AddType(n, New(n, []byte(c))))
 				}
+
 				actual, err := s.GetAST()
 				require.NoError(t, err)
 				assert.Equalf(
@@ -3630,5 +3812,79 @@ func TestSchema_UsedUserTypes(t *testing.T) {
 				assert.ElementsMatch(t, expected, ss)
 			})
 		}
+	})
+
+	t.Run("negative", func(t *testing.T) {
+		_, err := New("", []byte("foo")).UsedUserTypes()
+		assert.EqualError(t, err, `ERROR (code 301): Invalid character "o" in literal false (expecting 'a')
+	in line 1 on file 
+	> foo
+	---^`)
+	})
+}
+
+func TestSchema_Build(t *testing.T) {
+	t.Run("positive", func(t *testing.T) {
+		err := New("", []byte("42")).Build()
+		assert.NoError(t, err)
+	})
+
+	t.Run("negative", func(t *testing.T) {
+		err := New("", []byte("foo")).Build()
+		assert.EqualError(t, err, `ERROR (code 301): Invalid character "o" in literal false (expecting 'a')
+	in line 1 on file 
+	> foo
+	---^`)
+	})
+}
+
+func TestSchema_buildASTNode(t *testing.T) {
+	t.Run("root node nil", func(t *testing.T) {
+		s := &Schema{
+			inner: &internalSchema.Schema{},
+		}
+
+		n := s.buildASTNode()
+		assert.Equal(t, jschema.ASTNode{
+			Properties: &jschema.ASTNodes{},
+			Rules:      &jschema.RuleASTNodes{},
+		}, n)
+	})
+
+	t.Run("root node isn't nil", func(t *testing.T) {
+		newSchema := func(rootNode internalSchema.Node) *Schema {
+			inner := internalSchema.New()
+			inner.SetRootNode(rootNode)
+			return &Schema{
+				inner: &inner,
+			}
+		}
+
+		t.Run("positive", func(t *testing.T) {
+			expected := jschema.ASTNode{
+				JSONType:   jschema.JSONTypeString,
+				Properties: &jschema.ASTNodes{},
+				Rules:      &jschema.RuleASTNodes{},
+			}
+
+			root := &schemaMocks.Node{}
+			root.On("ASTNode").Return(expected, nil)
+
+			s := newSchema(root)
+
+			n := s.buildASTNode()
+			assert.Equal(t, expected, n)
+		})
+
+		t.Run("negative", func(t *testing.T) {
+			root := &schemaMocks.Node{}
+			root.On("ASTNode").Return(jschema.ASTNode{}, stdErrors.New("fake error"))
+
+			s := newSchema(root)
+
+			assert.PanicsWithError(t, "fake error", func() {
+				s.buildASTNode()
+			})
+		})
 	})
 }
