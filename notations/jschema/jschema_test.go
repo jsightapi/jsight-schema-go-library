@@ -3487,7 +3487,6 @@ func TestSchema_GetAST(t *testing.T) {
 					JSONType:   jschema.JSONTypeString,
 					SchemaType: string(jschema.SchemaTypeEnum),
 					Value:      "foo",
-					Properties: &jschema.ASTNodes{},
 					Rules: jschema.NewRuleASTNodes(
 						map[string]jschema.RuleASTNode{
 							"enum": {
@@ -3761,8 +3760,7 @@ func TestSchema_buildASTNode(t *testing.T) {
 
 		n := s.buildASTNode()
 		assert.Equal(t, jschema.ASTNode{
-			Properties: &jschema.ASTNodes{},
-			Rules:      &jschema.RuleASTNodes{},
+			Rules: &jschema.RuleASTNodes{},
 		}, n)
 	})
 
@@ -3777,9 +3775,8 @@ func TestSchema_buildASTNode(t *testing.T) {
 
 		t.Run("positive", func(t *testing.T) {
 			expected := jschema.ASTNode{
-				JSONType:   jschema.JSONTypeString,
-				Properties: &jschema.ASTNodes{},
-				Rules:      &jschema.RuleASTNodes{},
+				JSONType: jschema.JSONTypeString,
+				Rules:    &jschema.RuleASTNodes{},
 			}
 
 			root := &schemaMocks.Node{}
