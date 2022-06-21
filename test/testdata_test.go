@@ -6,8 +6,12 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/jsightapi/jsight-schema-go-library/errors"
+	"github.com/jsightapi/jsight-schema-go-library/formats/json"
 	"github.com/jsightapi/jsight-schema-go-library/fs"
 	"github.com/jsightapi/jsight-schema-go-library/kit"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/rules"
 	"github.com/jsightapi/jsight-schema-go-library/reader"
 )
 
@@ -35,14 +39,37 @@ func TestData(t *testing.T) {
 func validate(t test) kit.Error {
 	schemaFile := reader.Read(path.Join(GetProjectRoot(), t.relativePath, t.schema))
 	jsonFile := reader.Read(path.Join(GetProjectRoot(), t.relativePath, t.json))
-	types := readTypes(t.relativePath, t.types)
+	types := readFiles(t.relativePath, t.types)
+	enums := readFiles(t.relativePath, t.enums)
 
-	err := kit.ValidateJson(schemaFile, types, jsonFile, false)
+	sc := jschema.FromFile(schemaFile)
 
-	return err
+	for name, f := range enums {
+		if len(f.Content()) == 0 {
+			return errors.NewDocumentError(schemaFile, errors.Format(errors.ErrEmptyType, name))
+		}
+		if err := sc.AddRule(name, rules.EnumFromFile(f)); err != nil {
+			return kit.ConvertError(f, err)
+		}
+	}
+
+	for name, f := range types {
+		if len(f.Content()) == 0 {
+			return errors.NewDocumentError(schemaFile, errors.Format(errors.ErrEmptyType, name))
+		}
+		if err := sc.AddType(name, jschema.FromFile(f)); err != nil {
+			return kit.ConvertError(f, err)
+		}
+	}
+
+	err := sc.Validate(json.FromFile(jsonFile))
+	if err != nil {
+		return kit.ConvertError(schemaFile, err)
+	}
+	return nil
 }
 
-func readTypes(relativePath string, filenames []string) map[string]*fs.File {
+func readFiles(relativePath string, filenames []string) map[string]*fs.File {
 	types := make(map[string]*fs.File)
 
 	for _, filename := range filenames {
@@ -51,8 +78,7 @@ func readTypes(relativePath string, filenames []string) map[string]*fs.File {
 		ext := filepath.Ext(filename)
 		typeName := "@" + strings.TrimSuffix(filename, ext)
 
-		file := reader.Read(absolutePath)
-		file.SetName(typeName)
+		file := reader.ReadWithName(absolutePath, typeName)
 
 		types[typeName] = file
 	}

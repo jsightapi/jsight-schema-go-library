@@ -24,6 +24,7 @@ func dirTests(d dir) []test {
 			schema:       d.schema,
 			json:         jsonFilename,
 			types:        d.types,
+			enums:        d.enums,
 			want:         want(jsonFilename),
 		}
 		list = append(list, t)

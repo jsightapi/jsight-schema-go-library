@@ -162,7 +162,15 @@ type RuleASTNodes struct {
 }
 
 // Rule represents a custom user-defined rule.
-type Rule interface{}
+type Rule interface {
+	// Len returns length of this rule in bytes.
+	// Might return ParsingError if rule isn't valid.
+	Len() (uint, error)
+
+	// Check checks this rule is valid.
+	// Can return ParsingError if rule isn't valid.
+	Check() error
+}
 
 // ParsingError indicates something bad was happened during parsing.
 type ParsingError interface {

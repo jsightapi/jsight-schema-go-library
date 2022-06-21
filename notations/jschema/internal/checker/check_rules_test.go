@@ -39,7 +39,7 @@ func TestCheckRules(t *testing.T) {
 
 		for _, typ := range types {
 			f := fs.NewFile(typ.name, bytes.Bytes(typ.schema))
-			ty := loader.LoadSchema(scanner.NewSchemaScanner(f, false), rootSchema, false)
+			ty := loader.LoadSchema(scanner.New(f), rootSchema, false, nil)
 			rootSchema.AddNamedType(typ.name, ty, f, 0)
 		}
 

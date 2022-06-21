@@ -26,7 +26,7 @@ func TestCheckRootSchema(t *testing.T) {
 
 		for _, datum := range types {
 			f := fs.NewFile(datum.name, bytes.Bytes(datum.schema))
-			typ := loader.LoadSchema(scanner.NewSchemaScanner(f, false), rootSchema, false)
+			typ := loader.LoadSchema(scanner.New(f), rootSchema, false, nil)
 			rootSchema.AddNamedType(datum.name, typ, f, 0)
 		}
 
