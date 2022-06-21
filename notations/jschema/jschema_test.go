@@ -1153,6 +1153,13 @@ func TestSchema_Check(t *testing.T) {
 					"@enum": `["foo", "bar"]`,
 				},
 			},
+
+			`ERROR (code 806): An array or rule name was expected as a value for the "enum"
+	in line 1 on file 
+	> 42 // {enum: "@enum"}
+	---------------^`: {
+				given: `42 // {enum: "@enum"}`,
+			},
 		}
 
 		for expected, c := range cc {
