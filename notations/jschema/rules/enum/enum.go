@@ -1,4 +1,4 @@
-package rules
+package enum
 
 import (
 	"sync"
@@ -29,13 +29,13 @@ type Enum struct {
 
 var _ jschema.Rule = (*Enum)(nil)
 
-// NewEnum creates new Enum rule with specified name and content.
-func NewEnum(name string, content []byte) *Enum {
-	return EnumFromFile(fs.NewFile(name, content))
+// New creates new Enum rule with specified name and content.
+func New(name string, content []byte) *Enum {
+	return FromFile(fs.NewFile(name, content))
 }
 
-// EnumFromFile creates Enum rule from specified file.
-func EnumFromFile(f *fs.File) *Enum {
+// FromFile creates Enum rule from specified file.
+func FromFile(f *fs.File) *Enum {
 	return &Enum{file: f}
 }
 

@@ -1,4 +1,4 @@
-package rules
+package enum
 
 import (
 	"testing"
@@ -33,7 +33,7 @@ func TestEnum_Len(t *testing.T) {
 
 		for given, expected := range cc {
 			t.Run(given, func(t *testing.T) {
-				actual, err := NewEnum("", []byte(given)).Len()
+				actual, err := New("", []byte(given)).Len()
 				require.NoError(t, err)
 				assert.Equal(t, expected, actual)
 			})
@@ -41,7 +41,7 @@ func TestEnum_Len(t *testing.T) {
 	})
 
 	t.Run("negative", func(t *testing.T) {
-		_, err := NewEnum("", []byte("[")).Len()
+		_, err := New("", []byte("[")).Len()
 		assert.EqualError(t, err, `ERROR (code 303): Unexpected end of file
 	in line 1 on file 
 	> [
@@ -78,7 +78,7 @@ func TestEnum_Check(t *testing.T) {
 
 		for _, enum := range testList {
 			t.Run(enum, func(t *testing.T) {
-				err := NewEnum("enum", []byte(enum)).Check()
+				err := New("enum", []byte(enum)).Check()
 				require.NoError(t, err)
 			})
 		}
@@ -138,7 +138,7 @@ func TestEnum_Check(t *testing.T) {
 
 		for enum, expected := range cc {
 			t.Run(enum, func(t *testing.T) {
-				err := NewEnum("enum", []byte(enum)).Check()
+				err := New("enum", []byte(enum)).Check()
 				assert.EqualError(t, err, expected)
 			})
 		}
@@ -147,7 +147,7 @@ func TestEnum_Check(t *testing.T) {
 
 func TestEnum_Values(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
-		vals, err := NewEnum("", []byte(`[
+		vals, err := New("", []byte(`[
 	"foo",
 	42,
 	3.14,
@@ -169,7 +169,7 @@ func TestEnum_Values(t *testing.T) {
 	})
 
 	t.Run("negative", func(t *testing.T) {
-		_, err := NewEnum("", []byte("123")).Values()
+		_, err := New("", []byte("123")).Values()
 		assert.EqualError(t, err, `ERROR (code 1600): An array was expected as a value for the "enum"
 	in line 1 on file 
 	> 123

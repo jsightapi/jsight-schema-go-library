@@ -9,7 +9,7 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/errors"
 	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
-	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/rules"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/rules/enum"
 )
 
 // Loader for "enum" rule value (array of literals). Ex: [123, 45.67, "abc", true, null]
@@ -147,7 +147,7 @@ func (l *enumValueLoader) ruleName(lex lexeme.LexEvent) {
 		panic(errors.Format(errors.ErrEnumRuleNotFound, v))
 	}
 
-	e, ok := r.(*rules.Enum)
+	e, ok := r.(*enum.Enum)
 	if !ok {
 		panic(errors.Format(errors.ErrNotAnEnumRule, v))
 	}

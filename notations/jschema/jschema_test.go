@@ -18,7 +18,7 @@ import (
 	schemaMocks "github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/mocks"
 	internalSchema "github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
-	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/rules"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/rules/enum"
 	"github.com/jsightapi/jsight-schema-go-library/notations/regex"
 )
 
@@ -549,7 +549,7 @@ func TestSchema_Check(t *testing.T) {
 				s := New("", []byte(content))
 
 				for n, c := range c.enums {
-					require.NoError(t, s.AddRule(n, rules.NewEnum(n, []byte(c))))
+					require.NoError(t, s.AddRule(n, enum.New(n, []byte(c))))
 				}
 
 				for n, c := range c.types {
@@ -1167,7 +1167,7 @@ func TestSchema_Check(t *testing.T) {
 				s := New("", []byte(c.given))
 
 				for n, b := range c.rules {
-					require.NoError(t, s.AddRule(n, rules.NewEnum(n, []byte(b))))
+					require.NoError(t, s.AddRule(n, enum.New(n, []byte(b))))
 				}
 
 				for n, b := range c.types {
@@ -3513,7 +3513,7 @@ func TestSchema_GetAST(t *testing.T) {
 				s := New("", []byte(given))
 
 				for n, r := range c.rules {
-					require.NoError(t, s.AddRule(n, rules.NewEnum(n, []byte(r))))
+					require.NoError(t, s.AddRule(n, enum.New(n, []byte(r))))
 				}
 
 				for n, c := range c.types {

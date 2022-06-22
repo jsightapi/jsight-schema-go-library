@@ -11,7 +11,7 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/fs"
 	"github.com/jsightapi/jsight-schema-go-library/kit"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema"
-	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/rules"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/rules/enum"
 	"github.com/jsightapi/jsight-schema-go-library/reader"
 )
 
@@ -48,7 +48,7 @@ func validate(t test) kit.Error {
 		if len(f.Content()) == 0 {
 			return errors.NewDocumentError(schemaFile, errors.Format(errors.ErrEmptyType, name))
 		}
-		if err := sc.AddRule(name, rules.EnumFromFile(f)); err != nil {
+		if err := sc.AddRule(name, enum.FromFile(f)); err != nil {
 			return kit.ConvertError(f, err)
 		}
 	}
