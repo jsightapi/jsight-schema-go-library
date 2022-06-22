@@ -4,8 +4,8 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/bytes"
 	"github.com/jsightapi/jsight-schema-go-library/errors"
 	"github.com/jsightapi/jsight-schema-go-library/fs"
+	"github.com/jsightapi/jsight-schema-go-library/internal/ds"
 	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
-	internalScanner "github.com/jsightapi/jsight-schema-go-library/internal/scanner"
 )
 
 type state uint8
@@ -75,7 +75,7 @@ type scanner struct {
 
 	// returnToStep a stack of step functions, to preserve the sequence of steps
 	// (and return to them) in some cases.
-	returnToStep stepFuncStack
+	returnToStep *ds.Stack[stepFunc]
 
 	// file a structure containing JSON data.
 	file *fs.File
@@ -85,7 +85,7 @@ type scanner struct {
 
 	// stack a stack of found lexical event. The stack is needed for the scanner
 	// to take into account the nesting of JSON or SCHEME elements.
-	stack internalScanner.LexemesStack
+	stack *ds.Stack[lexeme.LexEvent]
 
 	// finds a list of found types of lexical event for the current step. Several
 	// lexical events can be found in one step (example: ArrayItemBegin and LiteralBegin).
@@ -111,8 +111,8 @@ func newScanner(file *fs.File) *scanner {
 		file:         file,
 		data:         file.Content(),
 		dataSize:     bytes.Index(len(file.Content())),
-		returnToStep: make(stepFuncStack, 0, 2),
-		stack:        internalScanner.NewLexemesStack(),
+		returnToStep: &ds.Stack[stepFunc]{},
+		stack:        &ds.Stack[lexeme.LexEvent]{},
 		finds:        make([]lexeme.LexEventType, 0, 3),
 	}
 }

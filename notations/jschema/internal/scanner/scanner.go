@@ -6,6 +6,7 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/bytes"
 	"github.com/jsightapi/jsight-schema-go-library/errors"
 	"github.com/jsightapi/jsight-schema-go-library/fs"
+	"github.com/jsightapi/jsight-schema-go-library/internal/ds"
 	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
 	"github.com/jsightapi/jsight-schema-go-library/internal/scanner"
 )
@@ -102,7 +103,7 @@ type Scanner struct {
 
 	// returnToStep a stack of step functions, to preserve the sequence of steps
 	// (and return to them) in some cases.
-	returnToStep stepFuncStack
+	returnToStep *ds.Stack[stepFunc]
 
 	// file a structure containing jSchema data.
 	file *fs.File
@@ -112,7 +113,7 @@ type Scanner struct {
 
 	// stack a stack of found lexical event. The stack is needed for the scanner
 	// to take into account the nesting of SCHEME elements.
-	stack scanner.LexemesStack
+	stack *ds.Stack[lexeme.LexEvent]
 
 	// finds a list of found types of lexical event for the current step. Several
 	// lexical events can be found in one step (example: ArrayItemBegin and LiteralBegin).
@@ -120,7 +121,7 @@ type Scanner struct {
 
 	// prevContextsStack a stack of previous scanner contexts.
 	// Used for restoring a previous context after finishing current one.
-	prevContextsStack contextStack
+	prevContextsStack *ds.Stack[context]
 
 	// context indicates which type of entity we process right now.
 	context context
@@ -175,15 +176,16 @@ func New(file *fs.File, oo ...Option) *Scanner {
 	content := file.Content()
 
 	s := &Scanner{
-		step:            stateFoundRootValue,
-		file:            file,
-		data:            content,
-		dataSize:        bytes.Index(len(content)),
-		returnToStep:    make(stepFuncStack, 0, 2),
-		stack:           scanner.NewLexemesStack(),
-		finds:           make([]lexeme.LexEventType, 0, 3),
-		context:         newContext(contextTypeInitial),
-		allowAnnotation: true,
+		step:              stateFoundRootValue,
+		file:              file,
+		data:              content,
+		dataSize:          bytes.Index(len(content)),
+		returnToStep:      &ds.Stack[stepFunc]{},
+		stack:             &ds.Stack[lexeme.LexEvent]{},
+		prevContextsStack: &ds.Stack[context]{},
+		finds:             make([]lexeme.LexEventType, 0, 3),
+		context:           newContext(contextTypeInitial),
+		allowAnnotation:   true,
 	}
 
 	for _, o := range oo {
