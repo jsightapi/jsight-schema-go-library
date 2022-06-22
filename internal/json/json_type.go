@@ -99,7 +99,7 @@ func (t Type) ToTokenType() string {
 	case TypeNull:
 		return "null"
 	case TypeMixed:
-		return "shortcut"
+		return "reference"
 	}
 	return ""
 }
