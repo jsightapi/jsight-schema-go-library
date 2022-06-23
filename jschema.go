@@ -68,11 +68,14 @@ type Schema interface {
 
 // ASTNode an AST node.
 type ASTNode struct {
-	// JSONType corresponding JSON type for this AST node's value.
+	// JSONType corresponding JSON type for this AST node's value. TODO rename to TokenType
 	JSONType JSONType
 
 	// SchemaType corresponding schema type for this AST node's value.
 	SchemaType string
+
+	// Key a node key (if this is the property of the object).
+	Key string
 
 	// Value a node value.
 	// Make sense only for scalars and shortcuts.
@@ -84,13 +87,9 @@ type ASTNode struct {
 	// Rules a map of attached rules.
 	Rules *RuleASTNodes
 
-	// Properties contains all object properties.
-	// Make sense only for objects.
-	Properties *ASTNodes
-
-	// Items contains all array items.
-	// Make sense only for arrays.
-	Items []ASTNode
+	// Children contains all array items and object properties.
+	// Make sense only for arrays and object.
+	Children []ASTNode
 
 	// IsKeyShortcut will be true if this property key is shortcut.
 	// Make sense only for AST nodes which are represents object property.
@@ -103,13 +102,6 @@ type ASTNodes struct {
 	data  map[string]ASTNode
 	order []string
 	mx    sync.RWMutex
-}
-
-func NewASTNodes(data map[string]ASTNode, order []string) *ASTNodes {
-	return &ASTNodes{
-		data:  data,
-		order: order,
-	}
 }
 
 type RuleASTNode struct {
