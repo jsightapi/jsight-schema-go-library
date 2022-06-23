@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"math"
+	"strconv"
 )
 
 type Index uint
@@ -206,4 +207,18 @@ func (b Bytes) LineFrom(start Index) (Bytes, error) {
 // it didn't allow to use that symbol in the name.
 func IsValidUserTypeNameByte(c byte) bool {
 	return c == '-' || c == '_' || ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || ('0' <= c && c <= '9')
+}
+
+// QuoteChar formats char as a quoted character literal.
+func QuoteChar(c byte) string {
+	// special cases - different from quoted strings
+	if c == '\'' {
+		return `'\''`
+	}
+	if c == '"' {
+		return `'"'`
+	}
+	// use quoted string with different quotation marks
+	s := strconv.Quote(string(c))
+	return "'" + s[1:len(s)-1] + "'"
 }

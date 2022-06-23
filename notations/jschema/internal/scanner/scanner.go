@@ -8,7 +8,6 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/fs"
 	"github.com/jsightapi/jsight-schema-go-library/internal/ds"
 	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
-	"github.com/jsightapi/jsight-schema-go-library/internal/scanner"
 )
 
 type state uint8
@@ -105,23 +104,23 @@ type Scanner struct {
 	// (and return to them) in some cases.
 	returnToStep *ds.Stack[stepFunc]
 
+	// stack a stack of found lexical event. The stack is needed for the scanner
+	// to take into account the nesting of SCHEME elements.
+	stack *ds.Stack[lexeme.LexEvent]
+
+	// prevContextsStack a stack of previous scanner contexts.
+	// Used for restoring a previous context after finishing current one.
+	prevContextsStack *ds.Stack[context]
+
 	// file a structure containing jSchema data.
 	file *fs.File
 
 	// data jSchema content.
 	data bytes.Bytes
 
-	// stack a stack of found lexical event. The stack is needed for the scanner
-	// to take into account the nesting of SCHEME elements.
-	stack *ds.Stack[lexeme.LexEvent]
-
 	// finds a list of found types of lexical event for the current step. Several
 	// lexical events can be found in one step (example: ArrayItemBegin and LiteralBegin).
 	finds []lexeme.LexEventType
-
-	// prevContextsStack a stack of previous scanner contexts.
-	// Used for restoring a previous context after finishing current one.
-	prevContextsStack *ds.Stack[context]
 
 	// context indicates which type of entity we process right now.
 	context context
@@ -236,7 +235,7 @@ func (s *Scanner) Length() uint {
 }
 
 func (s *Scanner) newDocumentError(code errors.ErrorCode, c byte) errors.DocumentError {
-	e := errors.Format(code, scanner.QuoteChar(c))
+	e := errors.Format(code, bytes.QuoteChar(c))
 	err := errors.NewDocumentError(s.file, e)
 	err.SetIndex(s.index - 1)
 	return err
@@ -308,25 +307,25 @@ func (s *Scanner) isFoundLastObjectEndOnAnnotation() (bool, lexeme.LexEventType)
 		s.stack.Get(length-2).Type() == lexeme.MixedValueBegin &&
 		s.stack.Get(length-3).Type() == lexeme.ObjectValueBegin &&
 		s.stack.Get(length-4).Type() == lexeme.ObjectBegin &&
-		(s.stack.Get(length-5).Type() == lexeme.InlineAnnotationBegin || s.stack.Get(length-5).Type() == lexeme.MultiLineAnnotationBegin):
+		(s.stack.Get(length-5).Type() == lexeme.InlineAnnotationBegin || s.stack.Get(length-5).Type() == lexeme.MultiLineAnnotationBegin): //nolint:lll
 		return true, s.stack.Get(length - 5).Type()
 
 	case length >= 4 &&
 		s.stack.Get(length-1).Type() == lexeme.LiteralBegin &&
 		s.stack.Get(length-2).Type() == lexeme.ObjectValueBegin &&
 		s.stack.Get(length-3).Type() == lexeme.ObjectBegin &&
-		(s.stack.Get(length-4).Type() == lexeme.InlineAnnotationBegin || s.stack.Get(length-4).Type() == lexeme.MultiLineAnnotationBegin):
+		(s.stack.Get(length-4).Type() == lexeme.InlineAnnotationBegin || s.stack.Get(length-4).Type() == lexeme.MultiLineAnnotationBegin): //nolint:lll
 		return true, s.stack.Get(length - 4).Type()
 
 	case length >= 3 &&
 		s.stack.Get(length-1).Type() == lexeme.ObjectValueBegin &&
 		s.stack.Get(length-2).Type() == lexeme.ObjectBegin &&
-		(s.stack.Get(length-3).Type() == lexeme.InlineAnnotationBegin || s.stack.Get(length-3).Type() == lexeme.MultiLineAnnotationBegin):
+		(s.stack.Get(length-3).Type() == lexeme.InlineAnnotationBegin || s.stack.Get(length-3).Type() == lexeme.MultiLineAnnotationBegin): //nolint:lll
 		return true, s.stack.Get(length - 3).Type()
 
 	case length >= 2 &&
 		s.stack.Get(length-1).Type() == lexeme.ObjectBegin &&
-		(s.stack.Get(length-2).Type() == lexeme.InlineAnnotationBegin || s.stack.Get(length-2).Type() == lexeme.MultiLineAnnotationBegin):
+		(s.stack.Get(length-2).Type() == lexeme.InlineAnnotationBegin || s.stack.Get(length-2).Type() == lexeme.MultiLineAnnotationBegin): //nolint:lll
 		return true, s.stack.Get(length - 2).Type()
 	}
 	return false, lexeme.InlineAnnotationBegin
