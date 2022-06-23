@@ -11,7 +11,7 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
 	"github.com/jsightapi/jsight-schema-go-library/internal/mocks"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
-	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/rules/enum"
+	"github.com/jsightapi/jsight-schema-go-library/rules/enum"
 )
 
 func Test_newEnumValueLoader(t *testing.T) {

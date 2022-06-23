@@ -18,8 +18,8 @@ import (
 	schemaMocks "github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/mocks"
 	internalSchema "github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
-	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/rules/enum"
 	"github.com/jsightapi/jsight-schema-go-library/notations/regex"
+	"github.com/jsightapi/jsight-schema-go-library/rules/enum"
 )
 
 func ExampleSchema() {

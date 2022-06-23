@@ -11,8 +11,8 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/fs"
 	"github.com/jsightapi/jsight-schema-go-library/kit"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema"
-	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/rules/enum"
 	"github.com/jsightapi/jsight-schema-go-library/reader"
+	"github.com/jsightapi/jsight-schema-go-library/rules/enum"
 )
 
 func TestData(t *testing.T) {
