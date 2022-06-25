@@ -28,27 +28,11 @@ type state uint8
 // It is okay to ignore the return value of any particular
 // call to scanner.state.
 const (
-	// scanContinue indicates an uninteresting byte, so we can keep scanning forward.
-	scanContinue state = iota // uninteresting byte
-
-	// scanSkipSpace indicates a space byte, can be skipped.
-	scanSkipSpace
-
-	// scanBeginArray indicates beginning of an array.
-	scanBeginArray
-
-	// scanArrayValue indicates finished array value.
-	scanArrayValue
-
-	// scanEndArray indicates the end of array (implies scanArrayValue if possible).
-	scanEndArray
+	// scanSkip indicates an uninteresting byte, so we can keep scanning forward.
+	scanSkip state = iota
 
 	// scanBeginLiteral indicates beginning of any value outside an array or object.
 	scanBeginLiteral
-
-	// scanEnd indicates the end of the scanning. Top-level value ended *before*
-	// this byte.
-	scanEnd
 )
 
 // scanner represents a scanner is a JSchema scanning state machine.
@@ -222,28 +206,28 @@ func (s *scanner) Next() (lexeme.LexEvent, error) {
 // Expects open square brace as the start of the enum values.
 func (s *scanner) stateBegin(c byte) (state, error) {
 	if bytes.IsSpace(c) {
-		return scanSkipSpace, nil
+		return scanSkip, nil
 	}
 
 	if c != '[' {
 		err := errors.NewDocumentError(s.file, errors.ErrEnumArrayExpected)
 		err.SetIndex(s.index - 1)
-		return scanContinue, err
+		return scanSkip, err
 	}
 
 	s.found(lexeme.ArrayBegin)
 	s.step = s.stateFoundArrayItemBeginOrEmpty
-	return scanBeginArray, nil
+	return scanSkip, nil
 }
 
 func (s *scanner) stateFoundArrayItemBeginOrEmpty(c byte) (state, error) {
 	if s.isNewLine(c) {
 		s.found(lexeme.NewLine)
-		return scanContinue, nil
+		return scanSkip, nil
 	}
 	if s.isCommentStart(c) {
 		s.switchToComment()
-		return scanContinue, nil
+		return scanSkip, nil
 	}
 
 	if c == ']' {
@@ -252,7 +236,7 @@ func (s *scanner) stateFoundArrayItemBeginOrEmpty(c byte) (state, error) {
 
 	r, err := s.stateBeginArrayItemOrEmpty(c)
 	if err != nil {
-		return scanContinue, err
+		return scanSkip, err
 	}
 	if r == scanBeginLiteral {
 		s.found(lexeme.ArrayItemBegin)
@@ -264,12 +248,12 @@ func (s *scanner) stateFoundArrayItemBeginOrEmpty(c byte) (state, error) {
 func (s *scanner) stateFoundArrayItemBegin(c byte) (state, error) {
 	if s.isCommentStart(c) {
 		s.switchToComment()
-		return scanContinue, nil
+		return scanSkip, nil
 	}
 
 	r, err := s.stateBeginValue(c)
 	if err != nil {
-		return scanContinue, err
+		return scanSkip, err
 	}
 	switch r { //nolint:exhaustive // It's okay.
 	case scanBeginLiteral:
@@ -282,14 +266,14 @@ func (s *scanner) stateFoundArrayItemBegin(c byte) (state, error) {
 func (s *scanner) stateBeginValue(c byte) (state, error) { //nolint:gocyclo // It's okay.
 	if s.isNewLine(c) {
 		s.found(lexeme.NewLine)
-		return scanSkipSpace, nil
+		return scanSkip, nil
 	}
 	if bytes.IsSpace(c) {
-		return scanSkipSpace, nil
+		return scanSkip, nil
 	}
 	if s.isAnnotationStart(c) {
 		s.switchToAnnotation()
-		return scanContinue, nil
+		return scanSkip, nil
 	}
 	switch c {
 	case '"':
@@ -320,7 +304,7 @@ func (s *scanner) stateBeginValue(c byte) (state, error) { //nolint:gocyclo // I
 		s.step = s.state1
 		return scanBeginLiteral, nil
 	}
-	return scanContinue, s.newDocumentErrorAtCharacter("looking for beginning of value")
+	return scanSkip, s.newDocumentErrorAtCharacter("looking for beginning of value")
 }
 
 // after reading `[`
@@ -365,28 +349,28 @@ func (s *scanner) stateEndValue(c byte) (state, error) { //nolint:gocyclo // Pre
 		return s.step(c)
 	}
 
-	return scanContinue, s.newDocumentErrorAtCharacter("at the end of value")
+	return scanSkip, s.newDocumentErrorAtCharacter("at the end of value")
 }
 
 func (s *scanner) stateAfterArrayItem(c byte) (state, error) {
 	if s.isNewLine(c) {
 		s.found(lexeme.NewLine)
-		return scanSkipSpace, nil
+		return scanSkip, nil
 	}
 	if bytes.IsSpace(c) {
-		return scanSkipSpace, nil
+		return scanSkip, nil
 	}
 	if s.isAnnotationStart(c) {
 		s.switchToAnnotation()
-		return scanContinue, nil
+		return scanSkip, nil
 	}
 	if s.isCommentStart(c) {
 		s.switchToComment()
-		return scanContinue, nil
+		return scanSkip, nil
 	}
 	if c == ',' {
 		s.step = s.stateFoundArrayItemBegin
-		return scanArrayValue, nil
+		return scanSkip, nil
 	}
 	if c == ']' {
 		return s.stateFoundArrayEnd()
@@ -401,7 +385,7 @@ func (s *scanner) stateFoundArrayEnd() (state, error) {
 	} else {
 		s.step = s.stateEndValue
 	}
-	return scanEndArray, nil
+	return scanSkip, nil
 }
 
 // stateEndTop is the state after finishing the top-level value,
@@ -411,35 +395,35 @@ func (s *scanner) stateEndTop(c byte) (state, error) {
 	switch {
 	case s.isNewLine(c):
 		s.found(lexeme.NewLine)
-		return scanSkipSpace, nil
+		return scanSkip, nil
 
 	case s.isAnnotationStart(c):
 		s.switchToAnnotation()
-		return scanContinue, nil
+		return scanSkip, nil
 
 	case s.isCommentStart(c):
 		s.switchToComment()
-		return scanContinue, nil
+		return scanSkip, nil
 
 	case !bytes.IsSpace(c):
 		if s.lengthComputing {
 			if s.stack.Len() > 0 {
 				// Looks like we have invalid schema, and we should keep scanning.
 				s.hasTrailingCharacters = true
-				return scanContinue, nil
+				return scanSkip, nil
 			}
 			s.found(lexeme.EndTop)
-			return scanEnd, eos
+			return scanSkip, eos
 		} else if s.annotation == annotationNone {
-			return scanContinue, s.newDocumentErrorAtCharacter("non-space byte after top-level value")
+			return scanSkip, s.newDocumentErrorAtCharacter("non-space byte after top-level value")
 		}
 	}
 
 	if s.hasTrailingCharacters {
 		s.found(lexeme.EndTop)
-		return scanEnd, eos
+		return scanSkip, eos
 	}
-	return scanEnd, nil
+	return scanSkip, nil
 }
 
 // after reading `"`
@@ -448,15 +432,15 @@ func (s *scanner) stateInString(c byte) (state, error) {
 	case '"':
 		s.step = s.stateEndValue
 		s.unfinishedLiteral = false
-		return scanContinue, nil
+		return scanSkip, nil
 	case '\\':
 		s.step = s.stateInStringEsc
-		return scanContinue, nil
+		return scanSkip, nil
 	}
 	if c < 0x20 {
-		return scanContinue, s.newDocumentErrorAtCharacter("in string literal")
+		return scanSkip, s.newDocumentErrorAtCharacter("in string literal")
 	}
-	return scanContinue, nil
+	return scanSkip, nil
 }
 
 // after reading `"\` during a quoted string
@@ -464,49 +448,49 @@ func (s *scanner) stateInStringEsc(c byte) (state, error) {
 	switch c {
 	case 'b', 'f', 'n', 'r', 't', '\\', '/', '"':
 		s.step = s.stateInString
-		return scanContinue, nil
+		return scanSkip, nil
 	case 'u':
 		s.returnToStep.Push(s.stateInString)
 		s.step = s.stateInStringEscU
-		return scanContinue, nil
+		return scanSkip, nil
 	}
-	return scanContinue, s.newDocumentErrorAtCharacter("in string escape code")
+	return scanSkip, s.newDocumentErrorAtCharacter("in string escape code")
 }
 
 // after reading `"\u` during a quoted string
 func (s *scanner) stateInStringEscU(c byte) (state, error) {
 	if '0' <= c && c <= '9' || 'a' <= c && c <= 'f' || 'A' <= c && c <= 'F' {
 		s.step = s.stateInStringEscU1
-		return scanContinue, nil
+		return scanSkip, nil
 	}
-	return scanContinue, s.newDocumentErrorAtCharacter("in \\u hexadecimal character escape")
+	return scanSkip, s.newDocumentErrorAtCharacter("in \\u hexadecimal character escape")
 }
 
 // after reading `"\u1` during a quoted string
 func (s *scanner) stateInStringEscU1(c byte) (state, error) {
 	if '0' <= c && c <= '9' || 'a' <= c && c <= 'f' || 'A' <= c && c <= 'F' {
 		s.step = s.stateInStringEscU12
-		return scanContinue, nil
+		return scanSkip, nil
 	}
-	return scanContinue, s.newDocumentErrorAtCharacter("in \\u hexadecimal character escape")
+	return scanSkip, s.newDocumentErrorAtCharacter("in \\u hexadecimal character escape")
 }
 
 // after reading `"\u12` during a quoted string
 func (s *scanner) stateInStringEscU12(c byte) (state, error) {
 	if '0' <= c && c <= '9' || 'a' <= c && c <= 'f' || 'A' <= c && c <= 'F' {
 		s.step = s.stateInStringEscU123
-		return scanContinue, nil
+		return scanSkip, nil
 	}
-	return scanContinue, s.newDocumentErrorAtCharacter("in \\u hexadecimal character escape")
+	return scanSkip, s.newDocumentErrorAtCharacter("in \\u hexadecimal character escape")
 }
 
 // after reading `"\u123` during a quoted string
 func (s *scanner) stateInStringEscU123(c byte) (state, error) {
 	if '0' <= c && c <= '9' || 'a' <= c && c <= 'f' || 'A' <= c && c <= 'F' {
 		s.step = s.returnToStep.Pop()
-		return scanContinue, nil
+		return scanSkip, nil
 	}
-	return scanContinue, s.newDocumentErrorAtCharacter("in \\u hexadecimal character escape")
+	return scanSkip, s.newDocumentErrorAtCharacter("in \\u hexadecimal character escape")
 }
 
 // after reading `-` during a number
@@ -514,14 +498,14 @@ func (s *scanner) stateNeg(c byte) (state, error) {
 	if c == '0' {
 		s.step = s.state0
 		s.unfinishedLiteral = false
-		return scanContinue, nil
+		return scanSkip, nil
 	}
 	if '1' <= c && c <= '9' {
 		s.step = s.state1
 		s.unfinishedLiteral = false
-		return scanContinue, nil
+		return scanSkip, nil
 	}
-	return scanContinue, s.newDocumentErrorAtCharacter("in numeric literal")
+	return scanSkip, s.newDocumentErrorAtCharacter("in numeric literal")
 }
 
 // after reading a non-zero integer during a number,
@@ -529,7 +513,7 @@ func (s *scanner) stateNeg(c byte) (state, error) {
 func (s *scanner) state1(c byte) (state, error) {
 	if '0' <= c && c <= '9' {
 		s.step = s.state1
-		return scanContinue, nil
+		return scanSkip, nil
 	}
 	return s.state0(c)
 }
@@ -539,10 +523,10 @@ func (s *scanner) state0(c byte) (state, error) {
 	if c == '.' {
 		s.unfinishedLiteral = true
 		s.step = s.stateDot
-		return scanContinue, nil
+		return scanSkip, nil
 	}
 	if c == 'e' || c == 'E' {
-		return scanContinue, s.newDocumentErrorAtCharacter(messageEIsNotAllowed)
+		return scanSkip, s.newDocumentErrorAtCharacter(messageEIsNotAllowed)
 	}
 	return s.stateEndValue(c)
 }
@@ -552,19 +536,19 @@ func (s *scanner) stateDot(c byte) (state, error) {
 	if '0' <= c && c <= '9' {
 		s.unfinishedLiteral = false
 		s.step = s.stateDot0
-		return scanContinue, nil
+		return scanSkip, nil
 	}
-	return scanContinue, s.newDocumentErrorAtCharacter("after decimal point in numeric literal")
+	return scanSkip, s.newDocumentErrorAtCharacter("after decimal point in numeric literal")
 }
 
 // after reading the integer, decimal point, and subsequent
 // digits of a number, such as after reading `3.14`
 func (s *scanner) stateDot0(c byte) (state, error) {
 	if '0' <= c && c <= '9' {
-		return scanContinue, nil
+		return scanSkip, nil
 	}
 	if c == 'e' || c == 'E' {
-		return scanContinue, s.newDocumentErrorAtCharacter(messageEIsNotAllowed)
+		return scanSkip, s.newDocumentErrorAtCharacter(messageEIsNotAllowed)
 	}
 	return s.stateEndValue(c)
 }
@@ -573,18 +557,18 @@ func (s *scanner) stateDot0(c byte) (state, error) {
 func (s *scanner) stateT(c byte) (state, error) {
 	if c == 'r' {
 		s.step = s.stateTr
-		return scanContinue, nil
+		return scanSkip, nil
 	}
-	return scanContinue, s.newDocumentErrorAtCharacter("in literal true (expecting 'r')")
+	return scanSkip, s.newDocumentErrorAtCharacter("in literal true (expecting 'r')")
 }
 
 // after reading `tr`
 func (s *scanner) stateTr(c byte) (state, error) {
 	if c == 'u' {
 		s.step = s.stateTru
-		return scanContinue, nil
+		return scanSkip, nil
 	}
-	return scanContinue, s.newDocumentErrorAtCharacter("in literal true (expecting 'u')")
+	return scanSkip, s.newDocumentErrorAtCharacter("in literal true (expecting 'u')")
 }
 
 // after reading `tru`
@@ -592,36 +576,36 @@ func (s *scanner) stateTru(c byte) (state, error) {
 	if c == 'e' {
 		s.step = s.stateEndValue
 		s.unfinishedLiteral = false
-		return scanContinue, nil
+		return scanSkip, nil
 	}
-	return scanContinue, s.newDocumentErrorAtCharacter("in literal true (expecting 'e')")
+	return scanSkip, s.newDocumentErrorAtCharacter("in literal true (expecting 'e')")
 }
 
 // after reading `f`
 func (s *scanner) stateF(c byte) (state, error) {
 	if c == 'a' {
 		s.step = s.stateFa
-		return scanContinue, nil
+		return scanSkip, nil
 	}
-	return scanContinue, s.newDocumentErrorAtCharacter("in literal false (expecting 'a')")
+	return scanSkip, s.newDocumentErrorAtCharacter("in literal false (expecting 'a')")
 }
 
 // after reading `fa`
 func (s *scanner) stateFa(c byte) (state, error) {
 	if c == 'l' {
 		s.step = s.stateFal
-		return scanContinue, nil
+		return scanSkip, nil
 	}
-	return scanContinue, s.newDocumentErrorAtCharacter("in literal false (expecting 'l')")
+	return scanSkip, s.newDocumentErrorAtCharacter("in literal false (expecting 'l')")
 }
 
 // after reading `fal`
 func (s *scanner) stateFal(c byte) (state, error) {
 	if c == 's' {
 		s.step = s.stateFals
-		return scanContinue, nil
+		return scanSkip, nil
 	}
-	return scanContinue, s.newDocumentErrorAtCharacter("in literal false (expecting 's')")
+	return scanSkip, s.newDocumentErrorAtCharacter("in literal false (expecting 's')")
 }
 
 // after reading `fals`
@@ -629,27 +613,27 @@ func (s *scanner) stateFals(c byte) (state, error) {
 	if c == 'e' {
 		s.step = s.stateEndValue
 		s.unfinishedLiteral = false
-		return scanContinue, nil
+		return scanSkip, nil
 	}
-	return scanContinue, s.newDocumentErrorAtCharacter("in literal false (expecting 'e')")
+	return scanSkip, s.newDocumentErrorAtCharacter("in literal false (expecting 'e')")
 }
 
 // after reading `n`
 func (s *scanner) stateN(c byte) (state, error) {
 	if c == 'u' {
 		s.step = s.stateNu
-		return scanContinue, nil
+		return scanSkip, nil
 	}
-	return scanContinue, s.newDocumentErrorAtCharacter("in literal null (expecting 'u')")
+	return scanSkip, s.newDocumentErrorAtCharacter("in literal null (expecting 'u')")
 }
 
 // after reading `nu`
 func (s *scanner) stateNu(c byte) (state, error) {
 	if c == 'l' {
 		s.step = s.stateNul
-		return scanContinue, nil
+		return scanSkip, nil
 	}
-	return scanContinue, s.newDocumentErrorAtCharacter("in literal null (expecting 'l')")
+	return scanSkip, s.newDocumentErrorAtCharacter("in literal null (expecting 'l')")
 }
 
 // after reading `nul`
@@ -657,9 +641,9 @@ func (s *scanner) stateNul(c byte) (state, error) {
 	if c == 'l' {
 		s.step = s.stateEndValue
 		s.unfinishedLiteral = false
-		return scanContinue, nil
+		return scanSkip, nil
 	}
-	return scanContinue, s.newDocumentErrorAtCharacter("in literal null (expecting 'l')")
+	return scanSkip, s.newDocumentErrorAtCharacter("in literal null (expecting 'l')")
 }
 
 func (s *scanner) stateAnyAnnotationStart(c byte) (state, error) {
@@ -668,15 +652,15 @@ func (s *scanner) stateAnyAnnotationStart(c byte) (state, error) {
 		s.annotation = annotationInline
 		s.found(lexeme.InlineAnnotationBegin)
 		s.step = s.stateInlineAnnotation
-		return scanContinue, nil
+		return scanSkip, nil
 	}
-	return scanContinue, s.newDocumentErrorAtCharacter("after first slash")
+	return scanSkip, s.newDocumentErrorAtCharacter("after first slash")
 }
 
 func (s *scanner) stateInlineAnnotation(c byte) (state, error) {
 	switch c {
 	case ' ', '\t':
-		return scanContinue, nil
+		return scanSkip, nil
 	}
 
 	s.found(lexeme.InlineAnnotationTextBegin)
@@ -693,13 +677,13 @@ func (s *scanner) stateInlineAnnotationText(c byte) (state, error) {
 		fn := s.returnToStep.Pop()
 		s.step = func(c byte) (state, error) {
 			if s.isAnnotationStart(c) {
-				return scanContinue, s.newDocumentErrorAtCharacter("after inline annotation")
+				return scanSkip, s.newDocumentErrorAtCharacter("after inline annotation")
 			}
 			return fn(c)
 		}
 		s.annotation = annotationNone
 	}
-	return scanContinue, nil
+	return scanSkip, nil
 }
 
 func (s *scanner) isCommentStart(c byte) bool {
@@ -719,9 +703,9 @@ func (s *scanner) stateAnyCommentStart(c byte) (state, error) {
 		// any symbol inline user comment
 		s.annotation = annotationNone
 		s.step = s.stateInlineComment
-		return scanContinue, nil
+		return scanSkip, nil
 	}
-	return scanContinue, s.newDocumentErrorAtCharacter("after first #")
+	return scanSkip, s.newDocumentErrorAtCharacter("after first #")
 }
 
 func (s *scanner) stateInlineComment(c byte) (state, error) {
@@ -730,7 +714,7 @@ func (s *scanner) stateInlineComment(c byte) (state, error) {
 		s.found(lexeme.NewLine)
 		s.index--
 	}
-	return scanContinue, nil
+	return scanSkip, nil
 }
 
 const messageEIsNotAllowed = "isn't allowed 'cause not obvious it's a float or an integer"
