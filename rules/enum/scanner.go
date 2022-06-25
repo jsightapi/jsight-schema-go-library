@@ -128,7 +128,7 @@ func (s *scanner) Length() (uint, error) {
 	var length uint
 	for {
 		lex, err := s.Next()
-		if stdErrors.Is(err, eos) {
+		if stdErrors.Is(err, errEOS) {
 			break
 		}
 		if err != nil {
@@ -156,7 +156,7 @@ func (s *scanner) Length() (uint, error) {
 	return length, nil
 }
 
-var eos = stdErrors.New("end of stream")
+var errEOS = stdErrors.New("end of stream")
 
 // Next reads schema byte by byte.
 // Stops if it detects lexical events.
@@ -188,6 +188,10 @@ func (s *scanner) Next() (lexeme.LexEvent, error) {
 		}
 	}
 
+	return s.processTail()
+}
+
+func (s *scanner) processTail() (lexeme.LexEvent, error) {
 	if s.stack.Len() != 0 {
 		s.index++
 		switch s.stack.Peek().Type() { //nolint:exhaustive // We handle all cases.
@@ -206,7 +210,7 @@ func (s *scanner) Next() (lexeme.LexEvent, error) {
 		return lexeme.LexEvent{}, err
 	}
 
-	return lexeme.LexEvent{}, eos
+	return lexeme.LexEvent{}, errEOS
 }
 
 // stateBegin first state of the scanner.
@@ -263,8 +267,8 @@ func (s *scanner) stateFoundArrayItemBegin(c byte) (state, error) {
 	if err != nil {
 		return scanSkip, err
 	}
-	switch r { //nolint:exhaustive // It's okay.
-	case scanBeginLiteral:
+
+	if r == scanBeginLiteral {
 		s.found(lexeme.ArrayItemBegin)
 		s.found(lexeme.LiteralBegin)
 	}
@@ -325,7 +329,7 @@ func (s *scanner) stateBeginArrayItemOrEmpty(c byte) (state, error) {
 	return s.stateBeginValue(c)
 }
 
-func (s *scanner) stateEndValue(c byte) (state, error) { //nolint:gocyclo // Pretty readable though.
+func (s *scanner) stateEndValue(c byte) (state, error) {
 	length := s.stack.Len()
 
 	if length == 0 { // json ex `{} `
@@ -346,8 +350,7 @@ func (s *scanner) stateEndValue(c byte) (state, error) { //nolint:gocyclo // Pre
 		t = s.stack.Get(length - 2).Type()
 	}
 
-	switch t { //nolint:exhaustive // We will return an error in over cases.
-	case lexeme.ArrayItemBegin:
+	if t == lexeme.ArrayItemBegin {
 		s.found(lexeme.ArrayItemEnd)
 		s.step = s.stateAfterArrayItem
 		return s.step(c)
@@ -425,7 +428,7 @@ func (s *scanner) stateEndTop(c byte) (state, error) {
 				return scanSkip, nil
 			}
 			s.found(lexeme.EndTop)
-			return scanSkip, eos
+			return scanSkip, errEOS
 		} else if s.annotation == annotationNone {
 			return scanSkip, s.newDocumentErrorAtCharacter("non-space byte after top-level value")
 		}
@@ -433,7 +436,7 @@ func (s *scanner) stateEndTop(c byte) (state, error) {
 
 	if s.hasTrailingCharacters {
 		s.found(lexeme.EndTop)
-		return scanSkip, eos
+		return scanSkip, errEOS
 	}
 	return scanSkip, nil
 }
@@ -659,14 +662,13 @@ func (s *scanner) stateNul(c byte) (state, error) {
 }
 
 func (s *scanner) stateAnyAnnotationStart(c byte) (state, error) {
-	switch c {
-	case '/': // second slash - inline annotation
-		s.annotation = annotationInline
-		s.found(lexeme.InlineAnnotationBegin)
-		s.step = s.stateInlineAnnotation
-		return scanSkip, nil
+	if c != '/' {
+		return scanSkip, s.newDocumentErrorAtCharacter("after first slash")
 	}
-	return scanSkip, s.newDocumentErrorAtCharacter("after first slash")
+	s.annotation = annotationInline
+	s.found(lexeme.InlineAnnotationBegin)
+	s.step = s.stateInlineAnnotation
+	return scanSkip, nil
 }
 
 func (s *scanner) stateInlineAnnotation(c byte) (state, error) {

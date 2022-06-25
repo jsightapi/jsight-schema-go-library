@@ -83,7 +83,7 @@ func (e *Enum) doCompile() (err error) {
 
 	for {
 		lex, err := scan.Next()
-		if stdErrors.Is(err, eos) {
+		if stdErrors.Is(err, errEOS) {
 			break
 		}
 		if err != nil {
