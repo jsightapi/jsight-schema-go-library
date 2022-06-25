@@ -51,7 +51,7 @@ func (e *Enum) computeLength() (length uint, err error) {
 		err = panics.Handle(recover(), err)
 	}()
 
-	return newScanner(e.file, scannerComputeLength).Length(), err
+	return newScanner(e.file, scannerComputeLength).Length()
 }
 
 // Check checks that enum is valid.

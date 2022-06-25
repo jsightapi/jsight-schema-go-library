@@ -116,7 +116,7 @@ func (e *DocumentError) detectNewLineSymbol() {
 	e.nl = '\n' // default new line
 	var found bool
 	for _, c := range content {
-		if c == '\n' || c == '\r' {
+		if bytes.IsNewLine(c) {
 			e.nl = c
 			found = true
 		} else if found { // first symbol after new line

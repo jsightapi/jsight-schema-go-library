@@ -227,7 +227,7 @@ func (s *Scanner) Length() uint {
 	}
 	for ; length > 0; length-- {
 		c := s.data[length-1]
-		if !bytes.IsSpace(c) {
+		if !bytes.IsBlank(c) {
 			break
 		}
 	}
@@ -475,7 +475,7 @@ func stateFoundObjectKeyBeginOrEmpty(s *Scanner, c byte) state {
 		s.found(lexeme.NewLine)
 		return scanSkipSpace
 	}
-	if bytes.IsSpace(c) {
+	if bytes.IsBlank(c) {
 		return scanSkipSpace
 	}
 	if s.isAnnotationStart(c) {
@@ -508,7 +508,7 @@ func stateFoundObjectKeyBegin(s *Scanner, c byte) state {
 		s.step = stateFoundObjectKeyBeginAfterNewLine
 		return scanSkipSpace
 	}
-	if bytes.IsSpace(c) {
+	if bytes.IsBlank(c) {
 		return scanSkipSpace
 	}
 	if s.isAnnotationStart(c) {
@@ -539,7 +539,7 @@ func stateFoundObjectKeyBeginAfterNewLine(s *Scanner, c byte) state {
 		s.found(lexeme.NewLine)
 		return scanSkipSpace
 	}
-	if bytes.IsSpace(c) {
+	if bytes.IsBlank(c) {
 		return scanSkipSpace
 	}
 	if s.isCommentStart(c) {
@@ -664,7 +664,7 @@ func stateBeginValue(s *Scanner, c byte) state { //nolint:gocyclo // It's okay.
 		s.found(lexeme.NewLine)
 		return scanSkipSpace
 	}
-	if bytes.IsSpace(c) {
+	if bytes.IsBlank(c) {
 		return scanSkipSpace
 	}
 	if s.isAnnotationStart(c) {
@@ -823,7 +823,7 @@ func stateAfterObjectKey(s *Scanner, c byte) state {
 	if s.isNewLine(c) {
 		s.found(lexeme.NewLine)
 	}
-	if bytes.IsSpace(c) {
+	if bytes.IsBlank(c) {
 		return scanSkipSpace
 	}
 	if s.isAnnotationStart(c) {
@@ -843,7 +843,7 @@ func stateAfterObjectValue(s *Scanner, c byte) state {
 		s.found(lexeme.NewLine)
 		return scanSkipSpace
 	}
-	if bytes.IsSpace(c) {
+	if bytes.IsBlank(c) {
 		return scanSkipSpace
 	}
 	if s.isAnnotationStart(c) {
@@ -869,7 +869,7 @@ func stateAfterArrayItem(s *Scanner, c byte) state {
 		s.found(lexeme.NewLine)
 		return scanSkipSpace
 	}
-	if bytes.IsSpace(c) {
+	if bytes.IsBlank(c) {
 		return scanSkipSpace
 	}
 	if s.isAnnotationStart(c) {
@@ -940,7 +940,7 @@ func stateEndTop(s *Scanner, c byte) state {
 		s.switchToComment()
 		return scanContinue
 
-	case !bytes.IsSpace(c):
+	case !bytes.IsBlank(c):
 		if s.lengthComputing {
 			if s.stack.Len() > 0 {
 				// Looks like we have invalid schema, and we should keep scanning.
@@ -1205,7 +1205,7 @@ func stateTypesShortcutSchemaName(s *Scanner, c byte) state {
 	case bytes.IsValidUserTypeNameByte(c):
 		s.step = stateTypesShortcutSchemaName
 
-	case c == ' ' || c == '\t':
+	case bytes.IsSpace(c):
 		s.step = stateTypesShortcutBeforePipe
 
 	case c == '|':
@@ -1231,7 +1231,7 @@ func stateTypesShortcutBeforePipe(s *Scanner, c byte) state {
 	}
 
 	switch {
-	case c == ' ' || c == '\t':
+	case bytes.IsSpace(c):
 		s.step = stateTypesShortcutBeforePipe
 
 	case c == '|':
@@ -1290,7 +1290,7 @@ func stateMultiLineAnnotation(s *Scanner, c byte) state {
 		s.found(lexeme.NewLine)
 		return scanSkipSpace
 	}
-	if bytes.IsSpace(c) {
+	if bytes.IsBlank(c) {
 		return scanSkipSpace
 	}
 	if c == '{' {
@@ -1306,7 +1306,7 @@ func stateMultiLineAnnotationEndAfterObject(s *Scanner, c byte) state {
 		s.found(lexeme.NewLine)
 		return scanSkipSpace
 	}
-	if bytes.IsSpace(c) {
+	if bytes.IsBlank(c) {
 		return scanContinue
 	}
 	if c == '*' {
@@ -1344,10 +1344,10 @@ func stateInlineAnnotation(s *Scanner, c byte) state {
 }
 
 func stateInlineAnnotationTextPrefix(s *Scanner, c byte) state {
-	if c == ' ' || c == '\t' {
+	if bytes.IsSpace(c) {
 		return scanSkipSpace
 	}
-	if c == '\n' || c == '\r' {
+	if bytes.IsNewLine(c) {
 		s.found(lexeme.InlineAnnotationEnd)
 		s.found(lexeme.NewLine)
 		s.step = s.returnToStep.Pop()
@@ -1370,7 +1370,7 @@ func stateInlineAnnotationTextPrefix(s *Scanner, c byte) state {
 }
 
 func stateInlineAnnotationTextPrefix2(s *Scanner, c byte) state {
-	if c == ' ' || c == '\t' {
+	if bytes.IsSpace(c) {
 		return scanContinue
 	}
 	s.found(lexeme.InlineAnnotationTextBegin)
@@ -1408,7 +1408,7 @@ func stateInlineAnnotationText(s *Scanner, c byte) state {
 }
 
 func stateInlineAnnotationTextSkip(s *Scanner, c byte) state {
-	if c != '\n' && c != '\r' {
+	if !bytes.IsNewLine(c) {
 		return scanContinue
 	}
 
@@ -1449,7 +1449,7 @@ func stateBeginAnnotationObjectKey(s *Scanner, c byte) state {
 }
 
 func stateInAnnotationObjectKeyFirstLetter(s *Scanner, c byte) state {
-	if (s.boundary == 0 && (c == ':' || c == '\n' || c == '\r' || c == '\\')) || c == s.boundary || c < 0x20 {
+	if (s.boundary == 0 && (c == ':' || bytes.IsNewLine(c) || c == '\\')) || c == s.boundary || c < 0x20 {
 		panic(s.newDocumentError(errors.ErrInvalidCharacterInAnnotationObjectKey, c))
 	}
 	s.step = stateInAnnotationObjectKey
@@ -1467,7 +1467,7 @@ func stateInAnnotationObjectKey(s *Scanner, c byte) state {
 	case c == ' ':
 		s.step = stateInAnnotationObjectKeyAfter
 
-	case c < 0x20 || (c == '"' || c == '\n' || c == '\r'):
+	case c < 0x20 || (c == '"' || bytes.IsNewLine(c)):
 		panic(s.newDocumentError(errors.ErrInvalidCharacterInAnnotationObjectKey, c))
 	}
 	return scanContinue
@@ -1523,7 +1523,7 @@ func stateAnyCommentStart(s *Scanner, c byte) state {
 }
 
 func stateInlineComment(s *Scanner, c byte) state {
-	if c == '\n' || c == '\r' {
+	if bytes.IsNewLine(c) {
 		s.step = s.returnToStep.Pop()
 		s.found(lexeme.NewLine)
 		s.index--

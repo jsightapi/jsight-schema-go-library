@@ -121,18 +121,18 @@ func scannerComputeLength(s *scanner) {
 	s.lengthComputing = true
 }
 
-func (s *scanner) Length() uint {
+func (s *scanner) Length() (uint, error) {
 	if !s.lengthComputing {
-		panic("Method not allowed")
+		return 0, stdErrors.New("method not allowed")
 	}
 	var length uint
 	for {
 		lex, err := s.Next()
+		if stdErrors.Is(err, eos) {
+			break
+		}
 		if err != nil {
-			if stdErrors.Is(err, eos) {
-				break
-			}
-			panic(err)
+			return 0, err
 		}
 
 		if lex.Type() == lexeme.EndTop {
@@ -149,22 +149,25 @@ func (s *scanner) Length() uint {
 	}
 	for ; length > 0; length-- {
 		c := s.data[length-1]
-		if !bytes.IsSpace(c) {
+		if !bytes.IsBlank(c) {
 			break
 		}
 	}
-	return length
+	return length, nil
 }
 
 var eos = stdErrors.New("end of stream")
 
 // Next reads schema byte by byte.
-// Panic if an invalid jSchema structure is found.
 // Stops if it detects lexical events.
 // Returns pointer to found lexeme event, or nil if you have complete reading.
 func (s *scanner) Next() (lexeme.LexEvent, error) {
 	if len(s.finds) != 0 {
-		return s.processingFoundLexeme(s.shiftFound()), nil
+		lex, err := s.shiftFound()
+		if err != nil {
+			return lexeme.LexEvent{}, err
+		}
+		return s.processingFoundLexeme(lex)
 	}
 
 	for s.index < s.dataSize {
@@ -177,7 +180,11 @@ func (s *scanner) Next() (lexeme.LexEvent, error) {
 		}
 
 		if len(s.finds) != 0 {
-			return s.processingFoundLexeme(s.shiftFound()), nil
+			lex, err := s.shiftFound()
+			if err != nil {
+				return lexeme.LexEvent{}, err
+			}
+			return s.processingFoundLexeme(lex)
 		}
 	}
 
@@ -188,11 +195,11 @@ func (s *scanner) Next() (lexeme.LexEvent, error) {
 			if s.unfinishedLiteral {
 				break
 			}
-			return s.processingFoundLexeme(lexeme.LiteralEnd), nil
+			return s.processingFoundLexeme(lexeme.LiteralEnd)
 		case lexeme.InlineAnnotationBegin:
-			return s.processingFoundLexeme(lexeme.InlineAnnotationEnd), nil
+			return s.processingFoundLexeme(lexeme.InlineAnnotationEnd)
 		case lexeme.InlineAnnotationTextBegin:
-			return s.processingFoundLexeme(lexeme.InlineAnnotationTextEnd), nil
+			return s.processingFoundLexeme(lexeme.InlineAnnotationTextEnd)
 		}
 		err := errors.NewDocumentError(s.file, errors.ErrUnexpectedEOF)
 		err.SetIndex(s.dataSize - 1)
@@ -205,7 +212,7 @@ func (s *scanner) Next() (lexeme.LexEvent, error) {
 // stateBegin first state of the scanner.
 // Expects open square brace as the start of the enum values.
 func (s *scanner) stateBegin(c byte) (state, error) {
-	if bytes.IsSpace(c) {
+	if bytes.IsBlank(c) {
 		return scanSkip, nil
 	}
 
@@ -221,13 +228,15 @@ func (s *scanner) stateBegin(c byte) (state, error) {
 }
 
 func (s *scanner) stateFoundArrayItemBeginOrEmpty(c byte) (state, error) {
-	if s.isNewLine(c) {
+	if bytes.IsNewLine(c) {
+		if s.annotation == annotationInline {
+			return scanSkip, s.newDocumentErrorAtCharacter("inside inline annotation")
+		}
 		s.found(lexeme.NewLine)
 		return scanSkip, nil
 	}
 	if s.isCommentStart(c) {
-		s.switchToComment()
-		return scanSkip, nil
+		return scanSkip, s.switchToComment()
 	}
 
 	if c == ']' {
@@ -247,8 +256,7 @@ func (s *scanner) stateFoundArrayItemBeginOrEmpty(c byte) (state, error) {
 
 func (s *scanner) stateFoundArrayItemBegin(c byte) (state, error) {
 	if s.isCommentStart(c) {
-		s.switchToComment()
-		return scanSkip, nil
+		return scanSkip, s.switchToComment()
 	}
 
 	r, err := s.stateBeginValue(c)
@@ -264,16 +272,18 @@ func (s *scanner) stateFoundArrayItemBegin(c byte) (state, error) {
 }
 
 func (s *scanner) stateBeginValue(c byte) (state, error) { //nolint:gocyclo // It's okay.
-	if s.isNewLine(c) {
+	if bytes.IsNewLine(c) {
+		if s.annotation == annotationInline {
+			return scanSkip, s.newDocumentErrorAtCharacter("inside inline annotation")
+		}
 		s.found(lexeme.NewLine)
 		return scanSkip, nil
 	}
-	if bytes.IsSpace(c) {
+	if bytes.IsBlank(c) {
 		return scanSkip, nil
 	}
 	if s.isAnnotationStart(c) {
-		s.switchToAnnotation()
-		return scanSkip, nil
+		return scanSkip, s.switchToAnnotation()
 	}
 	switch c {
 	case '"':
@@ -353,20 +363,21 @@ func (s *scanner) stateEndValue(c byte) (state, error) { //nolint:gocyclo // Pre
 }
 
 func (s *scanner) stateAfterArrayItem(c byte) (state, error) {
-	if s.isNewLine(c) {
+	if bytes.IsNewLine(c) {
+		if s.annotation == annotationInline {
+			return scanSkip, s.newDocumentErrorAtCharacter("inside inline annotation")
+		}
 		s.found(lexeme.NewLine)
 		return scanSkip, nil
 	}
-	if bytes.IsSpace(c) {
+	if bytes.IsBlank(c) {
 		return scanSkip, nil
 	}
 	if s.isAnnotationStart(c) {
-		s.switchToAnnotation()
-		return scanSkip, nil
+		return scanSkip, s.switchToAnnotation()
 	}
 	if s.isCommentStart(c) {
-		s.switchToComment()
-		return scanSkip, nil
+		return scanSkip, s.switchToComment()
 	}
 	if c == ',' {
 		s.step = s.stateFoundArrayItemBegin
@@ -375,7 +386,7 @@ func (s *scanner) stateAfterArrayItem(c byte) (state, error) {
 	if c == ']' {
 		return s.stateFoundArrayEnd()
 	}
-	panic(s.newDocumentErrorAtCharacter("after array item"))
+	return scanSkip, s.newDocumentErrorAtCharacter("after array item")
 }
 
 func (s *scanner) stateFoundArrayEnd() (state, error) {
@@ -393,19 +404,20 @@ func (s *scanner) stateFoundArrayEnd() (state, error) {
 // Only space characters should be seen now.
 func (s *scanner) stateEndTop(c byte) (state, error) {
 	switch {
-	case s.isNewLine(c):
+	case bytes.IsNewLine(c):
+		if s.annotation == annotationInline {
+			return scanSkip, s.newDocumentErrorAtCharacter("inside inline annotation")
+		}
 		s.found(lexeme.NewLine)
 		return scanSkip, nil
 
 	case s.isAnnotationStart(c):
-		s.switchToAnnotation()
-		return scanSkip, nil
+		return scanSkip, s.switchToAnnotation()
 
 	case s.isCommentStart(c):
-		s.switchToComment()
-		return scanSkip, nil
+		return scanSkip, s.switchToComment()
 
-	case !bytes.IsSpace(c):
+	case !bytes.IsBlank(c):
 		if s.lengthComputing {
 			if s.stack.Len() > 0 {
 				// Looks like we have invalid schema, and we should keep scanning.
@@ -690,12 +702,13 @@ func (s *scanner) isCommentStart(c byte) bool {
 	return (s.annotation == annotationNone || s.annotation == annotationInline) && c == '#'
 }
 
-func (s *scanner) switchToComment() {
+func (s *scanner) switchToComment() error {
 	if s.annotation != annotationNone && s.annotation != annotationInline {
-		panic(s.newDocumentErrorAtCharacter("inside user inline comment"))
+		return s.newDocumentErrorAtCharacter("inside user inline comment")
 	}
 	s.returnToStep.Push(s.step)
 	s.step = s.stateAnyCommentStart
+	return nil
 }
 
 func (s *scanner) stateAnyCommentStart(c byte) (state, error) {
@@ -709,7 +722,7 @@ func (s *scanner) stateAnyCommentStart(c byte) (state, error) {
 }
 
 func (s *scanner) stateInlineComment(c byte) (state, error) {
-	if c == '\n' || c == '\r' {
+	if bytes.IsNewLine(c) {
 		s.step = s.returnToStep.Pop()
 		s.found(lexeme.NewLine)
 		s.index--
@@ -723,15 +736,15 @@ func (s *scanner) found(lexType lexeme.LexEventType) {
 	s.finds = append(s.finds, lexType)
 }
 
-func (s *scanner) shiftFound() lexeme.LexEventType {
+func (s *scanner) shiftFound() (lexeme.LexEventType, error) {
 	length := len(s.finds)
 	if length == 0 {
-		panic("Empty set of found lexical event")
+		return 0, stdErrors.New("empty set of found lexical event")
 	}
 	lexType := s.finds[0]
 	copy(s.finds[0:], s.finds[1:])
 	s.finds = s.finds[:length-1]
-	return lexType
+	return lexType, nil
 }
 
 func (s *scanner) newDocumentErrorAtCharacter(context string) errors.DocumentError {
@@ -744,20 +757,20 @@ func (s *scanner) newDocumentErrorAtCharacter(context string) errors.DocumentErr
 	return err
 }
 
-func (s *scanner) processingFoundLexeme(lexType lexeme.LexEventType) lexeme.LexEvent { //nolint:gocyclo // todo try to make this more readable
+func (s *scanner) processingFoundLexeme(lexType lexeme.LexEventType) (lexeme.LexEvent, error) { //nolint:gocyclo // todo try to make this more readable
 	i := s.index - 1
 	if lexType == lexeme.NewLine || lexType == lexeme.EndTop { //nolint:gocritic // todo rewrite this logic to switch
-		return lexeme.NewLexEvent(lexType, i, i, s.file)
+		return lexeme.NewLexEvent(lexType, i, i, s.file), nil
 	} else if lexType.IsOpening() {
 		// `[`, `"` or literal first character (ex: `1` in `123`).
 		lex := lexeme.NewLexEvent(lexType, i, i, s.file)
 		s.stack.Push(lex)
-		return lex
+		return lex, nil
 	} else { // closing tag
 		pair := s.stack.Pop()
 		pairType := pair.Type()
 		if pairType == lexeme.ArrayBegin && lexType == lexeme.ArrayEnd {
-			return lexeme.NewLexEvent(lexType, pair.Begin(), i, s.file)
+			return lexeme.NewLexEvent(lexType, pair.Begin(), i, s.file), nil
 		} else if (pairType == lexeme.LiteralBegin && lexType == lexeme.LiteralEnd) ||
 			(pairType == lexeme.ArrayItemBegin && lexType == lexeme.ArrayItemEnd) ||
 			(pairType == lexeme.InlineAnnotationTextBegin && lexType == lexeme.InlineAnnotationTextEnd) ||
@@ -766,33 +779,21 @@ func (s *scanner) processingFoundLexeme(lexType lexeme.LexEventType) lexeme.LexE
 			if lexType == lexeme.MixedValueEnd && s.data[i-1] == ' ' {
 				i--
 			}
-			return lexeme.NewLexEvent(lexType, pair.Begin(), i-1, s.file)
+			return lexeme.NewLexEvent(lexType, pair.Begin(), i-1, s.file), nil
 		}
 	}
-	panic("Incorrect ending of the lexical event")
-}
-
-func (s *scanner) isNewLine(c byte) bool {
-	if c != '\n' && c != '\r' {
-		return false
-	}
-
-	if s.annotation == annotationInline {
-		panic(s.newDocumentErrorAtCharacter("inside inline annotation"))
-	}
-	return true
+	return lexeme.LexEvent{}, stdErrors.New("incorrect ending of the lexical event")
 }
 
 func (*scanner) isAnnotationStart(c byte) bool {
 	return c == '/'
 }
 
-func (s *scanner) switchToAnnotation() {
-	switch s.annotation {
-	case annotationNone:
-		s.returnToStep.Push(s.step)
-		s.step = s.stateAnyAnnotationStart
-	default:
-		panic(s.newDocumentErrorAtCharacter("inside inline annotation"))
+func (s *scanner) switchToAnnotation() error {
+	if s.annotation != annotationNone {
+		return s.newDocumentErrorAtCharacter("inside inline annotation")
 	}
+	s.returnToStep.Push(s.step)
+	s.step = s.stateAnyAnnotationStart
+	return nil
 }
