@@ -3501,8 +3501,11 @@ func TestSchema_GetAST(t *testing.T) {
 				},
 				rules: map[string]string{
 					"@enum": `[
-"foo",
-"bar"
+// Comment 1
+"foo", // Comment 2
+// Comment 3
+"bar"  // Comment 4
+// Comment 5
 ]`,
 				},
 			},

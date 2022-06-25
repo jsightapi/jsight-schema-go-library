@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/jsightapi/jsight-schema-go-library/bytes"
+	jschema "github.com/jsightapi/jsight-schema-go-library"
 )
 
 func TestEnum_Len(t *testing.T) {
@@ -15,15 +15,24 @@ func TestEnum_Len(t *testing.T) {
 			"[]":               2,
 			"[]   \t  \n  \r ": 2,
 			`[
-	42,
-	3.14,
-	"foo",
-	true,
-	false,
-	null
-]`: 44,
+				42,
+				3.14,
+				"foo",
+				true,
+				false,
+				null
+			]`: 65,
 			"[42] something": 4,
 			"":               0,
+			`[
+	// Interline comment 1
+	1, // Comment for 1
+	2, // Comment for 2
+
+	// Interline comment 2
+	3, // Comment for 3
+	4  // Comment for 4
+]`: 136,
 		}
 
 		for given, expected := range cc {
@@ -86,6 +95,15 @@ func TestEnum_Check(t *testing.T) {
 	true,
 	false,
 	null
+]`,
+			`[
+	// Interline comment 1
+	1, // Comment for 1
+	2, // Comment for 2
+
+	// Interline comment 2
+	3, // Comment for 3
+	4  // Comment for 4
 ]`,
 		}
 
@@ -158,27 +176,127 @@ func TestEnum_Check(t *testing.T) {
 	})
 }
 
+func TestEnum_GetAST(t *testing.T) {
+	t.Run("positive", func(t *testing.T) {
+		actual, err := New("", []byte(`[
+	// first comment
+	"foo",
+	42, // 42 comment
+	3.14,
+	true,
+	false, // false comment
+	// before null comment
+	null // null comment
+	// last comment
+]`)).
+			GetAST()
+
+		require.NoError(t, err)
+		assert.Equal(t, jschema.ASTNode{
+			JSONType:   jschema.JSONTypeArray,
+			SchemaType: string(jschema.SchemaTypeEnum),
+			Children: []jschema.ASTNode{
+				{
+					JSONType:   jschema.JSONTypeNull,
+					SchemaType: string(jschema.SchemaTypeComment),
+					Comment:    "first comment",
+				},
+				{
+					JSONType:   jschema.JSONTypeString,
+					SchemaType: string(jschema.SchemaTypeString),
+					Value:      `"foo"`,
+				},
+				{
+					JSONType:   jschema.JSONTypeNumber,
+					SchemaType: string(jschema.SchemaTypeInteger),
+					Value:      "42",
+					Comment:    "42 comment",
+				},
+				{
+					JSONType:   jschema.JSONTypeNumber,
+					SchemaType: string(jschema.SchemaTypeFloat),
+					Value:      "3.14",
+				},
+				{
+					JSONType:   jschema.JSONTypeBoolean,
+					SchemaType: string(jschema.SchemaTypeBoolean),
+					Value:      "true",
+				},
+				{
+					JSONType:   jschema.JSONTypeBoolean,
+					SchemaType: string(jschema.SchemaTypeBoolean),
+					Value:      "false",
+					Comment:    "false comment",
+				},
+				{
+					JSONType:   jschema.JSONTypeNull,
+					SchemaType: string(jschema.SchemaTypeComment),
+					Comment:    "before null comment",
+				},
+				{
+					JSONType:   jschema.JSONTypeNull,
+					SchemaType: string(jschema.SchemaTypeNull),
+					Value:      "null",
+					Comment:    "null comment",
+				},
+				{
+					JSONType:   jschema.JSONTypeNull,
+					SchemaType: string(jschema.SchemaTypeComment),
+					Comment:    "last comment",
+				},
+			},
+		}, actual)
+	})
+}
+
 func TestEnum_Values(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
-		vals, err := New("", []byte(`[
+		cc := map[string][]Value{
+			`[
 	"foo",
 	42,
 	3.14,
 	true,
 	false,
 	null
-]`)).
-			Values()
+]`: {
+				{Value: []byte(`"foo"`)},
+				{Value: []byte("42")},
+				{Value: []byte("3.14")},
+				{Value: []byte("true")},
+				{Value: []byte("false")},
+				{Value: []byte("null")},
+			},
 
-		require.NoError(t, err)
-		assert.Equal(t, []bytes.Bytes{
-			[]byte(`"foo"`),
-			[]byte("42"),
-			[]byte("3.14"),
-			[]byte("true"),
-			[]byte("false"),
-			[]byte("null"),
-		}, vals)
+			`[
+	// Interline comment 1
+	"foo", // Foo comment
+	"bar", // Bar comment
+
+	// Interline comment 2
+	"fizz", // Fizz comment
+	"buzz"  // Buzz comment
+
+	// Interline comment 3
+]`: {
+				{Comment: "Interline comment 1"},
+				{Value: []byte(`"foo"`), Comment: "Foo comment"},
+				{Value: []byte(`"bar"`), Comment: "Bar comment"},
+				{Comment: "Interline comment 2"},
+				{Value: []byte(`"fizz"`), Comment: "Fizz comment"},
+				{Value: []byte(`"buzz"`), Comment: "Buzz comment"},
+				{Comment: "Interline comment 3"},
+			},
+		}
+
+		for given, expected := range cc {
+			t.Run(given, func(t *testing.T) {
+				actual, err := New("", []byte(given)).Values()
+
+				require.NoError(t, err)
+				assert.Equal(t, actual, expected)
+			})
+		}
 	})
 
 	t.Run("negative", func(t *testing.T) {

@@ -158,8 +158,9 @@ func (l *enumValueLoader) ruleName(lex lexeme.LexEvent) {
 	}
 
 	l.enumConstraint.SetRuleName(v)
-	for _, v := range vv {
-		l.enumConstraint.Append(v)
+	for i, v := range vv {
+		l.enumConstraint.Append(v.Value)
+		l.enumConstraint.SetComment(i, v.Comment)
 	}
 	l.stateFunc = l.endOfLoading
 	l.inProgress = false

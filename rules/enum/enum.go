@@ -7,6 +7,7 @@ import (
 	jschema "github.com/jsightapi/jsight-schema-go-library"
 	"github.com/jsightapi/jsight-schema-go-library/bytes"
 	"github.com/jsightapi/jsight-schema-go-library/fs"
+	"github.com/jsightapi/jsight-schema-go-library/internal/json"
 	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
 )
 
@@ -14,15 +15,26 @@ import (
 type Enum struct {
 	compileErr       error
 	computeLengthErr error
+	buildAStNodeErr  error
 
-	// A file where enum content is placed.
-	file *fs.File
+	file   *fs.File
+	values []Value
 
-	values            []bytes.Bytes
+	astNode jschema.ASTNode
+	length  uint
+
 	compileOnce       sync.Once
 	computeLengthOnce sync.Once
+	buildASTNodeOnce  sync.Once
+}
 
-	length uint
+// Value represents single enum's value.
+type Value struct {
+	// Comment value's comment.
+	Comment string
+
+	// Value enum value.
+	Value bytes.Bytes
 }
 
 var _ jschema.Rule = (*Enum)(nil)
@@ -49,8 +61,55 @@ func (e *Enum) Check() error {
 	return e.compile()
 }
 
+func (e *Enum) GetAST() (jschema.ASTNode, error) {
+	if err := e.compile(); err != nil {
+		return jschema.ASTNode{}, err
+	}
+
+	return e.buildASTNode()
+}
+
+func (e *Enum) buildASTNode() (jschema.ASTNode, error) {
+	e.buildASTNodeOnce.Do(func() {
+		e.astNode = jschema.ASTNode{
+			JSONType:   jschema.JSONTypeArray,
+			SchemaType: string(jschema.SchemaTypeEnum),
+		}
+
+		if len(e.values) == 0 {
+			return
+		}
+
+		e.astNode.Children = make([]jschema.ASTNode, 0, len(e.values))
+
+		for _, v := range e.values {
+			n := jschema.ASTNode{
+				Value:   v.Value.String(),
+				Comment: v.Comment,
+			}
+
+			if v.Value == nil {
+				n.JSONType = jschema.JSONTypeNull
+				n.SchemaType = string(jschema.SchemaTypeComment)
+			} else {
+				n.JSONType = json.Guess(v.Value).JsonType().ToTokenType()
+
+				st, err := jschema.GuessSchemaType(v.Value)
+				if err != nil {
+					e.buildAStNodeErr = err
+					return
+				}
+				n.SchemaType = string(st)
+			}
+
+			e.astNode.Children = append(e.astNode.Children, n)
+		}
+	})
+	return e.astNode, e.buildAStNodeErr
+}
+
 // Values returns a list of values defined in this enum.
-func (e *Enum) Values() ([]bytes.Bytes, error) {
+func (e *Enum) Values() ([]Value, error) {
 	if err := e.compile(); err != nil {
 		return nil, err
 	}
@@ -67,6 +126,7 @@ func (e *Enum) compile() error {
 func (e *Enum) doCompile() (err error) {
 	scan := newScanner(e.file)
 
+	collectLiteral := false
 	for {
 		lex, err := scan.Next()
 		if stdErrors.Is(err, errEOS) {
@@ -77,8 +137,25 @@ func (e *Enum) doCompile() (err error) {
 		}
 
 		// Collect enum values.
-		if lex.Type() == lexeme.LiteralEnd {
-			e.values = append(e.values, lex.Value())
+		switch lex.Type() { //nolint:exhaustive // We're interested only in these types.
+		case lexeme.LiteralEnd:
+			collectLiteral = true
+			e.values = append(e.values, Value{
+				Value: lex.Value(),
+			})
+
+		case lexeme.NewLine:
+			collectLiteral = false
+
+		case lexeme.InlineAnnotationTextEnd:
+			comment := lex.Value().TrimSpaces().String()
+			if collectLiteral {
+				e.values[len(e.values)-1].Comment = comment
+			} else {
+				e.values = append(e.values, Value{
+					Comment: comment,
+				})
+			}
 		}
 	}
 	return nil
