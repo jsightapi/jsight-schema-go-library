@@ -27,8 +27,6 @@ func TestEnum_Len(t *testing.T) {
 ]`: 44,
 			"[42] something": 4,
 			"":               0,
-			"42":             2,
-			"42 [] foo":      2,
 		}
 
 		for given, expected := range cc {
@@ -41,11 +39,29 @@ func TestEnum_Len(t *testing.T) {
 	})
 
 	t.Run("negative", func(t *testing.T) {
-		_, err := New("", []byte("[")).Len()
-		assert.EqualError(t, err, `ERROR (code 303): Unexpected end of file
+		cc := map[string]string{
+			`ERROR (code 1600): An array was expected as a value for the "enum"
+	in line 1 on file 
+	> 42
+	--^`: "42",
+
+			`ERROR (code 1600): An array was expected as a value for the "enum"
+	in line 1 on file 
+	> 42 [] foo
+	--^`: "42 [] foo",
+
+			`ERROR (code 303): Unexpected end of file
 	in line 1 on file 
 	> [
-	--^`)
+	--^`: "[",
+		}
+
+		for expected, given := range cc {
+			t.Run(expected, func(t *testing.T) {
+				_, err := New("", []byte(given)).Len()
+				assert.EqualError(t, err, expected)
+			})
+		}
 	})
 }
 
@@ -114,7 +130,7 @@ func TestEnum_Check(t *testing.T) {
 	in line 1 on file enum
 	> [1,2,3] xxx
 	----------^`,
-			"xxx [1,2,3]": `ERROR (code 301): Invalid character "x" looking for beginning of value
+			"xxx [1,2,3]": `ERROR (code 1600): An array was expected as a value for the "enum"
 	in line 1 on file enum
 	> xxx [1,2,3]
 	--^`,
@@ -126,11 +142,11 @@ func TestEnum_Check(t *testing.T) {
 	in line 1 on file enum
 	> [,1]
 	---^`,
-			"[ {} ]": `ERROR (code 807): Incorrect array item type in "enum". Only literals are allowed.
+			"[ {} ]": `ERROR (code 301): Invalid character "{" looking for beginning of value
 	in line 1 on file enum
 	> [ {} ]
 	----^`,
-			"[ [] ]": `ERROR (code 807): Incorrect array item type in "enum". Only literals are allowed.
+			"[ [] ]": `ERROR (code 301): Invalid character "[" looking for beginning of value
 	in line 1 on file enum
 	> [ [] ]
 	----^`,

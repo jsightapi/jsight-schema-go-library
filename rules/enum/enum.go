@@ -1,6 +1,7 @@
 package enum
 
 import (
+	stdErrors "errors"
 	"sync"
 
 	jschema "github.com/jsightapi/jsight-schema-go-library"
@@ -47,10 +48,10 @@ func (e *Enum) Len() (uint, error) {
 
 func (e *Enum) computeLength() (length uint, err error) {
 	defer func() {
-		err = panics.Handle(recover(), nil)
+		err = panics.Handle(recover(), err)
 	}()
 
-	return newScanner(e.file, ComputeLength).Length(), err
+	return newScanner(e.file, scannerComputeLength).Length(), err
 }
 
 // Check checks that enum is valid.
@@ -75,20 +76,19 @@ func (e *Enum) compile() error {
 
 func (e *Enum) doCompile() (err error) {
 	defer func() {
-		err = panics.Handle(recover(), nil)
+		err = panics.Handle(recover(), err)
 	}()
 
 	scan := newScanner(e.file)
-	checker := newEnumChecker()
 
 	for {
-		lex, ok := scan.Next() // can panic
-		if !ok {
+		lex, err := scan.Next()
+		if stdErrors.Is(err, eos) {
 			break
 		}
-
-		// Check that current lexeme is valid.
-		checker.Check(lex) // can panic
+		if err != nil {
+			return err
+		}
 
 		// Collect enum values.
 		if lex.Type() == lexeme.LiteralEnd {
