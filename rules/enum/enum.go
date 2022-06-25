@@ -9,7 +9,6 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/errors"
 	"github.com/jsightapi/jsight-schema-go-library/fs"
 	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
-	"github.com/jsightapi/jsight-schema-go-library/internal/panics"
 )
 
 // The Enum rule.
@@ -47,10 +46,6 @@ func (e *Enum) Len() (uint, error) {
 }
 
 func (e *Enum) computeLength() (length uint, err error) {
-	defer func() {
-		err = panics.Handle(recover(), err)
-	}()
-
 	return newScanner(e.file, scannerComputeLength).Length()
 }
 
@@ -75,10 +70,6 @@ func (e *Enum) compile() error {
 }
 
 func (e *Enum) doCompile() (err error) {
-	defer func() {
-		err = panics.Handle(recover(), err)
-	}()
-
 	scan := newScanner(e.file)
 
 	for {
