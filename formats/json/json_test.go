@@ -45,7 +45,10 @@ func TestDocument_Len(t *testing.T) {
 
 	t.Run("negative", func(t *testing.T) {
 		_, err := New("", []byte("foo"), AllowTrailingNonSpaceCharacters()).Len()
-		assert.EqualError(t, err, "ERROR (code 301): Invalid character \"o\" in literal false (expecting 'a')\n\tin line 1 on file \n\t> foo\n\t---^") //nolint:lll
+		assert.EqualError(t, err, `ERROR (code 301): Invalid character "o" in literal false (expecting 'a')
+	in line 1 on file 
+	> foo
+	---^`)
 	})
 }
 
@@ -78,7 +81,7 @@ func TestDocument_Check(t *testing.T) {
 			assert.EqualError(t, err, `ERROR (code 301): Invalid character "o" in literal false (expecting 'a')
 	in line 1 on file 
 	> foo
-	---^`) //nolint:lll
+	---^`)
 		})
 
 		t.Run("without allowed trailing non empty character", func(t *testing.T) {

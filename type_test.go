@@ -157,4 +157,5 @@ var allSchemaTypes = []SchemaType{
 	SchemaTypeEnum,
 	SchemaTypeMixed,
 	SchemaTypeAny,
+	SchemaTypeComment,
 }

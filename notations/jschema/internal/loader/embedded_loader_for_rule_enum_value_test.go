@@ -11,7 +11,7 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
 	"github.com/jsightapi/jsight-schema-go-library/internal/mocks"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
-	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/rules"
+	"github.com/jsightapi/jsight-schema-go-library/rules/enum"
 )
 
 func Test_newEnumValueLoader(t *testing.T) {
@@ -552,7 +552,7 @@ func TestEnumValueLoader_ruleName(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
 		ec := constraint.NewEnum()
 		el := newEnumValueLoader(ec, map[string]jschema.Rule{
-			"foo": rules.NewEnum("foo", []byte(`[42, 3.14, "foo", false, true, null]`)),
+			"foo": enum.New("foo", []byte(`[42, 3.14, "foo", false, true, null]`)),
 		}).(*enumValueLoader)
 		el.stateFunc = nil
 		el.ruleName(newFakeLexEventWithValue(lexeme.TypesShortcutEnd, " \nfoo\t \r"))
@@ -607,8 +607,8 @@ func TestEnumValueLoader_ruleName(t *testing.T) {
 			`Rule "ruleName" not an Enum`: {
 				"ruleName": mocks.NewRule(t),
 			},
-			`Invalid enum "ruleName": Invalid character "i" looking for beginning of value`: {
-				"ruleName": rules.NewEnum("ruleName", []byte("invalid")),
+			`Invalid enum "ruleName": An array was expected as a value for the "enum"`: {
+				"ruleName": enum.New("ruleName", []byte("invalid")),
 			},
 		}
 

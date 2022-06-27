@@ -10,11 +10,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestIsSpace(t *testing.T) {
-	for c := byte(0); c < 255; c++ {
-		t.Run(string(c), func(t *testing.T) {
-			actual := IsSpace(c)
-			assert.Equal(t, c == ' ' || c == '\t' || c == '\n' || c == '\r', actual)
+func TestBytes_CountSpacesFromLeft(t *testing.T) {
+	cc := map[string]int{
+		"":           0,
+		"foo":        0,
+		" \t\r\nfoo": 4,
+	}
+
+	for given, expected := range cc {
+		t.Run(given, func(t *testing.T) {
+			actual := Bytes(given).CountSpacesFromLeft()
+			assert.Equal(t, expected, actual)
 		})
 	}
 }
@@ -425,6 +431,39 @@ func TestBytes_LineFrom(t *testing.T) {
 			} else {
 				require.NoErrorf(t, err, "b.LineFrom(%v)", tt.s)
 				require.Equalf(t, Bytes(tt.want), got, "b.LineFrom(%v)", tt.s)
+			}
+		})
+	}
+}
+
+func TestQuoteChar(t *testing.T) {
+	cc := map[byte]string{
+		'\'': "'\\''",
+		'"':  `'"'`,
+		'c':  "'c'",
+	}
+
+	for given, expected := range cc {
+		t.Run(string(given), func(t *testing.T) {
+			actual := QuoteChar(given)
+			assert.Equal(t, expected, actual)
+		})
+	}
+}
+
+func BenchmarkQuoteChar(b *testing.B) {
+	cc := []byte{
+		'\'',
+		'"',
+		'c',
+	}
+
+	b.ReportAllocs()
+
+	for _, c := range cc {
+		b.Run(string(c), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				QuoteChar(c)
 			}
 		})
 	}

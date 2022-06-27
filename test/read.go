@@ -1,7 +1,7 @@
 package test
 
 import (
-	"io/ioutil"
+	"os"
 	"path"
 )
 
@@ -12,7 +12,7 @@ func directories() []dir {
 func readTestdataDirectory(relativePath string) []dir {
 	absoluteDirPath := path.Join(GetProjectRoot(), relativePath)
 
-	files, err := ioutil.ReadDir(absoluteDirPath)
+	files, err := os.ReadDir(absoluteDirPath)
 	if err != nil {
 		panic(err)
 	}
