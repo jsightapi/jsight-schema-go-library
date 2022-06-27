@@ -15,7 +15,6 @@ const (
 	JSONTypeArray    JSONType = "array"
 	JSONTypeObject   JSONType = "object"
 	JSONTypeShortcut JSONType = "reference"
-	JSONTypeMixed    JSONType = "mixed"
 	JSONTypeNull     JSONType = "null"
 )
 
