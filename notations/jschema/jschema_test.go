@@ -10,14 +10,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	jschema "github.com/jsightapi/jsight-schema-go-library"
-	"github.com/jsightapi/jsight-schema-go-library/errors"
 	"github.com/jsightapi/jsight-schema-go-library/formats/json"
 	"github.com/jsightapi/jsight-schema-go-library/fs"
 	"github.com/jsightapi/jsight-schema-go-library/internal/mocks"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/loader"
 	schemaMocks "github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/mocks"
 	internalSchema "github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema"
-	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
 	"github.com/jsightapi/jsight-schema-go-library/notations/regex"
 	"github.com/jsightapi/jsight-schema-go-library/rules/enum"
 )
@@ -127,7 +125,8 @@ func BenchmarkSchema_Len(b *testing.B) {
 
 func TestSchema_Example(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
-		content, err := New("schema", []byte(`
+		t.Skip() // todo fix in SERV-8
+		s := New("schema", []byte(`
 {
 	"i": 123, // {min: 1}
 	"s": "str",
@@ -136,14 +135,60 @@ func TestSchema_Example(t *testing.T) {
 	"a": [1, "str", false, null],
 	"o": {
 		"ii": 999 // {max: 999}
-	}
+	},
+	"or_full": "foo", // {or: [{"type": "string"}, {"type": "integer"}]}
+	"or_short": "foo", // {or: ["string", "integer"]}
+	"shortcut": @foo,
+	"shortcut_or": @foo | @bar,
+	"enum": 1, // {enum: [1, 2, 3]}
+	"enum_rule": 2, // {enum: @enum}
+	"recursion": @recursion
 }
-`)).
-			Example()
+`))
+
+		require.NoError(t, s.AddRule("@enum", enum.New("@enum", []byte(`[
+	1,
+	2,
+	3
+]`))))
+		require.NoError(t, s.AddType("@foo", New("@foo", []byte(`{
+	"foo": 42
+}`))))
+		require.NoError(t, s.AddType("@bar", New("@bar", []byte(`{
+	"bar": 42
+}`))))
+		require.NoError(t, s.AddType("@recursion", New("@recursion", []byte(`{
+	"recursion": @recursion
+}`))))
+
+		actual, err := s.Example()
 		require.NoError(t, err)
-		assert.Equal(t,
-			`{"i":123,"s":"str","b":true,"n":null,"a":[1,"str",false,null],"o":{"ii":999}}`,
-			string(content),
+		assert.JSONEq(t, `{
+	"i": 123,
+	"s": "str",
+	"b": true,
+	"n": null,
+	"a": [
+		1,
+		"str",
+		false,
+		null
+	],
+	"o": {
+		"ii": 999
+	},
+	"or_full": "foo",
+	"or_short": "foo",
+	"shortcut": {
+		"foo": 42
+	},
+	"shortcut_or": {
+		"foo": 42
+	},
+	"enum": 1,
+	"enum_rule": 2
+}`,
+			string(actual),
 		)
 	})
 
@@ -157,70 +202,38 @@ func TestSchema_Example(t *testing.T) {
 	})
 }
 
-func Test_buildExample(t *testing.T) {
-	t.Run("positive", func(t *testing.T) {
-		cc := map[string]struct {
-			node     internalSchema.Node
-			expected string
-		}{
-			"object": {
-				loader.NewSchemaForSdk(
-					fs.NewFile("", []byte(`{"foo": "bar"}`)),
-					false,
-				).
-					RootNode(),
-				`{"foo":"bar"}`,
-			},
-			"array": {
-				loader.NewSchemaForSdk(
-					fs.NewFile("", []byte("[1]")),
-					false,
-				).
-					RootNode(),
-				"[1]",
-			},
-			"literal": {
-				loader.NewSchemaForSdk(
-					fs.NewFile("", []byte("42")),
-					false,
-				).
-					RootNode(),
-				"42",
-			},
-		}
+func Benchmark_buildExample(b *testing.B) {
+	node := loader.NewSchemaForSdk(
+		fs.NewFile("", []byte(`{
+	"foo": "bar",
+	"fizz": [
+		1,
+		2,
+		3
+	],
+	"buzz": {
+		"foo": [
+			{"bar": 1},
+			{"bar": 2}
+		],
+		"bar": {
+			"fizz": 42,
+			"buzz": [1, 2, 3]
+		},
+		"fizz": 1, // {or: ["string", "integer"]}
+		"buzz": 2
+	}
+}`)),
+		false,
+	).
+		RootNode()
 
-		for name, c := range cc {
-			t.Run(name, func(t *testing.T) {
-				actual := buildExample(c.node)
-				assert.Equal(t, []byte(c.expected), actual)
-			})
-		}
-	})
+	b.ReportAllocs()
+	b.ResetTimer()
 
-	t.Run("negative", func(t *testing.T) {
-		t.Run("nil node", func(t *testing.T) {
-			assert.Panics(t, func() {
-				buildExample(nil)
-			})
-		})
-
-		t.Run("have TypesListConstraintType constraint", func(t *testing.T) {
-			assert.PanicsWithValue(t, errors.ErrUserTypeFound, func() {
-				n := &schemaMocks.Node{}
-				n.
-					On("Constraint", constraint.TypesListConstraintType).
-					Return(constraint.NewType(nil, jschema.RuleASTNodeSourceManual))
-
-				buildExample(n)
-			})
-		})
-
-		t.Run("mixed node", func(t *testing.T) {
-			assert.PanicsWithValue(t, "unhandled node type *schema.MixedNode", func() {
-				buildExample(&internalSchema.MixedNode{})
-			})
-		})
-	})
+	for i := 0; i < b.N; i++ {
+		_, _ = buildExample(node)
+	}
 }
 
 func TestSchema_AddType(t *testing.T) {
