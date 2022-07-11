@@ -119,14 +119,14 @@ func resetExampleBufferPool(b *stdBytes.Buffer) {
 	exampleBufferPool.Put(b)
 }
 
-func buildExample(node internalSchema.Node) ([]byte, error) {
+func buildExample(node internalSchema.Node) ([]byte, error) { //nolint:gocyclo // Will be fixed soon.
 	if node.Constraint(constraint.TypesListConstraintType) != nil {
 		return nil, errors.ErrUserTypeFound
 	}
 
 	switch typedNode := node.(type) {
 	case *internalSchema.ObjectNode:
-		b := exampleBufferPool.Get().(*stdBytes.Buffer)
+		b := exampleBufferPool.Get().(*stdBytes.Buffer) //nolint:errcheck // We're sure about this type.
 		defer resetExampleBufferPool(b)
 
 		b.WriteRune('{')
@@ -152,7 +152,7 @@ func buildExample(node internalSchema.Node) ([]byte, error) {
 		return b.Bytes(), nil
 
 	case *internalSchema.ArrayNode:
-		b := exampleBufferPool.Get().(*stdBytes.Buffer)
+		b := exampleBufferPool.Get().(*stdBytes.Buffer) //nolint:errcheck // We're sure about this type.
 		defer resetExampleBufferPool(b)
 
 		b.WriteRune('[')

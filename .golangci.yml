@@ -262,7 +262,8 @@ linters:
     - errorlint
 
     # Checks exhaustiveness of enum switch statements.
-    - exhaustive
+    # It's broken :(
+    #- exhaustive
 
     # Checks for pointers to enclosing loop variables.
     - exportloopref

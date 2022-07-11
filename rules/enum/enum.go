@@ -7,7 +7,6 @@ import (
 	jschema "github.com/jsightapi/jsight-schema-go-library"
 	"github.com/jsightapi/jsight-schema-go-library/bytes"
 	"github.com/jsightapi/jsight-schema-go-library/fs"
-	"github.com/jsightapi/jsight-schema-go-library/internal/json"
 	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
 )
 
@@ -32,6 +31,9 @@ type Enum struct {
 type Value struct {
 	// Comment value's comment.
 	Comment string
+
+	// Type value type.
+	Type jschema.SchemaType
 
 	// Value enum value.
 	Value bytes.Bytes
@@ -92,14 +94,8 @@ func (e *Enum) buildASTNode() (jschema.ASTNode, error) {
 				n.JSONType = jschema.JSONTypeNull
 				n.SchemaType = string(jschema.SchemaTypeComment)
 			} else {
-				n.JSONType = json.Guess(v.Value).JsonType().ToTokenType()
-
-				st, err := jschema.GuessSchemaType(v.Value)
-				if err != nil {
-					e.buildAStNodeErr = err
-					return
-				}
-				n.SchemaType = string(st)
+				n.JSONType = v.Type.ToTokenType()
+				n.SchemaType = string(v.Type)
 			}
 
 			e.astNode.Children = append(e.astNode.Children, n)
@@ -137,11 +133,18 @@ func (e *Enum) doCompile() (err error) {
 		}
 
 		// Collect enum values.
-		switch lex.Type() { //nolint:exhaustive // We're interested only in these types.
+		switch lex.Type() {
 		case lexeme.LiteralEnd:
 			collectLiteral = true
+			v := lex.Value()
+			t, err := jschema.GuessSchemaType(v)
+			if err != nil {
+				return err
+			}
+
 			e.values = append(e.values, Value{
-				Value: lex.Value(),
+				Value: v,
+				Type:  t,
 			})
 
 		case lexeme.NewLine:
