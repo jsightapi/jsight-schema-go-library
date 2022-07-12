@@ -190,7 +190,7 @@ func (s *scanner) processTail() (lexeme.LexEvent, error) {
 	}
 
 	s.index++
-	switch s.stack.Peek().Type() { //nolint:exhaustive // We handle all cases.
+	switch s.stack.Peek().Type() {
 	case lexeme.LiteralBegin:
 		if s.unfinishedLiteral {
 			break

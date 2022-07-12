@@ -260,12 +260,12 @@ func TestEnum_Values(t *testing.T) {
 	false,
 	null
 ]`: {
-				{Value: []byte(`"foo"`)},
-				{Value: []byte("42")},
-				{Value: []byte("3.14")},
-				{Value: []byte("true")},
-				{Value: []byte("false")},
-				{Value: []byte("null")},
+				{Value: []byte(`"foo"`), Type: jschema.SchemaTypeString},
+				{Value: []byte("42"), Type: jschema.SchemaTypeInteger},
+				{Value: []byte("3.14"), Type: jschema.SchemaTypeFloat},
+				{Value: []byte("true"), Type: jschema.SchemaTypeBoolean},
+				{Value: []byte("false"), Type: jschema.SchemaTypeBoolean},
+				{Value: []byte("null"), Type: jschema.SchemaTypeNull},
 			},
 
 			`[
@@ -280,11 +280,11 @@ func TestEnum_Values(t *testing.T) {
 	// Interline comment 3
 ]`: {
 				{Comment: "Interline comment 1"},
-				{Value: []byte(`"foo"`), Comment: "Foo comment"},
-				{Value: []byte(`"bar"`), Comment: "Bar comment"},
+				{Value: []byte(`"foo"`), Type: jschema.SchemaTypeString, Comment: "Foo comment"},
+				{Value: []byte(`"bar"`), Type: jschema.SchemaTypeString, Comment: "Bar comment"},
 				{Comment: "Interline comment 2"},
-				{Value: []byte(`"fizz"`), Comment: "Fizz comment"},
-				{Value: []byte(`"buzz"`), Comment: "Buzz comment"},
+				{Value: []byte(`"fizz"`), Type: jschema.SchemaTypeString, Comment: "Fizz comment"},
+				{Value: []byte(`"buzz"`), Type: jschema.SchemaTypeString, Comment: "Buzz comment"},
 				{Comment: "Interline comment 3"},
 			},
 		}
