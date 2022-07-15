@@ -53,7 +53,6 @@ func TestEmail_Validate(t *testing.T) {
 			`john..doe@example.com`,                // double dot before @; (with caveat: Gmail lets this through)
 			`john.doe@example..com`,                // double dot after @
 
-			// todo do I need to support this address format?
 			`Barry Gibbs <bg@example.com>`, // a valid address with name
 			` aaa@bbb.cc`,                  // a valid address with a leading space
 			`aaa@bbb.cc `,                  // a valid address with a trailing space

@@ -39,7 +39,3 @@ func (c mixedChecker) check(nodeLex lexeme.LexEvent) (err errors.Error) {
 
 	return nil
 }
-
-func (c mixedChecker) indentedString(depth int) string {
-	return c.node.IndentedNodeString(depth)
-}

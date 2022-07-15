@@ -12,9 +12,10 @@ const (
 	ErrImpossible ErrorCode = 1
 
 	// main & common
-	ErrUserTypeFound      ErrorCode = 101
-	ErrUnknownType        ErrorCode = 102
-	ErrUnknownJSchemaType ErrorCode = 103
+	ErrUserTypeFound             ErrorCode = 101
+	ErrUnknownType               ErrorCode = 102
+	ErrUnknownJSchemaType        ErrorCode = 103
+	ErrInfinityRecursionDetected ErrorCode = 104
 
 	// validator
 	ErrValidator                       ErrorCode = 201
@@ -139,9 +140,10 @@ var errorFormat = map[ErrorCode]string{
 	ErrImpossible: "The error should not occur during regular operation. May appear only in the process of unfinished code refactoring.", //nolint:lll
 
 	// main & common
-	ErrUserTypeFound:      "Found an invalid reference to the type",
-	ErrUnknownType:        "Unknown type %q",
-	ErrUnknownJSchemaType: "Unknown JSchema type %q",
+	ErrUserTypeFound:             "Found an invalid reference to the type",
+	ErrUnknownType:               "Unknown type %q",
+	ErrUnknownJSchemaType:        "Unknown JSchema type %q",
+	ErrInfinityRecursionDetected: "Infinity recursion detected %s",
 
 	// validator
 	ErrValidator:                       "Validator error",
@@ -169,7 +171,7 @@ var errorFormat = map[ErrorCode]string{
 	ErrDuplicationOfNameOfTypes: "Duplication of the name of the types (%s)",
 
 	// node
-	ErrDuplicateRule: `Duplicate "%s" rule`,
+	ErrDuplicateRule: "Duplicate %q rule",
 
 	// constraint
 	ErrUnknownRule:                      `Unknown rule "%s"`,

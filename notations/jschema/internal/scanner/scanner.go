@@ -357,9 +357,11 @@ func (s *Scanner) shiftFound() lexeme.LexEventType {
 
 func (s *Scanner) processingFoundLexeme(lexType lexeme.LexEventType) lexeme.LexEvent { //nolint:gocyclo // todo try to make this more readable
 	i := s.index - 1
-	if lexType == lexeme.NewLine || lexType == lexeme.EndTop { //nolint:gocritic // todo rewrite this logic to switch
+	if lexType == lexeme.NewLine || lexType == lexeme.EndTop {
 		return lexeme.NewLexEvent(lexType, i, i, s.file)
-	} else if lexType.IsOpening() {
+	}
+
+	if lexType.IsOpening() {
 		var lex lexeme.LexEvent
 		if lexType == lexeme.InlineAnnotationBegin || lexType == lexeme.MultiLineAnnotationBegin {
 			lex = lexeme.NewLexEvent(lexType, i-1, i, s.file) // `//` or `/*`
@@ -369,28 +371,29 @@ func (s *Scanner) processingFoundLexeme(lexType lexeme.LexEventType) lexeme.LexE
 		}
 		s.stack.Push(lex)
 		return lex
-	} else { // closing tag
-		pair := s.stack.Pop()
-		pairType := pair.Type()
-		if (pairType == lexeme.ObjectBegin && lexType == lexeme.ObjectEnd) ||
-			(pairType == lexeme.ArrayBegin && lexType == lexeme.ArrayEnd) ||
-			(pairType == lexeme.MultiLineAnnotationBegin && lexType == lexeme.MultiLineAnnotationEnd) {
-			return lexeme.NewLexEvent(lexType, pair.Begin(), i, s.file)
-		} else if (pairType == lexeme.LiteralBegin && lexType == lexeme.LiteralEnd) ||
-			(pairType == lexeme.ArrayItemBegin && lexType == lexeme.ArrayItemEnd) ||
-			(pairType == lexeme.ObjectKeyBegin && lexType == lexeme.ObjectKeyEnd) ||
-			(pairType == lexeme.ObjectValueBegin && lexType == lexeme.ObjectValueEnd) ||
-			(pairType == lexeme.InlineAnnotationTextBegin && lexType == lexeme.InlineAnnotationTextEnd) ||
-			(pairType == lexeme.MultiLineAnnotationTextBegin && lexType == lexeme.MultiLineAnnotationTextEnd) ||
-			(pairType == lexeme.InlineAnnotationBegin && lexType == lexeme.InlineAnnotationEnd) ||
-			(pairType == lexeme.KeyShortcutBegin && lexType == lexeme.KeyShortcutEnd) ||
-			(pairType == lexeme.TypesShortcutBegin && lexType == lexeme.TypesShortcutEnd) ||
-			(pairType == lexeme.MixedValueBegin && lexType == lexeme.MixedValueEnd) {
-			if lexType == lexeme.MixedValueEnd && s.data[i-1] == ' ' {
-				i--
-			}
-			return lexeme.NewLexEvent(lexType, pair.Begin(), i-1, s.file)
+	}
+
+	// closing tag
+	pair := s.stack.Pop()
+	pairType := pair.Type()
+	if (pairType == lexeme.ObjectBegin && lexType == lexeme.ObjectEnd) ||
+		(pairType == lexeme.ArrayBegin && lexType == lexeme.ArrayEnd) ||
+		(pairType == lexeme.MultiLineAnnotationBegin && lexType == lexeme.MultiLineAnnotationEnd) {
+		return lexeme.NewLexEvent(lexType, pair.Begin(), i, s.file)
+	} else if (pairType == lexeme.LiteralBegin && lexType == lexeme.LiteralEnd) ||
+		(pairType == lexeme.ArrayItemBegin && lexType == lexeme.ArrayItemEnd) ||
+		(pairType == lexeme.ObjectKeyBegin && lexType == lexeme.ObjectKeyEnd) ||
+		(pairType == lexeme.ObjectValueBegin && lexType == lexeme.ObjectValueEnd) ||
+		(pairType == lexeme.InlineAnnotationTextBegin && lexType == lexeme.InlineAnnotationTextEnd) ||
+		(pairType == lexeme.MultiLineAnnotationTextBegin && lexType == lexeme.MultiLineAnnotationTextEnd) ||
+		(pairType == lexeme.InlineAnnotationBegin && lexType == lexeme.InlineAnnotationEnd) ||
+		(pairType == lexeme.KeyShortcutBegin && lexType == lexeme.KeyShortcutEnd) ||
+		(pairType == lexeme.TypesShortcutBegin && lexType == lexeme.TypesShortcutEnd) ||
+		(pairType == lexeme.MixedValueBegin && lexType == lexeme.MixedValueEnd) {
+		if lexType == lexeme.MixedValueEnd && s.data[i-1] == ' ' {
+			i--
 		}
+		return lexeme.NewLexEvent(lexType, pair.Begin(), i-1, s.file)
 	}
 	panic("Incorrect ending of the lexical event")
 }

@@ -3,7 +3,6 @@ package loader
 import (
 	"testing"
 
-	"github.com/jsightapi/jsight-schema-go-library/bytes"
 	"github.com/jsightapi/jsight-schema-go-library/fs"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/scanner"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema"
@@ -31,10 +30,10 @@ func testSchema(areKeysOptionalByDefault bool) *schema.Schema {
 		"type": @sub
 	}`
 
-	file := fs.NewFile("", bytes.Bytes(testRootSchema))
+	file := fs.NewFile("", testRootSchema)
 	rootSchema := NewSchemaForSdk(file, areKeysOptionalByDefault) // required by default
 
-	f := fs.NewFile("", bytes.Bytes(testTypeSchema))
+	f := fs.NewFile("", testTypeSchema)
 	typeSchema := LoadSchema(scanner.New(f), rootSchema, areKeysOptionalByDefault, nil)
 	rootSchema.AddNamedType(testTypeName, typeSchema, f, 0)
 

@@ -3,19 +3,17 @@ package test
 import (
 	"os"
 	"path/filepath"
-	"sync"
+
+	"github.com/jsightapi/jsight-schema-go-library/internal/sync"
 )
 
-var (
-	projectRootOnce sync.Once
-	projectRoot     string
-)
+var projectRootOnce sync.ErrOnceWithValue[string]
 
 func GetProjectRoot() string {
-	projectRootOnce.Do(func() {
-		projectRoot = determineProjectRoot()
+	v, _ := projectRootOnce.Do(func() (string, error) { //nolint:errcheck // There is no error.
+		return determineProjectRoot(), nil
 	})
-	return projectRoot
+	return v
 }
 
 func determineProjectRoot() string {

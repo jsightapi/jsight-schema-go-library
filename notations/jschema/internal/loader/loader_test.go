@@ -5,7 +5,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/jsightapi/jsight-schema-go-library/bytes"
 	"github.com/jsightapi/jsight-schema-go-library/fs"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/scanner"
 )
@@ -27,7 +26,7 @@ func TestLoadSchemaWithoutCompile(t *testing.T) {
 		for _, s := range ss {
 			t.Run(s, func(t *testing.T) {
 				assert.NotPanics(t, func() {
-					scan := scanner.New(fs.NewFile("", bytes.Bytes(s)))
+					scan := scanner.New(fs.NewFile("", s))
 					LoadSchemaWithoutCompile(scan, nil, nil)
 				})
 			})
@@ -49,7 +48,7 @@ func TestLoadSchemaWithoutCompile(t *testing.T) {
 		for expected, s := range ss {
 			t.Run(s, func(t *testing.T) {
 				assert.PanicsWithError(t, expected, func() {
-					scan := scanner.New(fs.NewFile("", bytes.Bytes(s)))
+					scan := scanner.New(fs.NewFile("", s))
 					LoadSchemaWithoutCompile(scan, nil, nil)
 				})
 			})
@@ -58,9 +57,9 @@ func TestLoadSchemaWithoutCompile(t *testing.T) {
 }
 
 func BenchmarkLoadSchemaWithoutCompile(b *testing.B) {
-	file := fs.NewFile("", bytes.Bytes(`{
+	file := fs.NewFile("", `{
 	"foo": "bar"
-}`))
+}`)
 	scan := scanner.New(file)
 
 	b.ReportAllocs()

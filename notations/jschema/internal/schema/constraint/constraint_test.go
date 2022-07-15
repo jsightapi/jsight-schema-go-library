@@ -40,7 +40,7 @@ func TestNewConstraintFromRule(t *testing.T) {
 						lexeme.LiteralBegin,
 						0,
 						bytes.Index(len(given))-1,
-						fs.NewFile("", bytes.Bytes(given)),
+						fs.NewFile("", given),
 					),
 					bytes.Bytes(c.val),
 					nil,

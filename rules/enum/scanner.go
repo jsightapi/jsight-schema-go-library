@@ -10,9 +10,10 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
 )
 
-type stepFunc func(byte) (state, error)
-
-type state uint8
+type (
+	state    uint8
+	stepFunc func(byte) (state, error)
+)
 
 // These values are returned by the state transition functions
 // assigned to scanner.state and the method scanner.eof.

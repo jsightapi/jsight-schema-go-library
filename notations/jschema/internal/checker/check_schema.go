@@ -71,7 +71,6 @@ func (c checkSchema) checkNode(node schema.Node, ss map[string]schema.Type) {
 	defer lexeme.CatchLexEventError(node.BasisLexEventOfSchemaForNode())
 	switch node := node.(type) {
 	case *schema.LiteralNode:
-		// c.log.Default(node.IndentedNodeString(0))
 		c.checkCompatibilityOfConstraints(node)
 		c.checkLinksOfNode(node, ss) // can panic
 		c.checkLiteralNode(node, ss)

@@ -6,28 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestLexEventType_IsOneOf(t *testing.T) {
-	ll := []LexEventType{
-		LiteralBegin,
-		ObjectKeyEnd,
-		NewLine,
-	}
-
-	cc := map[LexEventType]bool{
-		LiteralBegin:    true,
-		ObjectKeyEnd:    true,
-		NewLine:         true,
-		MixedValueBegin: false,
-	}
-
-	for lexType, expected := range cc {
-		t.Run(lexType.String(), func(t *testing.T) {
-			actual := lexType.IsOneOf(ll...)
-			assert.Equal(t, expected, actual)
-		})
-	}
-}
-
 func TestLexEventType_IsOpening(t *testing.T) {
 	cc := map[LexEventType]bool{
 		LiteralBegin:                 true,
