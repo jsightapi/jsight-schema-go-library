@@ -97,11 +97,7 @@ func success(key string) []string {
 		panic(`Key "` + key + `" not found`)
 	}
 
-	var result []string
-	for _, str := range arr { //nolint:gosimple // todo should replace loop with `result = append(result, arr...)`
-		result = append(result, str)
-	}
-	return result
+	return append([]string{}, arr...)
 }
 
 // Returns all the value from json variable with the exception of the specified key
@@ -109,9 +105,7 @@ func fail(key string) []string {
 	var result []string
 	for k, arr := range jsonTests {
 		if k != key {
-			for _, str := range arr { //nolint:gosimple // todo should replace loop with `result = append(result, arr...)`
-				result = append(result, str)
-			}
+			result = append(result, arr...)
 		}
 	}
 	return result

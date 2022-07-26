@@ -14,7 +14,7 @@ import (
 func TestDocumentError_preparation(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
 		t.Run("not prepared", func(t *testing.T) {
-			e := DocumentError{file: fs.NewFile("", []byte("123456"))}
+			e := DocumentError{file: fs.NewFile("", "123456")}
 			e.preparation()
 
 			assert.EqualValues(t, 6, e.length)
@@ -50,7 +50,7 @@ func TestDocumentError_detectNewLineSymbol(t *testing.T) {
 
 	for given, expected := range cc {
 		t.Run(nameReplacer.Replace(given), func(t *testing.T) {
-			e := DocumentError{file: fs.NewFile("", []byte(given))}
+			e := DocumentError{file: fs.NewFile("", given)}
 			e.detectNewLineSymbol()
 
 			assert.Equal(t, string(expected), string(e.nl))
@@ -157,7 +157,7 @@ func TestDocumentError_lineBeginning(t *testing.T) {
 	for _, d := range data {
 		for _, v := range d.valid {
 			t.Run(fmt.Sprintf("%s %d", d.source, v.index), func(t *testing.T) {
-				file := fs.NewFile("", bytes.Bytes(d.source))
+				file := fs.NewFile("", d.source)
 
 				e := newFakeDocumentError(file, v.index)
 
@@ -172,7 +172,7 @@ func TestDocumentError_lineEnd(t *testing.T) {
 	for _, d := range data {
 		for _, v := range d.valid {
 			t.Run(fmt.Sprintf("%s %d", d.source, v.index), func(t *testing.T) {
-				file := fs.NewFile("", bytes.Bytes(d.source))
+				file := fs.NewFile("", d.source)
 
 				e := newFakeDocumentError(file, v.index)
 
@@ -187,7 +187,7 @@ func TestNewDocumentError_Line(t *testing.T) {
 	for _, d := range data {
 		for _, v := range d.valid {
 			t.Run(fmt.Sprintf("%s %d", d.source, v.index), func(t *testing.T) {
-				file := fs.NewFile("", bytes.Bytes(d.source))
+				file := fs.NewFile("", d.source)
 
 				e := newFakeDocumentError(file, v.index)
 
@@ -202,7 +202,7 @@ func TestDocumentError_SourceSubString(t *testing.T) {
 	for _, d := range data {
 		for _, v := range d.valid {
 			t.Run(fmt.Sprintf("%s %d", d.source, v.index), func(t *testing.T) {
-				file := fs.NewFile("", bytes.Bytes(d.source))
+				file := fs.NewFile("", d.source)
 
 				e := newFakeDocumentError(file, v.index)
 
@@ -213,7 +213,7 @@ func TestDocumentError_SourceSubString(t *testing.T) {
 	}
 
 	t.Run("too long source substring", func(t *testing.T) {
-		file := fs.NewFile("", bytes.Bytes(strings.Repeat("123456789 ", 100)))
+		file := fs.NewFile("", strings.Repeat("123456789 ", 100))
 
 		e := newFakeDocumentError(file, 0)
 

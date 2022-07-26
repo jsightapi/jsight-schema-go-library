@@ -68,7 +68,7 @@ func TestScanner(t *testing.T) {
 
 	for given, checkers := range cc {
 		t.Run(given, func(t *testing.T) {
-			file := fs.NewFile("", []byte(given))
+			file := fs.NewFile("", given)
 			s := New(file)
 
 			for _, c := range checkers {

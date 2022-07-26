@@ -11,6 +11,6 @@ func newFakeLexEvent(t lexeme.LexEventType) lexeme.LexEvent {
 }
 
 func newFakeLexEventWithValue(t lexeme.LexEventType, s string) lexeme.LexEvent {
-	f := fs.NewFile("", []byte(s))
+	f := fs.NewFile("", s)
 	return lexeme.NewLexEvent(t, 0, bytes.Index(len(s)-1), f)
 }

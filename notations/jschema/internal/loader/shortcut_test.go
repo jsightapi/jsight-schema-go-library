@@ -21,7 +21,7 @@ func Test_addShortcutConstraint(t *testing.T) {
 
 			n := schema.NewNode(lexeme.NewLexEvent(lexeme.ObjectBegin, 0, 0, nil))
 			sc := schema.New()
-			f := fs.NewFile("", []byte(content))
+			f := fs.NewFile("", content)
 			lex := lexeme.NewLexEvent(lexeme.TypesShortcutEnd, 0, bytes.Index(len(content)-1), f)
 
 			err := addShortcutConstraint(n, &sc, lex)
@@ -42,7 +42,7 @@ func Test_addShortcutConstraint(t *testing.T) {
 
 			n := schema.NewNode(lexeme.NewLexEvent(lexeme.ObjectBegin, 0, 0, nil))
 			sc := schema.New()
-			f := fs.NewFile("", []byte(content))
+			f := fs.NewFile("", content)
 			lex := lexeme.NewLexEvent(lexeme.TypesShortcutEnd, 0, bytes.Index(len(content)-1), f)
 
 			err := addShortcutConstraint(n, &sc, lex)

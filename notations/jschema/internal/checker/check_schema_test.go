@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/jsightapi/jsight-schema-go-library/bytes"
 	"github.com/jsightapi/jsight-schema-go-library/errors"
 	"github.com/jsightapi/jsight-schema-go-library/fs"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/loader"
@@ -20,12 +19,12 @@ func TestCheckRootSchema(t *testing.T) {
 	}
 
 	check := func(schema string, types []typ) {
-		schemaFile := fs.NewFile("schema", bytes.Bytes(schema))
+		schemaFile := fs.NewFile("schema", schema)
 
 		rootSchema := loader.NewSchemaForSdk(schemaFile, false)
 
 		for _, datum := range types {
-			f := fs.NewFile(datum.name, bytes.Bytes(datum.schema))
+			f := fs.NewFile(datum.name, datum.schema)
 			typ := loader.LoadSchema(scanner.New(f), rootSchema, false, nil)
 			rootSchema.AddNamedType(datum.name, typ, f, 0)
 		}

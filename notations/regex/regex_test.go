@@ -17,7 +17,7 @@ func TestSchema_generateExample(t *testing.T) {
 
 	for _, s := range ss {
 		t.Run(s, func(t *testing.T) {
-			sch := New("", []byte(s))
+			sch := New("", s)
 			sch.pattern = s
 
 			actual, err := sch.generateExample()
@@ -40,7 +40,7 @@ func TestSchema_doCompile(t *testing.T) {
 
 		for given, expected := range cc {
 			t.Run(given, func(t *testing.T) {
-				s := New("", []byte(given))
+				s := New("", given)
 				err := s.doCompile()
 				require.NoError(t, err)
 				assert.Equal(t, expected, s.pattern)
@@ -62,7 +62,7 @@ func TestSchema_doCompile(t *testing.T) {
 
 		for given, expected := range cc {
 			t.Run(given, func(t *testing.T) {
-				err := New("", []byte(given)).doCompile()
+				err := New("", given).doCompile()
 				assert.EqualError(t, err, expected)
 			})
 		}

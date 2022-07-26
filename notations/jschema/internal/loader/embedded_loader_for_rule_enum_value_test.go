@@ -552,7 +552,7 @@ func TestEnumValueLoader_ruleName(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
 		ec := constraint.NewEnum()
 		el := newEnumValueLoader(ec, map[string]jschema.Rule{
-			"foo": enum.New("foo", []byte(`[42, 3.14, "foo", false, true, null]`)),
+			"foo": enum.New("foo", `[42, 3.14, "foo", false, true, null]`),
 		}).(*enumValueLoader)
 		el.stateFunc = nil
 		el.ruleName(newFakeLexEventWithValue(lexeme.TypesShortcutEnd, " \nfoo\t \r"))
@@ -608,7 +608,7 @@ func TestEnumValueLoader_ruleName(t *testing.T) {
 				"ruleName": mocks.NewRule(t),
 			},
 			`Invalid enum "ruleName": An array was expected as a value for the "enum"`: {
-				"ruleName": enum.New("ruleName", []byte("invalid")),
+				"ruleName": enum.New("ruleName", "invalid"),
 			},
 		}
 

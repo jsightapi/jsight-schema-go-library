@@ -37,7 +37,7 @@ func TestEnum_Len(t *testing.T) {
 
 		for given, expected := range cc {
 			t.Run(given, func(t *testing.T) {
-				actual, err := New("", []byte(given)).Len()
+				actual, err := New("", given).Len()
 				require.NoError(t, err)
 				assert.Equal(t, expected, actual)
 			})
@@ -64,7 +64,7 @@ func TestEnum_Len(t *testing.T) {
 
 		for expected, given := range cc {
 			t.Run(expected, func(t *testing.T) {
-				_, err := New("", []byte(given)).Len()
+				_, err := New("", given).Len()
 				assert.EqualError(t, err, expected)
 			})
 		}
@@ -109,7 +109,7 @@ func TestEnum_Check(t *testing.T) {
 
 		for _, enum := range testList {
 			t.Run(enum, func(t *testing.T) {
-				err := New("enum", []byte(enum)).Check()
+				err := New("enum", enum).Check()
 				require.NoError(t, err)
 			})
 		}
@@ -169,7 +169,7 @@ func TestEnum_Check(t *testing.T) {
 
 		for enum, expected := range cc {
 			t.Run(enum, func(t *testing.T) {
-				err := New("enum", []byte(enum)).Check()
+				err := New("enum", enum).Check()
 				assert.EqualError(t, err, expected)
 			})
 		}
@@ -178,7 +178,7 @@ func TestEnum_Check(t *testing.T) {
 
 func TestEnum_GetAST(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
-		actual, err := New("", []byte(`[
+		actual, err := New("", `[
 	// first comment
 	"foo",
 	42, // 42 comment
@@ -188,7 +188,7 @@ func TestEnum_GetAST(t *testing.T) {
 	// before null comment
 	null // null comment
 	// last comment
-]`)).
+]`).
 			GetAST()
 
 		require.NoError(t, err)
@@ -291,7 +291,7 @@ func TestEnum_Values(t *testing.T) {
 
 		for given, expected := range cc {
 			t.Run(given, func(t *testing.T) {
-				actual, err := New("", []byte(given)).Values()
+				actual, err := New("", given).Values()
 
 				require.NoError(t, err)
 				assert.Equal(t, actual, expected)
@@ -300,7 +300,7 @@ func TestEnum_Values(t *testing.T) {
 	})
 
 	t.Run("negative", func(t *testing.T) {
-		_, err := New("", []byte("123")).Values()
+		_, err := New("", "123").Values()
 		assert.EqualError(t, err, `ERROR (code 1600): An array was expected as a value for the "enum"
 	in line 1 on file 
 	> 123

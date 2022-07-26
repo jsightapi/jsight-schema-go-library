@@ -4,7 +4,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
+	jschema "github.com/jsightapi/jsight-schema-go-library"
 	"github.com/jsightapi/jsight-schema-go-library/fs"
 	"github.com/jsightapi/jsight-schema-go-library/internal/json"
 	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
@@ -21,9 +23,128 @@ func TestNewMixedValueNode(t *testing.T) {
 	assert.Equal(t, &Constraints{}, n.constraints)
 }
 
+func TestMixedValueNode_AddConstraint(t *testing.T) {
+	t.Run("Type constraint", func(t *testing.T) {
+		n := createFakeMixedValueNode()
+		n.AddConstraint(createFakeTypeConstraint("@foo"))
+
+		assert.Equal(t, []string{"@foo"}, n.types)
+	})
+
+	t.Run("Or constraint", func(t *testing.T) {
+		n := createFakeMixedValueNode()
+		n.AddConstraint(constraint.NewOr(jschema.RuleASTNodeSourceManual))
+
+		assert.Equal(t, []string(nil), n.types)
+	})
+
+	t.Run("TypeList constraint", func(t *testing.T) {
+		c := constraint.NewTypesList(jschema.RuleASTNodeSourceManual)
+		c.AddName("@foo", "@foo", jschema.RuleASTNodeSourceManual)
+		c.AddName("@bar", "@bar", jschema.RuleASTNodeSourceManual)
+
+		n := createFakeMixedValueNode()
+		n.AddConstraint(c)
+
+		assert.Equal(t, []string{"@foo", "@bar"}, n.types)
+	})
+}
+
+func TestMixedValueNode_addTypeConstraint(t *testing.T) {
+	t.Run("not exists", func(t *testing.T) {
+		const name = "@foo"
+		n := createFakeMixedValueNode()
+		n.addTypeConstraint(createFakeTypeConstraint(name))
+
+		c, ok := n.baseNode.constraints.Get(constraint.TypeConstraintType)
+		require.True(t, ok)
+		require.IsType(t, &constraint.TypeConstraint{}, c)
+
+		assert.Equal(t, name, c.(*constraint.TypeConstraint).Bytes().String())
+	})
+
+	t.Run("exists", func(t *testing.T) {
+		cc := map[string]struct {
+			exists             *constraint.TypeConstraint
+			new                *constraint.TypeConstraint
+			expected           *constraint.TypeConstraint
+			expectedSchemaType string
+		}{
+			"equal, not mixed": {
+				createFakeTypeConstraint("@foo"),
+				createFakeTypeConstraint("@foo"),
+				createFakeTypeConstraint("@foo"),
+				"@foo",
+			},
+			"equal, mixed": {
+				createFakeTypeConstraint("mixed"),
+				createFakeTypeConstraint("mixed"),
+				createFakeTypeConstraint("mixed"),
+				"mixed",
+			},
+			"not equal, new is mixed": {
+				createFakeTypeConstraint("@foo"),
+				createFakeTypeConstraint("mixed"),
+				createFakeTypeConstraint("mixed"),
+				"mixed",
+			},
+		}
+
+		for n, c := range cc {
+			t.Run(n, func(t *testing.T) {
+				n := createFakeMixedValueNode()
+				n.schemaType = "should be changed"
+				n.baseNode.AddConstraint(c.exists)
+
+				n.addTypeConstraint(c.new)
+
+				actual := n.baseNode.constraints.GetValue(constraint.TypeConstraintType)
+				assert.Equal(t, c.expected, actual)
+			})
+		}
+
+		t.Run("not equal, new isn't mixed", func(t *testing.T) {
+			assert.PanicsWithError(t, `Duplicate "type" rule`, func() {
+				n := createFakeMixedValueNode()
+				n.schemaType = "should be changed"
+				n.baseNode.AddConstraint(createFakeTypeConstraint("@foo"))
+
+				n.addTypeConstraint(createFakeTypeConstraint("@bar"))
+			})
+		})
+	})
+}
+
+func Test_addOrConstraint(t *testing.T) {
+	t.Run("without type constraint", func(t *testing.T) {
+		expected := constraint.NewOr(jschema.RuleASTNodeSourceManual)
+
+		n := createFakeMixedValueNode()
+		n.addOrConstraint(expected)
+
+		actual := n.baseNode.constraints.GetValue(constraint.OrConstraintType)
+		assert.Equal(t, expected, actual)
+	})
+
+	t.Run("with type constraint", func(t *testing.T) {
+		expected := constraint.NewOr(jschema.RuleASTNodeSourceManual)
+
+		n := createFakeMixedValueNode()
+		n.baseNode.AddConstraint(createFakeTypeConstraint("@foo"))
+
+		n.addOrConstraint(expected)
+
+		actual := n.baseNode.constraints.GetValue(constraint.OrConstraintType)
+		assert.Equal(t, expected, actual)
+
+		actual = n.baseNode.constraints.GetValue(constraint.TypeConstraintType)
+		assert.Equal(t, createFakeTypeConstraint(`"mixed"`), actual)
+	})
+}
+
 func TestMixedValueNode_Grow(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
-		n := NewMixedValueNode(lexeme.NewLexEvent(lexeme.MixedValueBegin, 0, 0, nil))
+		n := createFakeMixedValueNode()
 		n.parent = newObjectNode(lexeme.NewLexEvent(lexeme.ObjectBegin, 0, 0, nil))
 
 		cc := map[lexeme.LexEventType]Node{
@@ -33,7 +154,7 @@ func TestMixedValueNode_Grow(t *testing.T) {
 
 		for lexType, expected := range cc {
 			t.Run(lexType.String(), func(t *testing.T) {
-				actual, ok := n.Grow(lexeme.NewLexEvent(lexType, 0, 0, fs.NewFile("", []byte("foo"))))
+				actual, ok := n.Grow(lexeme.NewLexEvent(lexType, 0, 0, fs.NewFile("", "foo")))
 				assert.Equal(t, expected, actual)
 				assert.False(t, ok)
 			})
@@ -44,70 +165,17 @@ func TestMixedValueNode_Grow(t *testing.T) {
 		assert.PanicsWithValue(t,
 			`Unexpected lexical event "`+lexeme.ObjectBegin.String()+`" in mixed value node`,
 			func() {
-				NewMixedValueNode(lexeme.NewLexEvent(lexeme.MixedValueBegin, 0, 0, nil)).
+				createFakeMixedValueNode().
 					Grow(lexeme.NewLexEvent(lexeme.ObjectBegin, 0, 0, nil))
 			},
 		)
 	})
 }
 
-func TestMixedValueNode_IndentedTreeString(t *testing.T) {
-	TestMixedValueNode_IndentedNodeString(t)
+func createFakeMixedValueNode() *MixedValueNode {
+	return NewMixedValueNode(lexeme.NewLexEvent(lexeme.MixedValueBegin, 0, 0, nil))
 }
 
-func TestMixedValueNode_IndentedNodeString(t *testing.T) {
-	createNode := func(
-		constraints map[constraint.Type]constraint.Constraint,
-		order []constraint.Type,
-	) *MixedValueNode {
-		n := NewMixedValueNode(lexeme.NewLexEvent(lexeme.MixedValueBegin, 0, 0, nil))
-		if constraints != nil {
-			n.constraints = &Constraints{
-				data:  constraints,
-				order: order,
-			}
-		}
-		return n
-	}
-
-	cc := map[string]struct {
-		n        *MixedValueNode
-		depth    int
-		expected string
-	}{
-		"depth 0, without constraints": {
-			createNode(nil, nil),
-			0,
-			"* mixed\n",
-		},
-
-		"depth 1, without constraints": {
-			createNode(nil, nil),
-			1,
-			"\t* mixed\n",
-		},
-
-		"depth 0, with constraints": {
-			createNode(map[constraint.Type]constraint.Constraint{
-				constraint.ConstType: &constraint.Const{},
-			}, []constraint.Type{constraint.ConstType}),
-			0,
-			"* mixed\n* const: false\n",
-		},
-
-		"depth 1, with constraints": {
-			createNode(map[constraint.Type]constraint.Constraint{
-				constraint.ConstType: &constraint.Const{},
-			}, []constraint.Type{constraint.ConstType}),
-			1,
-			"\t* mixed\n\t* const: false\n",
-		},
-	}
-
-	for name, c := range cc {
-		t.Run(name, func(t *testing.T) {
-			actual := c.n.IndentedNodeString(c.depth)
-			assert.Equal(t, c.expected, actual)
-		})
-	}
+func createFakeTypeConstraint(name string) *constraint.TypeConstraint {
+	return constraint.NewType([]byte(name), jschema.RuleASTNodeSourceManual)
 }

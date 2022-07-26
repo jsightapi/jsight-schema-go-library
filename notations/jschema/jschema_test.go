@@ -21,7 +21,7 @@ import (
 )
 
 func ExampleSchema() {
-	s := New("root", []byte(`{"foo": @Fizz,"bar": @Buzz}`))
+	s := New("root", `{"foo": @Fizz,"bar": @Buzz}`)
 
 	l, err := s.Len()
 	if err != nil {
@@ -30,13 +30,13 @@ func ExampleSchema() {
 	}
 	fmt.Println(l)
 
-	err = s.AddType("@Fizz", New("fizz", []byte(`{"fizz": 1}`)))
+	err = s.AddType("@Fizz", New("fizz", `{"fizz": 1}`))
 	if err != nil {
 		fmt.Printf("Error: %s\n", err)
 		return
 	}
 
-	err = s.AddType("@Buzz", New("buzz", []byte(`{"buzz": 2}`)))
+	err = s.AddType("@Buzz", New("buzz", `{"buzz": 2}`))
 	if err != nil {
 		fmt.Printf("Error: %s\n", err)
 		return
@@ -48,7 +48,7 @@ func ExampleSchema() {
 		return
 	}
 
-	err = s.Validate(json.New("json", []byte(`{"foo":{"fizz":42},"bar":{"buzz":42}}`)))
+	err = s.Validate(json.New("json", `{"foo":{"fizz":42},"bar":{"buzz":42}}`))
 	if err != nil {
 		fmt.Printf("Error: %s\n", err)
 		return
@@ -85,7 +85,7 @@ some extra text`: 26,
 
 		for given, expected := range cc {
 			t.Run(given, func(t *testing.T) {
-				l, err := New("foo", []byte(given)).Len()
+				l, err := New("foo", given).Len()
 				require.NoError(t, err)
 				assert.Equal(t, int(expected), int(l))
 			})
@@ -93,7 +93,7 @@ some extra text`: 26,
 	})
 
 	t.Run("negative", func(t *testing.T) {
-		_, err := New("foo", []byte("invalid")).Len()
+		_, err := New("foo", "invalid").Len()
 		assert.EqualError(t, err, `ERROR (code 301): Invalid character "i" looking for beginning of value
 	in line 1 on file foo
 	> invalid
@@ -106,7 +106,7 @@ func BenchmarkSchema_Len(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		b.StopTimer()
-		s := New("foo", []byte(`[
+		s := New("foo", `[
   {
     "id": 1,
     "first_name": "Cecilia",
@@ -115,7 +115,7 @@ func BenchmarkSchema_Len(b *testing.B) {
     "gender": "Female",
     "ip_address": "14.224.72.249"
   }
-]`))
+]`)
 		b.StartTimer()
 		l, err := s.Len()
 		require.NoError(b, err)
@@ -126,7 +126,7 @@ func BenchmarkSchema_Len(b *testing.B) {
 func TestSchema_Example(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
 		t.Skip() // todo fix in SERV-8
-		s := New("schema", []byte(`
+		s := New("schema", `
 {
 	"i": 123, // {min: 1}
 	"s": "str",
@@ -144,22 +144,22 @@ func TestSchema_Example(t *testing.T) {
 	"enum_rule": 2, // {enum: @enum}
 	"recursion": @recursion
 }
-`))
+`)
 
-		require.NoError(t, s.AddRule("@enum", enum.New("@enum", []byte(`[
+		require.NoError(t, s.AddRule("@enum", enum.New("@enum", `[
 	1,
 	2,
 	3
-]`))))
-		require.NoError(t, s.AddType("@foo", New("@foo", []byte(`{
+]`)))
+		require.NoError(t, s.AddType("@foo", New("@foo", `{
 	"foo": 42
-}`))))
-		require.NoError(t, s.AddType("@bar", New("@bar", []byte(`{
+}`)))
+		require.NoError(t, s.AddType("@bar", New("@bar", `{
 	"bar": 42
-}`))))
-		require.NoError(t, s.AddType("@recursion", New("@recursion", []byte(`{
+}`)))
+		require.NoError(t, s.AddType("@recursion", New("@recursion", `{
 	"recursion": @recursion
-}`))))
+}`)))
 
 		actual, err := s.Example()
 		require.NoError(t, err)
@@ -193,7 +193,7 @@ func TestSchema_Example(t *testing.T) {
 	})
 
 	t.Run("negative", func(t *testing.T) {
-		_, err := New("schema", []byte("invalid")).
+		_, err := New("schema", "invalid").
 			Example()
 		assert.EqualError(t, err, `ERROR (code 301): Invalid character "i" looking for beginning of value
 	in line 1 on file schema
@@ -204,7 +204,7 @@ func TestSchema_Example(t *testing.T) {
 
 func Benchmark_buildExample(b *testing.B) {
 	node := loader.NewSchemaForSdk(
-		fs.NewFile("", []byte(`{
+		fs.NewFile("", `{
 	"foo": "bar",
 	"fizz": [
 		1,
@@ -223,7 +223,7 @@ func Benchmark_buildExample(b *testing.B) {
 		"fizz": 1, // {or: ["string", "integer"]}
 		"buzz": 2
 	}
-}`)),
+}`),
 		false,
 	).
 		RootNode()
@@ -239,8 +239,8 @@ func Benchmark_buildExample(b *testing.B) {
 func TestSchema_AddType(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
 		t.Run("jschema", func(t *testing.T) {
-			root := New("", []byte(`{"foo": @foo}`))
-			typ := New("", []byte("123"))
+			root := New("", `{"foo": @foo}`)
+			typ := New("", "123")
 			err := root.AddType("@foo", typ)
 			require.NoError(t, err)
 
@@ -249,8 +249,8 @@ func TestSchema_AddType(t *testing.T) {
 		})
 
 		t.Run("regex", func(t *testing.T) {
-			root := New("", []byte(`{"foo": @foo}`))
-			typ := regex.New("", []byte("/foo-\\d/"))
+			root := New("", `{"foo": @foo}`)
+			typ := regex.New("", "/foo-\\d/")
 			err := root.AddType("@foo", typ)
 			require.NoError(t, err)
 
@@ -260,12 +260,12 @@ func TestSchema_AddType(t *testing.T) {
 
 	t.Run("negative", func(t *testing.T) {
 		t.Run("invalid schema", func(t *testing.T) {
-			err := New("", nil).AddType("invalid", nil)
+			err := New("", "42").AddType("invalid", nil)
 			assert.EqualError(t, err, "schema should be JSight or Regex schema, but <nil> given")
 		})
 
 		t.Run("invalid schema name", func(t *testing.T) {
-			err := New("", nil).AddType("invalid", New("invalid", nil))
+			err := New("", "42").AddType("invalid", New("invalid", "42"))
 			assert.EqualError(t, err, "Invalid schema name (invalid)")
 		})
 	})
@@ -276,7 +276,7 @@ func TestSchema_AddRule(t *testing.T) {
 		const name = "foo"
 		r := mocks.NewRule(t)
 		r.On("Check").Return(nil)
-		s := New("", nil)
+		s := New("", "content")
 
 		err := s.AddRule(name, r)
 
@@ -288,7 +288,7 @@ func TestSchema_AddRule(t *testing.T) {
 
 	t.Run("negative", func(t *testing.T) {
 		t.Run("already compiled", func(t *testing.T) {
-			s := New("foo", nil)
+			s := New("foo", "content")
 			s.inner = &internalSchema.Schema{}
 
 			err := s.AddRule("foo", mocks.NewRule(t))
@@ -298,7 +298,7 @@ func TestSchema_AddRule(t *testing.T) {
 		})
 
 		t.Run("nil rule", func(t *testing.T) {
-			s := New("", nil)
+			s := New("", "content")
 
 			err := s.AddRule("", nil)
 
@@ -309,7 +309,7 @@ func TestSchema_AddRule(t *testing.T) {
 		t.Run("invalid rule", func(t *testing.T) {
 			r := mocks.NewRule(t)
 			r.On("Check").Return(stdErrors.New("fake error"))
-			s := New("", nil)
+			s := New("", "content")
 
 			err := s.AddRule("", r)
 
@@ -555,19 +555,48 @@ func TestSchema_Check(t *testing.T) {
 					"@enum": `["foo", "bar"]`,
 				},
 			},
+
+			// Valid recursions.
+			`{
+	"foo": @bar
+}`: {
+				types: map[string]string{
+					"@bar": `{
+	"bar": @main // {optional: true}
+}`,
+				},
+			},
+
+			`{
+	"foo": [@main]
+}`: {},
+
+			`{
+	"foo": @fizz | @buzz
+}`: {
+				types: map[string]string{
+					"@fizz": `{
+	"fizz": @main
+}`,
+					"@buzz": `{
+	"buzz": 42
+}`,
+				},
+			},
 		}
 
 		for content, c := range cc {
 			t.Run(content, func(t *testing.T) {
-				s := New("", []byte(content))
+				s := New("@main", content)
 
 				for n, c := range c.enums {
-					require.NoError(t, s.AddRule(n, enum.New(n, []byte(c))))
+					require.NoError(t, s.AddRule(n, enum.New(n, c)))
 				}
 
 				for n, c := range c.types {
-					require.NoError(t, s.AddType(n, New(n, []byte(c))))
+					require.NoError(t, s.AddType(n, New(n, c)))
 				}
+				require.NoError(t, s.AddType("@main", s))
 
 				require.NoError(t, s.Check())
 			})
@@ -1177,14 +1206,14 @@ func TestSchema_Check(t *testing.T) {
 
 		for expected, c := range cc {
 			t.Run(expected, func(t *testing.T) {
-				s := New("", []byte(c.given))
+				s := New("", c.given)
 
 				for n, b := range c.rules {
-					require.NoError(t, s.AddRule(n, enum.New(n, []byte(b))))
+					require.NoError(t, s.AddRule(n, enum.New(n, b)))
 				}
 
 				for n, b := range c.types {
-					require.NoError(t, s.AddType(n, New(n, []byte(b))))
+					require.NoError(t, s.AddType(n, New(n, b)))
 				}
 
 				err := s.Check()
@@ -1223,7 +1252,7 @@ func TestSchema_Check(t *testing.T) {
 
 			for expected, schema := range cc {
 				t.Run(expected, func(t *testing.T) {
-					assert.EqualError(t, New("", []byte(schema)).Check(), expected)
+					assert.EqualError(t, New("", schema).Check(), expected)
 				})
 			}
 		})
@@ -1273,7 +1302,66 @@ func TestSchema_Check(t *testing.T) {
 
 			for expected, schema := range cc {
 				t.Run(expected, func(t *testing.T) {
-					assert.EqualError(t, New("", []byte(schema)).Check(), expected)
+					assert.EqualError(t, New("", schema).Check(), expected)
+				})
+			}
+		})
+
+		t.Run("invalid recursion", func(t *testing.T) {
+			cc := map[string]struct {
+				given string
+				types map[string]string
+			}{
+				"Infinity recursion detected @main -> @bar -> @main": {
+					given: `{
+	"foo": @bar
+}`,
+					types: map[string]string{
+						"@bar": `{
+	"bar": @main
+}`,
+					},
+				},
+
+				"Infinity recursion detected @main -> @fizz -> @main": {
+					given: `{
+	"foo": @fizz | @buzz
+}`,
+					types: map[string]string{
+						"@fizz": `{
+	"fizz": @main
+}`,
+						"@buzz": `{
+	"buzz": @main
+}`,
+					},
+				},
+
+				"Infinity recursion detected @main -> @main": {
+					given: `{ // {allOf: ["@foo", "@bar"]}
+}`,
+					types: map[string]string{
+						"@foo": `{
+	"foo": 42
+}`,
+						"@bar": `{
+	"bar": @main
+}`,
+					},
+				},
+			}
+
+			for expected, c := range cc {
+				t.Run(expected, func(t *testing.T) {
+					s := New("@main", c.given)
+
+					for n, b := range c.types {
+						require.NoError(t, s.AddType(n, New(n, b)))
+					}
+					require.NoError(t, s.AddType("@main", s))
+
+					err := s.Check()
+					assert.EqualError(t, err, expected)
 				})
 			}
 		})
@@ -1455,15 +1543,15 @@ func TestSchema_Validate(t *testing.T) {
 
 		for name, c := range cc {
 			t.Run(name, func(t *testing.T) {
-				schema := New("schema", []byte(c.schema), KeysAreOptionalByDefault())
+				schema := New("schema", c.schema, KeysAreOptionalByDefault())
 
 				for n, s := range c.types {
-					require.NoError(t, schema.AddType(n, New(s, []byte(s), KeysAreOptionalByDefault())))
+					require.NoError(t, schema.AddType(n, New(s, s, KeysAreOptionalByDefault())))
 				}
 
 				for _, s := range c.jsons {
 					t.Run(s, func(t *testing.T) {
-						err := schema.Validate(json.New("json", []byte(s)))
+						err := schema.Validate(json.New("json", s))
 						require.NoError(t, err)
 					})
 				}
@@ -1535,19 +1623,19 @@ func TestSchema_Validate(t *testing.T) {
 
 		for expected, c := range cc {
 			t.Run(expected, func(t *testing.T) {
-				schema := New("schema", []byte(c.schema), KeysAreOptionalByDefault())
+				schema := New("schema", c.schema, KeysAreOptionalByDefault())
 
 				for n, s := range c.types {
-					require.NoError(t, schema.AddType(n, New(s, []byte(s), KeysAreOptionalByDefault())))
+					require.NoError(t, schema.AddType(n, New(s, s, KeysAreOptionalByDefault())))
 				}
 
-				err := schema.Validate(json.New("json", []byte(c.json)))
+				err := schema.Validate(json.New("json", c.json))
 				assert.EqualError(t, err, expected)
 			})
 		}
 
 		t.Run("not a JSON document", func(t *testing.T) {
-			err := New("schema", []byte("42")).Validate(&mocks.Document{})
+			err := New("schema", "42").Validate(&mocks.Document{})
 			assert.EqualError(t, err, "support only JSON documents, but got *mocks.Document")
 		})
 	})
@@ -3526,14 +3614,14 @@ func TestSchema_GetAST(t *testing.T) {
 
 		for given, c := range cc {
 			t.Run(given, func(t *testing.T) {
-				s := New("", []byte(given))
+				s := New("", given)
 
 				for n, r := range c.rules {
-					require.NoError(t, s.AddRule(n, enum.New(n, []byte(r))))
+					require.NoError(t, s.AddRule(n, enum.New(n, r)))
 				}
 
 				for n, c := range c.types {
-					require.NoError(t, s.AddType(n, New(n, []byte(c))))
+					require.NoError(t, s.AddType(n, New(n, c)))
 				}
 
 				actual, err := s.GetAST()
@@ -3684,10 +3772,10 @@ func TestSchema_GetAST(t *testing.T) {
 
 		for expected, c := range cc {
 			t.Run(expected, func(t *testing.T) {
-				s := New("", []byte(c.schema))
+				s := New("", c.schema)
 
 				for n, c := range c.types {
-					require.NoError(t, s.AddType(n, New(n, []byte(c))))
+					require.NoError(t, s.AddType(n, New(n, c)))
 				}
 
 				_, err := s.GetAST()
@@ -3737,7 +3825,7 @@ func TestSchema_UsedUserTypes(t *testing.T) {
 
 		for given, expected := range cc {
 			t.Run(given, func(t *testing.T) {
-				ss, err := New("", []byte(given)).UsedUserTypes()
+				ss, err := New("", given).UsedUserTypes()
 				require.NoError(t, err)
 				assert.ElementsMatch(t, expected, ss)
 			})
@@ -3745,7 +3833,7 @@ func TestSchema_UsedUserTypes(t *testing.T) {
 	})
 
 	t.Run("negative", func(t *testing.T) {
-		_, err := New("", []byte("foo")).UsedUserTypes()
+		_, err := New("", "foo").UsedUserTypes()
 		assert.EqualError(t, err, `ERROR (code 301): Invalid character "o" in literal false (expecting 'a')
 	in line 1 on file 
 	> foo
@@ -3755,12 +3843,12 @@ func TestSchema_UsedUserTypes(t *testing.T) {
 
 func TestSchema_Build(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
-		err := New("", []byte("42")).Build()
+		err := New("", "42").Build()
 		assert.NoError(t, err)
 	})
 
 	t.Run("negative", func(t *testing.T) {
-		err := New("", []byte("foo")).Build()
+		err := New("", "foo").Build()
 		assert.EqualError(t, err, `ERROR (code 301): Invalid character "o" in literal false (expecting 'a')
 	in line 1 on file 
 	> foo

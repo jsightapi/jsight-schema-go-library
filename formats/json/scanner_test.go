@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/jsightapi/jsight-schema-go-library/bytes"
 	"github.com/jsightapi/jsight-schema-go-library/fs"
 	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
 )
@@ -130,7 +129,7 @@ func TestScanner_Next(t *testing.T) {
 
 		for json, expected := range jsonValidResults {
 			t.Run("json", func(t *testing.T) {
-				s := newScanner(fs.NewFile("", bytes.Bytes(json)))
+				s := newScanner(fs.NewFile("", json))
 				var results []lexeme.LexEventType
 
 				for {
@@ -320,7 +319,7 @@ func TestScanner_Next(t *testing.T) {
 
 		for given, expected := range cc {
 			t.Run(given, func(t *testing.T) {
-				d := FromFile(fs.NewFile("", bytes.Bytes(given)))
+				d := FromFile(fs.NewFile("", given))
 
 				var foundError bool
 				for {

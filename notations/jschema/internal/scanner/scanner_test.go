@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/jsightapi/jsight-schema-go-library/bytes"
 	"github.com/jsightapi/jsight-schema-go-library/fs"
 	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
 )
@@ -15,7 +14,7 @@ func Test_newScanner(t *testing.T) {
 	const content = "bar"
 	contentLen := len(content)
 
-	f := fs.NewFile("foo", bytes.Bytes(content))
+	f := fs.NewFile("foo", content)
 
 	s := New(f)
 
@@ -30,7 +29,7 @@ func Test_newScanner(t *testing.T) {
 }
 
 func BenchmarkScanner_Length(b *testing.B) {
-	file := fs.NewFile("", bytes.Bytes(`
+	file := fs.NewFile("", `
 /*
 {}
 */
@@ -44,7 +43,7 @@ func BenchmarkScanner_Length(b *testing.B) {
 */
 
 some text
-`))
+`)
 
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -67,7 +66,7 @@ func TestScanner_Length(t *testing.T) {
 	for given, expected := range tests {
 		t.Run(given, func(t *testing.T) {
 			assert.NotPanics(t, func() {
-				actual := New(fs.NewFile("", bytes.Bytes(given)), ComputeLength).
+				actual := New(fs.NewFile("", given), ComputeLength).
 					Length()
 				assert.Equal(t, expected, actual)
 			})
@@ -701,7 +700,7 @@ func TestScanner_Next(t *testing.T) {
 
 		for _, tst := range cc {
 			t.Run(tst.content, func(t *testing.T) {
-				file := fs.NewFile("", bytes.Bytes(tst.content))
+				file := fs.NewFile("", tst.content)
 				s := New(file)
 				processingValid(t, s, tst)
 			})
@@ -766,7 +765,7 @@ bbb"}`,
 		for _, content := range cc {
 			t.Run(content, func(t *testing.T) {
 				assert.Panics(t, func() {
-					s := New(fs.NewFile("", bytes.Bytes(content)))
+					s := New(fs.NewFile("", content))
 					for {
 						if _, ok := s.Next(); ok == false {
 							break
