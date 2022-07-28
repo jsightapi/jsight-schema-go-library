@@ -125,9 +125,8 @@ func BenchmarkSchema_Len(b *testing.B) {
 
 func TestSchema_Example(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
-		t.Skip() // todo fix in SERV-8
-		s := New("schema", `
-{
+		s := New("@main", `
+{ //{allOf: ["@allOf1", "@allOf2"]}
 	"i": 123, // {min: 1}
 	"s": "str",
 	"b": true,
@@ -142,7 +141,9 @@ func TestSchema_Example(t *testing.T) {
 	"shortcut_or": @foo | @bar,
 	"enum": 1, // {enum: [1, 2, 3]}
 	"enum_rule": 2, // {enum: @enum}
-	"recursion": @recursion
+	"recursion": @recursion,
+	"deep_recursion": @deep_recursion,
+	@keyName: 100500
 }
 `)
 
@@ -158,7 +159,20 @@ func TestSchema_Example(t *testing.T) {
 	"bar": 42
 }`)))
 		require.NoError(t, s.AddType("@recursion", New("@recursion", `{
-	"recursion": @recursion
+	"recursion": @recursion // {optional: true}
+}`)))
+		require.NoError(t, s.AddType("@deep_recursion", New("@deep_recursion", `{
+	"bar": @nested
+}`)))
+		require.NoError(t, s.AddType("@nested", New("@nested", `{
+	"fizz": @deep_recursion
+}`)))
+		require.NoError(t, s.AddType("@keyName", New("@keyName", `"key_name_1" // {regex: "key_name_\\d+"}`)))
+		require.NoError(t, s.AddType("@allOf1", New("@allOf1", `{
+	"allOf1": 42
+}`)))
+		require.NoError(t, s.AddType("@allOf2", New("@allOf2", `{
+	"allOf2": @recursion // {optional: true}
 }`)))
 
 		actual, err := s.Example()
@@ -186,7 +200,22 @@ func TestSchema_Example(t *testing.T) {
 		"foo": 42
 	},
 	"enum": 1,
-	"enum_rule": 2
+	"enum_rule": 2,
+	"recursion": {
+		"recursion": {}
+	},
+	"deep_recursion": {
+		"bar": {
+			"fizz": {
+				"bar": {}
+			}
+		}
+	},
+	"key_name_1": 100500,
+	"allOf1": 42,
+	"allOf2": {
+		"recursion": {}
+	}
 }`,
 			string(actual),
 		)
@@ -232,7 +261,7 @@ func Benchmark_buildExample(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_, _ = buildExample(node)
+		_, _ = buildExample(node, nil)
 	}
 }
 
