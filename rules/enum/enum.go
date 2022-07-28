@@ -149,6 +149,7 @@ func (e *Enum) doCompile() (err error) {
 			} else {
 				e.values = append(e.values, Value{
 					Comment: comment,
+					Type:    jschema.SchemaTypeComment,
 				})
 			}
 		}
