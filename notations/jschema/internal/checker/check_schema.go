@@ -105,7 +105,7 @@ func (c checkSchema) checkLiteralNode(node schema.Node, ss map[string]schema.Typ
 	var err errors.Error
 
 	for _, checker := range checkerList {
-		err = checker.check(node.BasisLexEventOfSchemaForNode())
+		err = checker.Check(node.BasisLexEventOfSchemaForNode())
 		if err != nil {
 			errorsCount++
 		}

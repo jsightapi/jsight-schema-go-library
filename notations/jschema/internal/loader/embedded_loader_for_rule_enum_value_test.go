@@ -7,7 +7,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	jschema "github.com/jsightapi/jsight-schema-go-library"
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
 	"github.com/jsightapi/jsight-schema-go-library/errors"
+	"github.com/jsightapi/jsight-schema-go-library/fs"
 	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
 	"github.com/jsightapi/jsight-schema-go-library/internal/mocks"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
@@ -40,7 +42,7 @@ func TestEnumValueLoader_load(t *testing.T) {
 			inProgress: true,
 		}
 
-		ret := l.load(expected)
+		ret := l.Load(expected)
 		assert.True(t, ret)
 	})
 
@@ -55,7 +57,7 @@ func TestEnumValueLoader_load(t *testing.T) {
 				inProgress: true,
 			}
 
-			ret := l.load(expected)
+			ret := l.Load(expected)
 			assert.False(t, ret)
 		})
 	})
@@ -664,4 +666,13 @@ func TestEnumValueLoader_endOfLoading(t *testing.T) {
 			})
 		})
 	}
+}
+
+func newFakeLexEvent(t lexeme.LexEventType) lexeme.LexEvent {
+	return lexeme.NewLexEvent(t, 0, 0, nil)
+}
+
+func newFakeLexEventWithValue(t lexeme.LexEventType, s string) lexeme.LexEvent {
+	f := fs.NewFile("", s)
+	return lexeme.NewLexEvent(t, 0, bytes.Index(len(s)-1), f)
 }

@@ -11,9 +11,7 @@ import (
 
 	jschema "github.com/jsightapi/jsight-schema-go-library"
 	"github.com/jsightapi/jsight-schema-go-library/formats/json"
-	"github.com/jsightapi/jsight-schema-go-library/fs"
 	"github.com/jsightapi/jsight-schema-go-library/internal/mocks"
-	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/loader"
 	schemaMocks "github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/mocks"
 	internalSchema "github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema"
 	"github.com/jsightapi/jsight-schema-go-library/notations/regex"
@@ -229,40 +227,6 @@ func TestSchema_Example(t *testing.T) {
 	> invalid
 	--^`)
 	})
-}
-
-func Benchmark_buildExample(b *testing.B) {
-	node := loader.NewSchemaForSdk(
-		fs.NewFile("", `{
-	"foo": "bar",
-	"fizz": [
-		1,
-		2,
-		3
-	],
-	"buzz": {
-		"foo": [
-			{"bar": 1},
-			{"bar": 2}
-		],
-		"bar": {
-			"fizz": 42,
-			"buzz": [1, 2, 3]
-		},
-		"fizz": 1, // {or: ["string", "integer"]}
-		"buzz": 2
-	}
-}`),
-		false,
-	).
-		RootNode()
-
-	b.ReportAllocs()
-	b.ResetTimer()
-
-	for i := 0; i < b.N; i++ {
-		_, _ = buildExample(node, nil)
-	}
 }
 
 func TestSchema_AddType(t *testing.T) {

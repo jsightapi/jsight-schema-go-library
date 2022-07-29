@@ -8,9 +8,8 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
 )
 
-// This class is responsible for creating constraints for SCHEMA internal representation nodes from the RULES described
-// in the SCHEMA file.
-
+// ruleLoader responsible for creating constraints for SCHEMA internal representation
+// nodes from the RULES described in the SCHEMA file.
 type ruleLoader struct {
 	// A node to add constraint.
 	node schema.Node
@@ -125,12 +124,10 @@ func (rl *ruleLoader) objectEndAfterRuleName(lex lexeme.LexEvent) {
 }
 
 func (rl *ruleLoader) ruleValueBegin(lex lexeme.LexEvent) {
-	switch lex.Type() {
-	case lexeme.ObjectValueBegin:
-		rl.stateFunc = rl.ruleValue
-	default:
+	if lex.Type() != lexeme.ObjectValueBegin {
 		panic(errors.ErrLoader)
 	}
+	rl.stateFunc = rl.ruleValue
 }
 
 func (rl *ruleLoader) ruleValue(lex lexeme.LexEvent) {
@@ -174,22 +171,20 @@ func (rl *ruleLoader) ruleValue(lex lexeme.LexEvent) {
 }
 
 func (rl *ruleLoader) ruleValueLiteral(ruleValue lexeme.LexEvent) {
-	switch ruleValue.Type() {
-	case lexeme.LiteralEnd:
-		c := constraint.NewConstraintFromRule(rl.ruleNameLex, ruleValue.Value(), rl.node.Value()) // can panic
-		rl.node.AddConstraint(c)
-
-		rl.stateFunc = rl.ruleValueEnd
-	default:
+	if ruleValue.Type() != lexeme.LiteralEnd {
 		panic(errors.ErrLoader)
 	}
+	c := constraint.NewConstraintFromRule(rl.ruleNameLex, ruleValue.Value(), rl.node.Value()) // can panic
+	rl.node.AddConstraint(c)
+
+	rl.stateFunc = rl.ruleValueEnd
 }
 
 func (rl *ruleLoader) loadEmbeddedValue(lex lexeme.LexEvent) {
 	if lex.Type() == lexeme.NewLine {
 		return
 	}
-	if !rl.embeddedValueLoader.load(lex) {
+	if !rl.embeddedValueLoader.Load(lex) {
 		rl.embeddedValueLoader = nil
 		rl.stateFunc = rl.ruleValueEnd
 	}

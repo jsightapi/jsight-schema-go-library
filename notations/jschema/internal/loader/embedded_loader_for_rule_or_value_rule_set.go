@@ -49,14 +49,13 @@ func newOrRuleSetLoader(node schema.Node, rootSchema *schema.Schema) *orRuleSetL
 	return s
 }
 
-// Returns false when the load is complete.
-func (s *orRuleSetLoader) load(lex lexeme.LexEvent) bool {
+func (s *orRuleSetLoader) Load(lex lexeme.LexEvent) bool {
 	defer lexeme.CatchLexEventError(lex)
 	s.stateFunc(lex)
 	return s.inProgress
 }
 
-// begin of object "{"
+// objectBegin begin of object "{"
 func (s *orRuleSetLoader) objectBegin(lex lexeme.LexEvent) {
 	if lex.Type() != lexeme.ObjectBegin {
 		panic(errors.ErrLoader)
@@ -64,7 +63,7 @@ func (s *orRuleSetLoader) objectBegin(lex lexeme.LexEvent) {
 	s.stateFunc = s.keyOrObjectEnd
 }
 
-// object key or object end
+// keyOrObjectEnd object key or object end
 // ex: {"key" <--
 // ex: {...} <--
 func (s *orRuleSetLoader) keyOrObjectEnd(lex lexeme.LexEvent) {
@@ -83,7 +82,7 @@ func (s *orRuleSetLoader) keyOrObjectEnd(lex lexeme.LexEvent) {
 	}
 }
 
-// object value begin
+// valueBegin object value begin
 // ex: {"key": <--
 func (s *orRuleSetLoader) valueBegin(lex lexeme.LexEvent) {
 	if lex.Type() != lexeme.ObjectValueBegin {
@@ -92,7 +91,7 @@ func (s *orRuleSetLoader) valueBegin(lex lexeme.LexEvent) {
 	s.stateFunc = s.valueLiteral
 }
 
-// literal value
+// valueLiteral literal value
 // ex: {"key": ... <--
 func (s *orRuleSetLoader) valueLiteral(lex lexeme.LexEvent) {
 	switch lex.Type() {
@@ -107,7 +106,7 @@ func (s *orRuleSetLoader) valueLiteral(lex lexeme.LexEvent) {
 	}
 }
 
-// object value end
+// valueEnd object value end
 // ex: {"key": "value" <--
 func (s *orRuleSetLoader) valueEnd(lex lexeme.LexEvent) {
 	if lex.Type() != lexeme.ObjectValueEnd {

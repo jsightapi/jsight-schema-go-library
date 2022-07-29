@@ -279,13 +279,13 @@ func TestEnum_Values(t *testing.T) {
 
 	// Interline comment 3
 ]`: {
-				{Comment: "Interline comment 1"},
+				{Comment: "Interline comment 1", Type: jschema.SchemaTypeComment},
 				{Value: []byte(`"foo"`), Type: jschema.SchemaTypeString, Comment: "Foo comment"},
 				{Value: []byte(`"bar"`), Type: jschema.SchemaTypeString, Comment: "Bar comment"},
-				{Comment: "Interline comment 2"},
+				{Comment: "Interline comment 2", Type: jschema.SchemaTypeComment},
 				{Value: []byte(`"fizz"`), Type: jschema.SchemaTypeString, Comment: "Fizz comment"},
 				{Value: []byte(`"buzz"`), Type: jschema.SchemaTypeString, Comment: "Buzz comment"},
-				{Comment: "Interline comment 3"},
+				{Comment: "Interline comment 3", Type: jschema.SchemaTypeComment},
 			},
 		}
 

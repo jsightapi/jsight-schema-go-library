@@ -39,11 +39,10 @@ func newOrValueLoader(node schema.Node, rootSchema *schema.Schema) embeddedLoade
 	return a
 }
 
-// Returns false when the load is complete.
-func (a *orValueLoader) load(lex lexeme.LexEvent) bool {
+func (a *orValueLoader) Load(lex lexeme.LexEvent) bool {
 	defer lexeme.CatchLexEventError(lex)
 	if a.ruleSetLoader != nil {
-		if !a.ruleSetLoader.load(lex) {
+		if !a.ruleSetLoader.Load(lex) {
 			a.ruleSetLoader = nil
 		}
 	} else {
@@ -52,7 +51,7 @@ func (a *orValueLoader) load(lex lexeme.LexEvent) bool {
 	return a.inProgress
 }
 
-// return TypesList constraint for node
+// nodeTypesListConstraint returns TypesList constraint for node.
 func (a *orValueLoader) nodeTypesListConstraint() *constraint.TypesList {
 	c := a.node.Constraint(constraint.TypesListConstraintType)
 	if c == nil {
@@ -69,7 +68,7 @@ func (a *orValueLoader) begin(lex lexeme.LexEvent) {
 	a.stateFunc = a.itemBeginOrArrayEnd
 }
 
-// begin of array item or array end
+// itemBeginOrArrayEnd begin of array item or array end
 // ex: [{ <--
 // ex: [" <--
 // ex: ] <--
@@ -91,7 +90,7 @@ func (a *orValueLoader) itemBeginOrArrayEnd(lex lexeme.LexEvent) {
 	}
 }
 
-// array item value (literal begin or object begin)
+// itemInner array item value (literal begin or object begin)
 // ex: [{ <--
 // ex: [" <--
 func (a *orValueLoader) itemInner(lex lexeme.LexEvent) {
@@ -100,7 +99,7 @@ func (a *orValueLoader) itemInner(lex lexeme.LexEvent) {
 		a.stateFunc = a.literal
 	case lexeme.ObjectBegin:
 		a.ruleSetLoader = newOrRuleSetLoader(a.node, a.rootSchema)
-		a.ruleSetLoader.load(lex)
+		a.ruleSetLoader.Load(lex)
 		a.stateFunc = a.itemEnd
 	default:
 		panic(errors.ErrIncorrectArrayItemTypeInOrRule) // ex: array
@@ -144,7 +143,7 @@ func (a *orValueLoader) literal(lex lexeme.LexEvent) {
 	a.stateFunc = a.itemEnd
 }
 
-// array item end
+// itemEnd array item end
 // ex: ["@type" <--
 // ex: [{...} <--
 func (a *orValueLoader) itemEnd(lex lexeme.LexEvent) {

@@ -31,7 +31,7 @@ func TestSchemaCompiler_precisionConstraint(t *testing.T) {
 
 		for name, fn := range cc {
 			t.Run(name, func(t *testing.T) {
-				n := &mocks.Node{}
+				n := mocks.NewNode(t)
 				fn(n)
 				schemaCompiler{}.precisionConstraint(n)
 			})
@@ -40,7 +40,7 @@ func TestSchemaCompiler_precisionConstraint(t *testing.T) {
 
 	t.Run("negative", func(t *testing.T) {
 		assert.PanicsWithError(t, `The "precision" constraint can't be used for the "foo" type`, func() {
-			n := &mocks.Node{}
+			n := mocks.NewNode(t)
 			n.On("Constraint", constraint.PrecisionConstraintType).Return(constraint.Precision{})
 			n.On("Constraint", constraint.TypeConstraintType).Return(constraint.NewType(
 				[]byte("foo"),
