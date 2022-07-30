@@ -576,6 +576,34 @@ func TestSchema_Check(t *testing.T) {
 }`,
 				},
 			},
+
+			`1 /* {or: [
+	{type: "string"},
+	{enum: [1,2,3]}
+]} */`: {},
+
+			`"foo" /* {or: [
+	{type: "string"},
+	{enum: [1,2,3]}
+]} */`: {},
+
+			`1 /* {or: [
+	{type: "string"},
+	{enum: @enum}
+]} */`: {
+				enums: map[string]string{
+					"@enum": "[1, 2, 3]",
+				},
+			},
+
+			`"foo" /* {or: [
+	{type: "string"},
+	{enum: @enum}
+]} */`: {
+				enums: map[string]string{
+					"@enum": "[1, 2, 3]",
+				},
+			},
 		}
 
 		for content, c := range cc {

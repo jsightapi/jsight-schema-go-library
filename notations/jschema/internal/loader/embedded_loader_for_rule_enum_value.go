@@ -32,10 +32,12 @@ type enumValueLoader struct {
 	inProgress bool
 }
 
+var _ embeddedLoader = (*enumValueLoader)(nil)
+
 func newEnumValueLoader(
 	enumConstraint *constraint.Enum,
 	rules map[string]jschemaLib.Rule,
-) embeddedLoader {
+) *enumValueLoader {
 	l := &enumValueLoader{
 		enumConstraint: enumConstraint,
 		inProgress:     true,

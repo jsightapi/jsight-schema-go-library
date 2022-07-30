@@ -20,7 +20,9 @@ type allOfValueLoader struct {
 	inProgress bool
 }
 
-func newAllOfValueLoader(allOfConstraint *constraint.AllOf) embeddedLoader {
+var _ embeddedLoader = (*allOfValueLoader)(nil)
+
+func newAllOfValueLoader(allOfConstraint *constraint.AllOf) *allOfValueLoader {
 	l := &allOfValueLoader{
 		allOfConstraint: allOfConstraint,
 		inProgress:      true,

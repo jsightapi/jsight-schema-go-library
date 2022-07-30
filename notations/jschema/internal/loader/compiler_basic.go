@@ -231,7 +231,7 @@ func (schemaCompiler) typeConstraint(node schema.Node) { //nolint:gocyclo // tod
 			if typesListConstraint.(*constraint.TypesList).Len() < 2 {
 				panic(errors.ErrNotFoundRuleOr)
 			}
-		case "enum":
+		case constraint.EnumConstraintType.String():
 			if node.Constraint(constraint.EnumConstraintType) == nil {
 				panic(errors.ErrNotFoundRuleEnum)
 			}

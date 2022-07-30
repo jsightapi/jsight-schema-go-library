@@ -16,6 +16,9 @@ type orValueLoader struct {
 	// A rootSchema into which types can be added from the "or" rule.
 	rootSchema *schema.Schema
 
+	// rules all available rules.
+	rules map[string]jschema.Rule
+
 	// stateFunc a function for running a state machine (the current state of the
 	// state machine).
 	stateFunc func(lexeme.LexEvent)
@@ -27,12 +30,19 @@ type orValueLoader struct {
 	inProgress bool
 }
 
+var _ embeddedLoader = (*orValueLoader)(nil)
+
 // newOrValueLoader creates loader for "or" rule value (array of rule-sets).
 // Ex: [{type: "@typeName-1"}, "@typeName-2", {type: "integer", min: 0}]
-func newOrValueLoader(node schema.Node, rootSchema *schema.Schema) embeddedLoader {
+func newOrValueLoader(
+	node schema.Node,
+	rootSchema *schema.Schema,
+	rules map[string]jschema.Rule,
+) *orValueLoader {
 	a := &orValueLoader{
 		node:       node,
 		rootSchema: rootSchema,
+		rules:      rules,
 		inProgress: true,
 	}
 	a.stateFunc = a.begin
@@ -98,7 +108,7 @@ func (a *orValueLoader) itemInner(lex lexeme.LexEvent) {
 	case lexeme.LiteralBegin:
 		a.stateFunc = a.literal
 	case lexeme.ObjectBegin:
-		a.ruleSetLoader = newOrRuleSetLoader(a.node, a.rootSchema)
+		a.ruleSetLoader = newOrRuleSetLoader(a.node, a.rootSchema, a.rules)
 		a.ruleSetLoader.Load(lex)
 		a.stateFunc = a.itemEnd
 	default:

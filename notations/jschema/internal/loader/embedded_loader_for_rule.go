@@ -143,7 +143,7 @@ func (rl *ruleLoader) ruleValue(lex lexeme.LexEvent) {
 	case "or":
 		rl.node.AddConstraint(constraint.NewTypesList(jschema.RuleASTNodeSourceManual))
 		rl.node.AddConstraint(constraint.NewOr(jschema.RuleASTNodeSourceManual)) // Used for compile-time checking.
-		rl.embeddedValueLoader = newOrValueLoader(rl.node, rl.rootSchema)
+		rl.embeddedValueLoader = newOrValueLoader(rl.node, rl.rootSchema, rl.rules)
 		rl.stateFunc = rl.loadEmbeddedValue
 		rl.stateFunc(lex)
 

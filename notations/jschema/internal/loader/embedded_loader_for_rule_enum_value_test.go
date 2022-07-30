@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	jschema "github.com/jsightapi/jsight-schema-go-library"
 	"github.com/jsightapi/jsight-schema-go-library/bytes"
@@ -21,10 +20,8 @@ func Test_newEnumValueLoader(t *testing.T) {
 	rr := map[string]jschema.Rule{
 		"foo": mocks.NewRule(t),
 	}
-	rl := newEnumValueLoader(c, rr)
-	require.IsType(t, &enumValueLoader{}, rl)
+	l := newEnumValueLoader(c, rr)
 
-	l := rl.(*enumValueLoader)
 	assert.Same(t, c, l.enumConstraint)
 	assert.Equal(t, rr, l.rules)
 	assert.NotNil(t, l.stateFunc)
@@ -309,7 +306,7 @@ func TestEnumValueLoader_commentEnd(t *testing.T) {
 			c := constraint.NewEnum()
 			c.Append([]byte("42"))
 
-			l := newEnumValueLoader(c, nil).(*enumValueLoader)
+			l := newEnumValueLoader(c, nil)
 
 			if shouldPanic {
 				assert.PanicsWithValue(t, errors.ErrLoader, func() {
@@ -432,7 +429,7 @@ func TestEnumValueLoader_literal(t *testing.T) {
 
 	t.Run(lexeme.LiteralEnd.String(), func(t *testing.T) {
 		c := constraint.NewEnum()
-		l := newEnumValueLoader(c, nil).(*enumValueLoader)
+		l := newEnumValueLoader(c, nil)
 		l.lastIdx = -1
 
 		l.literal(newFakeLexEventWithValue(lexeme.LiteralEnd, "42"))
@@ -555,7 +552,7 @@ func TestEnumValueLoader_ruleName(t *testing.T) {
 		ec := constraint.NewEnum()
 		el := newEnumValueLoader(ec, map[string]jschema.Rule{
 			"foo": enum.New("foo", `[42, 3.14, "foo", false, true, null]`),
-		}).(*enumValueLoader)
+		})
 		el.stateFunc = nil
 		el.ruleName(newFakeLexEventWithValue(lexeme.TypesShortcutEnd, " \nfoo\t \r"))
 
