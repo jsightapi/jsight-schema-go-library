@@ -22,14 +22,22 @@ func TestData(t *testing.T) {
 
 			if tt.want == nil {
 				if err != nil {
-					t.Errorf("Unexpected error\n\tFile: %s\n\tPosition: %d\n\tCode: %v\n\tMessage: %s", err.Filename(), err.Position(), err.ErrCode(), err.Message())
+					t.Errorf(`Unexpected error
+	File: %s
+	Position: %d
+	tCode: %v
+	Message: %s`, err.Filename(), err.Position(), err.ErrCode(), err.Message())
 				}
 			} else {
 				want := (int)(tt.want.Code())
 				if err == nil {
 					t.Errorf("There must have been a error code: %v", want)
 				} else if want != err.ErrCode() {
-					t.Errorf("Invalid error code\n\tFile: %s\n\tWant error code: %v\n\tGot error code: %v\n\tMessage: %s", err.Filename(), want, err.ErrCode(), err.Message())
+					t.Errorf(`Invalid error code
+	File: %s
+	Want error code: %v
+	Got error code: %v
+	Message: %s`, err.Filename(), want, err.ErrCode(), err.Message())
 				}
 			}
 		})

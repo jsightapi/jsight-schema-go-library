@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/jsightapi/jsight-schema-go-library/bytes"
 )
@@ -247,18 +248,10 @@ func TestGuessLiteralNodeType(t *testing.T) {
 
 func TestGuessLiteralNodeTypePanic(t *testing.T) {
 	for _, str := range success("wrong") {
-		guessLiteralNodeTypePanic(t, str)
+		assert.Panics(t, func() {
+			Guess(bytes.Bytes(str)).LiteralJsonType()
+		})
 	}
-}
-
-func guessLiteralNodeTypePanic(t *testing.T, s string) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("Expect error for: " + s)
-		}
-	}()
-
-	Guess(bytes.Bytes(s)).LiteralJsonType()
 }
 
 func TestNumberOptimization(t *testing.T) {
@@ -272,9 +265,8 @@ func TestNumberOptimization(t *testing.T) {
 	pointer2 := g.number
 
 	pointer3, err := g.Number()
-	if err != nil {
-		t.Error(err)
-	}
+	require.NoError(t, err)
+
 	pointer4 := g.number
 
 	assert.NotNil(t, pointer1)

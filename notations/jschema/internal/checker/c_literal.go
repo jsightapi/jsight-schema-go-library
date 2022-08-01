@@ -19,7 +19,7 @@ func newLiteralChecker(node schema.Node) literalChecker {
 	}
 }
 
-func (c literalChecker) check(nodeLex lexeme.LexEvent) (err errors.Error) {
+func (c literalChecker) Check(nodeLex lexeme.LexEvent) (err errors.Error) {
 	defer func() {
 		if r := recover(); r != nil {
 			switch val := r.(type) {

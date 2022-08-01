@@ -3,20 +3,15 @@ package checker
 import (
 	"github.com/jsightapi/jsight-schema-go-library/errors"
 	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
-	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema"
 )
 
-type objectChecker struct {
-	node schema.Node
+type objectChecker struct{}
+
+func newObjectChecker() objectChecker {
+	return objectChecker{}
 }
 
-func newObjectChecker(node schema.Node) objectChecker {
-	return objectChecker{
-		node: node,
-	}
-}
-
-func (objectChecker) check(nodeLex lexeme.LexEvent) (err errors.Error) {
+func (objectChecker) Check(nodeLex lexeme.LexEvent) errors.Error {
 	if nodeLex.Type() != lexeme.ObjectEnd {
 		return lexeme.NewLexEventError(nodeLex, errors.ErrChecker)
 	}

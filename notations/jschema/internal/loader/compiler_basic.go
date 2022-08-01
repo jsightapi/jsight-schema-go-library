@@ -9,12 +9,12 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
 )
 
-// Schema compilation works with each node's constraints. This process adjust constraints so that they were in peace
-// with each other. For example, if node has "precision" constraint, we have to add to this node "decimal" constraint,
-// because only decimal can have precision. Another interesting example: if key-value node doesn't have an "optional"
-// constraint, we have to add to parent object "required key" constraint, because this node's key is required in the
-// object.
-
+// schemaCompiler works with each node's constraints. This process adjust constraints
+// so that they were in peace with each other. For example, if node has "precision"
+// constraint, we have to add to this node "decimal" constraint, because only
+// decimal can have precision. Another interesting example: if key-value node doesn't
+// have an "optional" constraint, we have to add to parent object "required key"
+// constraint, because this node's key is required in the object.
 type schemaCompiler struct {
 	rootSchema               *schema.Schema
 	areKeysOptionalByDefault bool
@@ -231,7 +231,7 @@ func (schemaCompiler) typeConstraint(node schema.Node) { //nolint:gocyclo // tod
 			if typesListConstraint.(*constraint.TypesList).Len() < 2 {
 				panic(errors.ErrNotFoundRuleOr)
 			}
-		case "enum":
+		case constraint.EnumConstraintType.String():
 			if node.Constraint(constraint.EnumConstraintType) == nil {
 				panic(errors.ErrNotFoundRuleEnum)
 			}

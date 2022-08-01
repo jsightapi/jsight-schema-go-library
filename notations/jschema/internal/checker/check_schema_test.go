@@ -21,11 +21,11 @@ func TestCheckRootSchema(t *testing.T) {
 	check := func(schema string, types []typ) {
 		schemaFile := fs.NewFile("schema", schema)
 
-		rootSchema := loader.NewSchemaForSdk(schemaFile, false)
+		rootSchema := loader.LoadSchema(scanner.New(schemaFile), nil)
 
 		for _, datum := range types {
 			f := fs.NewFile(datum.name, datum.schema)
-			typ := loader.LoadSchema(scanner.New(f), rootSchema, false, nil)
+			typ := loader.LoadSchema(scanner.New(f), rootSchema)
 			rootSchema.AddNamedType(datum.name, typ, f, 0)
 		}
 

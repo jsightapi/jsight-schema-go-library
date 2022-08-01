@@ -1,7 +1,6 @@
 package scanner
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -937,13 +936,6 @@ type validResults struct {
 }
 
 func processingValid(t *testing.T, s *Scanner, tst validResults) {
-	defer func() {
-		if r := recover(); r != nil {
-			str := fmt.Sprint(r)
-			t.Errorf("Panic at:\n%s\n\n%s", tst.content, str)
-		}
-	}()
-
 	var results []lexeme.LexEventType
 
 	for {

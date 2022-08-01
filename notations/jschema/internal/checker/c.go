@@ -7,7 +7,7 @@ import (
 )
 
 type nodeChecker interface {
-	check(lexeme.LexEvent) errors.Error
+	Check(lexeme.LexEvent) errors.Error
 }
 
 func newNodeChecker(node schema.Node) (nodeChecker, error) {
@@ -16,10 +16,10 @@ func newNodeChecker(node schema.Node) (nodeChecker, error) {
 		return newLiteralChecker(node), nil
 
 	case *schema.ObjectNode:
-		return newObjectChecker(node), nil
+		return newObjectChecker(), nil
 
 	case *schema.ArrayNode:
-		return newArrayChecker(node), nil
+		return newArrayChecker(), nil
 
 	case *schema.MixedNode:
 		return newMixedChecker(node), nil

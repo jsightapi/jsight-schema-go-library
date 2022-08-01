@@ -45,9 +45,7 @@ func TestBytes_OneOf(t *testing.T) {
 	for _, c := range cc {
 		t.Run(fmt.Sprintf("%v", c.given), func(t *testing.T) {
 			actual := b.OneOf(c.given...)
-			if actual != c.expected {
-				t.Errorf("%t != %t", actual, c.expected)
-			}
+			assert.Equal(t, c.expected, actual)
 		})
 	}
 }
@@ -64,11 +62,6 @@ func BenchmarkBytes_OneOf(b *testing.B) {
 	}
 }
 
-type bytesTestData struct {
-	source string
-	result string
-}
-
 var benchmarkParseIntBytes = Bytes("1234567890")
 
 func BenchmarkParseUint(b *testing.B) {
@@ -76,9 +69,7 @@ func BenchmarkParseUint(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_, err := benchmarkParseIntBytes.ParseUint()
-		if err != nil {
-			b.Error(err)
-		}
+		assert.NoError(b, err)
 	}
 }
 
@@ -87,9 +78,7 @@ func BenchmarkParseInt(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_, err := benchmarkParseIntBytes.ParseInt()
-		if err != nil {
-			b.Error(err)
-		}
+		assert.NoError(b, err)
 	}
 }
 
@@ -98,32 +87,29 @@ func BenchmarkAtoi(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_, err := strconv.Atoi(string(benchmarkParseIntBytes))
-		if err != nil {
-			b.Error(err)
-		}
+		assert.NoError(b, err)
 	}
 }
 
 func TestBytes_Unquote(t *testing.T) {
-	testData := []bytesTestData{
+	cc := map[string]string{
 		// trimmed
-		{`""`, ``},
-		{`"123"`, `123`},
+		`""`:    "",
+		`"123"`: `123`,
 
 		// no trimmed
-		{``, ``},
-		{`"`, `"`},
-		{`123`, `123`},
-		{`"123`, `"123`},
-		{`123"`, `123"`},
+		"":     "",
+		`"`:    `"`,
+		"123":  "123",
+		`"123`: `"123`,
+		`123"`: `123"`,
 	}
 
-	for _, d := range testData {
-		source := Bytes(d.source)
-		trimmed := string(source.Unquote())
-		if trimmed != d.result {
-			t.Errorf(`Incorrect result %#v for source %#v expected %#v`, trimmed, d.source, d.result)
-		}
+	for given, expected := range cc {
+		t.Run(given, func(t *testing.T) {
+			actual := Bytes(given).Unquote()
+			assert.Equal(t, expected, string(actual))
+		})
 	}
 }
 
@@ -164,30 +150,29 @@ func TestBytes_TrimSpaces(t *testing.T) {
 }
 
 func TestBytes_TrimSpacesFromLeft(t *testing.T) {
-	testData := []bytesTestData{
-		{"", ""},
-		{"1", "1"},
-		{"12", "12"},
-		{"123", "123"},
+	cc := map[string]string{
+		"":    "",
+		"1":   "1",
+		"12":  "12",
+		"123": "123",
 
-		{" 123", "123"},
-		{"\t123", "123"},
-		{"\n123", "123"},
-		{"\r123", "123"},
-		{"\t\t\n\n\r\r  123", "123"},
+		" 123":              "123",
+		"\t123":             "123",
+		"\n123":             "123",
+		"\r123":             "123",
+		"\t\t\n\n\r\r  123": "123",
 
-		{"123 ", `123 `},
-		{"123\t", "123\t"},
-		{"123\n", "123\n"},
-		{"123\r", "123\r"},
+		"123 ":  "123 ",
+		"123\t": "123\t",
+		"123\n": "123\n",
+		"123\r": "123\r",
 	}
 
-	for _, d := range testData {
-		source := Bytes(d.source)
-		trimmed := string(source.TrimSpacesFromLeft())
-		if trimmed != d.result {
-			t.Errorf(`Incorrect result %#v for source %#v expected %#v`, trimmed, d.source, d.result)
-		}
+	for given, expected := range cc {
+		t.Run(given, func(t *testing.T) {
+			actual := Bytes(given).TrimSpacesFromLeft()
+			assert.Equal(t, expected, string(actual))
+		})
 	}
 }
 
