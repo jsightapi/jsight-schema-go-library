@@ -9,23 +9,12 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/internal/json"
 )
 
-func TestDate_IsJsonTypeCompatible(t *testing.T) {
-	cc := map[json.Type]bool{
-		json.TypeObject:  false,
-		json.TypeArray:   false,
-		json.TypeString:  true,
-		json.TypeInteger: false,
-		json.TypeFloat:   false,
-		json.TypeBoolean: false,
-		json.TypeNull:    false,
-		json.TypeMixed:   false,
-	}
+func TestNewDate(t *testing.T) {
+	assert.NotNil(t, NewDate())
+}
 
-	for typ, expected := range cc {
-		t.Run(typ.String(), func(t *testing.T) {
-			assert.Equal(t, expected, NewDate().IsJsonTypeCompatible(typ))
-		})
-	}
+func TestDate_IsJsonTypeCompatible(t *testing.T) {
+	testIsJsonTypeCompatible(t, NewDate(), json.TypeString)
 }
 
 func TestDate_Type(t *testing.T) {

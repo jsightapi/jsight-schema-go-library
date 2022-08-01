@@ -1,6 +1,7 @@
 package constraint
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,6 +10,32 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/bytes"
 )
 
+func TestNewType(t *testing.T) {
+	ruleValue := bytes.Bytes("@foo")
+	c := NewType(ruleValue, jschema.RuleASTNodeSourceGenerated)
+
+	assert.Equal(t, ruleValue, c.value)
+	assert.Equal(t, jschema.RuleASTNodeSourceGenerated, c.source)
+}
+
+func TestTypeConstraint_IsGenerated(t *testing.T) {
+	cc := map[jschema.RuleASTNodeSource]bool{
+		jschema.RuleASTNodeSourceUnknown:   false,
+		jschema.RuleASTNodeSourceManual:    false,
+		jschema.RuleASTNodeSourceGenerated: true,
+	}
+
+	for source, expected := range cc {
+		t.Run(strconv.Itoa(int(source)), func(t *testing.T) {
+			assert.Equal(t, expected, NewType([]byte("@foo"), source).IsGenerated())
+		})
+	}
+}
+
+func TestTypeConstraint_IsJsonTypeCompatible(t *testing.T) {
+	testIsJsonTypeCompatible(t, TypeConstraint{}, allJSONTypes...)
+}
+
 func TestTypeConstraint_Type(t *testing.T) {
 	assert.Equal(t,
 		TypeConstraintType,
@@ -16,11 +43,49 @@ func TestTypeConstraint_Type(t *testing.T) {
 	)
 }
 
+func TestTypeConstraint_String(t *testing.T) {
+	assert.Equal(t, "type: @foo", NewType([]byte("@foo"), jschema.RuleASTNodeSourceGenerated).String())
+}
+
+func TestTypeConstraint_Bytes(t *testing.T) {
+	ruleValue := bytes.Bytes("@foo")
+	c := NewType(ruleValue, jschema.RuleASTNodeSourceManual)
+
+	assert.Equal(t, ruleValue, c.Bytes())
+}
+
 func TestTypeConstraint_ASTNode(t *testing.T) {
-	assert.Equal(t, jschema.RuleASTNode{
-		JSONType:   jschema.JSONTypeString,
-		Value:      "foo",
-		Properties: &jschema.RuleASTNodes{},
-		Source:     jschema.RuleASTNodeSourceGenerated,
-	}, NewType(bytes.Bytes("foo"), jschema.RuleASTNodeSourceGenerated).ASTNode())
+	cc := map[string]jschema.RuleASTNode{
+		"foo": {
+			JSONType:   jschema.JSONTypeString,
+			Value:      "foo",
+			Properties: &jschema.RuleASTNodes{},
+			Source:     jschema.RuleASTNodeSourceGenerated,
+		},
+
+		"@foo": {
+			JSONType:   jschema.JSONTypeShortcut,
+			Value:      "@foo",
+			Properties: &jschema.RuleASTNodes{},
+			Source:     jschema.RuleASTNodeSourceGenerated,
+		},
+	}
+
+	for given, expected := range cc {
+		t.Run(given, func(t *testing.T) {
+			assert.Equal(
+				t,
+				expected,
+				NewType([]byte(given), jschema.RuleASTNodeSourceGenerated).ASTNode(),
+			)
+		})
+	}
+}
+
+func TestTypeConstraint_Source(t *testing.T) {
+	assert.Equal(
+		t,
+		jschema.RuleASTNodeSourceManual,
+		NewType([]byte("@foo"), jschema.RuleASTNodeSourceManual).Source(),
+	)
 }

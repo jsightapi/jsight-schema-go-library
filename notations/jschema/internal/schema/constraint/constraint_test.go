@@ -50,4 +50,24 @@ func TestNewConstraintFromRule(t *testing.T) {
 			})
 		}
 	})
+
+	t.Run("negative", func(t *testing.T) {
+		assert.PanicsWithError(t, `ERROR (code 601): Unknown rule "invalid"
+	in line 1 on file 
+	> invalid
+	--^`, func() {
+			const given = "invalid"
+
+			NewConstraintFromRule(
+				lexeme.NewLexEvent(
+					lexeme.LiteralBegin,
+					0,
+					bytes.Index(len(given))-1,
+					fs.NewFile("", given),
+				),
+				nil,
+				nil,
+			)
+		})
+	})
 }

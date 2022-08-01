@@ -28,28 +28,24 @@ func TestNewConst(t *testing.T) {
 	})
 
 	t.Run("negative", func(t *testing.T) {
-		assert.Panics(t, func() {
+		assert.PanicsWithError(t, `Invalid value of "const" constraint`, func() {
 			fakeConst("foo", "")
 		})
 	})
 }
 
 func TestConst_IsJsonTypeCompatible(t *testing.T) {
-	cc := map[json.Type]bool{
-		json.TypeObject:  false,
-		json.TypeArray:   false,
-		json.TypeString:  true,
-		json.TypeInteger: true,
-		json.TypeFloat:   true,
-		json.TypeBoolean: true,
-		json.TypeNull:    true,
-	}
-
-	for typ, expected := range cc {
-		t.Run(typ.String(), func(t *testing.T) {
-			assert.Equal(t, expected, Const{}.IsJsonTypeCompatible(typ))
-		})
-	}
+	testIsJsonTypeCompatible(
+		t,
+		Const{},
+		json.TypeUndefined,
+		json.TypeString,
+		json.TypeInteger,
+		json.TypeFloat,
+		json.TypeBoolean,
+		json.TypeNull,
+		json.TypeMixed,
+	)
 }
 
 func TestConst_Type(t *testing.T) {
@@ -57,13 +53,29 @@ func TestConst_Type(t *testing.T) {
 }
 
 func TestConst_String(t *testing.T) {
-	assert.Equal(t, "const: true", Const{apply: true}.String())
-	assert.Equal(t, "const: false", Const{}.String())
+	cc := map[string]string{
+		"false": "const: false",
+		"true":  "const: true",
+	}
+
+	for given, expected := range cc {
+		t.Run(given, func(t *testing.T) {
+			assert.Equal(t, expected, fakeConst(given, "").String())
+		})
+	}
 }
 
 func TestConst_Bool(t *testing.T) {
-	assert.True(t, Const{apply: true}.Bool())
-	assert.False(t, Const{}.Bool())
+	cc := map[string]bool{
+		"false": false,
+		"true":  true,
+	}
+
+	for given, expected := range cc {
+		t.Run(given, func(t *testing.T) {
+			assert.Equal(t, expected, fakeConst(given, "").Bool())
+		})
+	}
 }
 
 func TestConst_Validate(t *testing.T) {
@@ -84,7 +96,7 @@ func TestConst_Validate(t *testing.T) {
 	})
 
 	t.Run("negative", func(t *testing.T) {
-		assert.Panics(t, func() {
+		assert.PanicsWithError(t, "Does not match expected value (foo)", func() {
 			fakeConst("true", "foo").Validate(bytes.Bytes("bar"))
 		})
 	})

@@ -18,21 +18,7 @@ func Test_NewAllOf(t *testing.T) {
 }
 
 func TestAllOf_IsJsonTypeCompatible(t *testing.T) {
-	cc := map[json.Type]bool{
-		json.TypeObject:  true,
-		json.TypeArray:   false,
-		json.TypeString:  false,
-		json.TypeInteger: false,
-		json.TypeFloat:   false,
-		json.TypeBoolean: false,
-		json.TypeNull:    false,
-	}
-
-	for jsonType, expected := range cc {
-		t.Run(jsonType.String(), func(t *testing.T) {
-			assert.Equal(t, expected, AllOf{}.IsJsonTypeCompatible(jsonType))
-		})
-	}
+	testIsJsonTypeCompatible(t, AllOf{}, json.TypeObject)
 }
 
 func TestAllOf_Type(t *testing.T) {
@@ -69,7 +55,7 @@ func TestAllOf_Append(t *testing.T) {
 		})
 
 		t.Run("not a type", func(t *testing.T) {
-			assert.Panics(t, func() {
+			assert.PanicsWithError(t, `Invalid schema name (foo) in "allOf" rule`, func() {
 				NewAllOf().Append(bytes.Bytes(`"foo"`))
 			})
 		})
@@ -87,41 +73,85 @@ func TestAllOf_SchemaNames(t *testing.T) {
 }
 
 func TestAllOf_ASTNode(t *testing.T) {
-	c := NewAllOf()
-	c.Append(bytes.Bytes(`"@foo"`))
-	c.Append(bytes.Bytes(`"@bar"`))
-	c.Append(bytes.Bytes(`"@fizz"`))
-	c.Append(bytes.Bytes(`"@buzz"`))
+	cc := map[string]struct {
+		setup    func() *AllOf
+		expected jschema.RuleASTNode
+	}{
+		"none": {
+			setup: func() *AllOf {
+				return NewAllOf()
+			},
 
-	assert.Equal(t, jschema.RuleASTNode{
-		JSONType:   jschema.JSONTypeArray,
-		Properties: &jschema.RuleASTNodes{},
-		Items: []jschema.RuleASTNode{
-			{
-				JSONType:   jschema.JSONTypeString,
-				Value:      "@foo",
+			expected: jschema.RuleASTNode{
+				JSONType:   jschema.JSONTypeArray,
 				Properties: &jschema.RuleASTNodes{},
-				Source:     jschema.RuleASTNodeSourceManual,
-			},
-			{
-				JSONType:   jschema.JSONTypeString,
-				Value:      "@bar",
-				Properties: &jschema.RuleASTNodes{},
-				Source:     jschema.RuleASTNodeSourceManual,
-			},
-			{
-				JSONType:   jschema.JSONTypeString,
-				Value:      "@fizz",
-				Properties: &jschema.RuleASTNodes{},
-				Source:     jschema.RuleASTNodeSourceManual,
-			},
-			{
-				JSONType:   jschema.JSONTypeString,
-				Value:      "@buzz",
-				Properties: &jschema.RuleASTNodes{},
+				Items:      []jschema.RuleASTNode{},
 				Source:     jschema.RuleASTNodeSourceManual,
 			},
 		},
-		Source: jschema.RuleASTNodeSourceManual,
-	}, c.ASTNode())
+
+		"single": {
+			setup: func() *AllOf {
+				c := NewAllOf()
+				c.Append(bytes.Bytes(`"@foo"`))
+				return c
+			},
+
+			expected: jschema.RuleASTNode{
+				JSONType:   jschema.JSONTypeShortcut,
+				Properties: &jschema.RuleASTNodes{},
+				Value:      "@foo",
+				Source:     jschema.RuleASTNodeSourceManual,
+			},
+		},
+
+		"multiple": {
+			setup: func() *AllOf {
+				c := NewAllOf()
+				c.Append(bytes.Bytes(`"@foo"`))
+				c.Append(bytes.Bytes(`"@bar"`))
+				c.Append(bytes.Bytes(`"@fizz"`))
+				c.Append(bytes.Bytes(`"@buzz"`))
+				return c
+			},
+
+			expected: jschema.RuleASTNode{
+				JSONType:   jschema.JSONTypeArray,
+				Properties: &jschema.RuleASTNodes{},
+				Items: []jschema.RuleASTNode{
+					{
+						JSONType:   jschema.JSONTypeShortcut,
+						Value:      "@foo",
+						Properties: &jschema.RuleASTNodes{},
+						Source:     jschema.RuleASTNodeSourceManual,
+					},
+					{
+						JSONType:   jschema.JSONTypeShortcut,
+						Value:      "@bar",
+						Properties: &jschema.RuleASTNodes{},
+						Source:     jschema.RuleASTNodeSourceManual,
+					},
+					{
+						JSONType:   jschema.JSONTypeShortcut,
+						Value:      "@fizz",
+						Properties: &jschema.RuleASTNodes{},
+						Source:     jschema.RuleASTNodeSourceManual,
+					},
+					{
+						JSONType:   jschema.JSONTypeShortcut,
+						Value:      "@buzz",
+						Properties: &jschema.RuleASTNodes{},
+						Source:     jschema.RuleASTNodeSourceManual,
+					},
+				},
+				Source: jschema.RuleASTNodeSourceManual,
+			},
+		},
+	}
+
+	for n, c := range cc {
+		t.Run(n, func(t *testing.T) {
+			assert.Equal(t, c.expected, c.setup().ASTNode())
+		})
+	}
 }

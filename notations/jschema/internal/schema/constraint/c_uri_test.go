@@ -6,12 +6,22 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/jsightapi/jsight-schema-go-library/bytes"
+	"github.com/jsightapi/jsight-schema-go-library/internal/json"
 )
+
+func TestUri_IsJsonTypeCompatible(t *testing.T) {
+	testIsJsonTypeCompatible(t, Uri{}, json.TypeString)
+}
 
 func TestUri_Type(t *testing.T) {
 	assert.Equal(t, UriConstraintType, NewUri().Type())
 }
 
+func TestUri_String(t *testing.T) {
+	assert.Equal(t, "uri", NewUri().String())
+}
+
+//goland:noinspection ALL
 func TestUri_Validate(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
 		var tests = []string{
@@ -36,31 +46,31 @@ func TestUri_Validate(t *testing.T) {
 	})
 
 	t.Run("negative", func(t *testing.T) {
-		var tests = []string{
-			``,
-			`12`,
-			`1.2`,
-			`true`,
-			`false`,
-			`null`,
-			`"ABC"`,
-			`example.org`,
-			` https://example.org`, // first space
-			`/path/to/file.ext`,    // absolute path
-			`path/to/file.ext`,     // relative path
-			`//example.org/path/to/file.ext`,
-			`://example.org/path/to/file.ext`,
-			`?q=1`,
-			`http`,
-			`http:`,
-			`http:/`,
-			`http://`,
-			`http://?q=1`,
+		var cc = map[string]string{
+			"":                                "Invalid URI ()",
+			"12":                              "Invalid URI (12)",
+			"1.2":                             "Invalid URI (1.2)",
+			"true":                            "Invalid URI (true)",
+			"false":                           "Invalid URI (false)",
+			"null":                            "Invalid URI (null)",
+			`"ABC"`:                           "Invalid URI (ABC)",
+			"example.org":                     "Invalid URI (example.org)",
+			" https://example.org":            "Invalid URI ( https://example.org)",
+			"/path/to/file.ext":               "Invalid URI (/path/to/file.ext)",
+			"path/to/file.ext":                "Invalid URI (path/to/file.ext)",
+			"//example.org/path/to/file.ext":  "Invalid URI (//example.org/path/to/file.ext)",
+			"://example.org/path/to/file.ext": "Invalid URI (://example.org/path/to/file.ext)",
+			"?q=1":                            "Invalid URI (?q=1)",
+			"http":                            "Invalid URI (http)",
+			"http:":                           "Invalid URI (http:)",
+			"http:/":                          "Invalid URI (http:/)",
+			"http://":                         "Invalid URI (http://)",
+			"http://?q=1":                     "Invalid URI (http://?q=1)",
 		}
 
-		for _, uri := range tests {
+		for uri, expected := range cc {
 			t.Run(uri, func(t *testing.T) {
-				assert.Panics(t, func() {
+				assert.PanicsWithError(t, expected, func() {
 					NewUri().Validate(bytes.Bytes(uri))
 				})
 			})

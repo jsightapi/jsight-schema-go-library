@@ -6,26 +6,16 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/jsightapi/jsight-schema-go-library/bytes"
+	"github.com/jsightapi/jsight-schema-go-library/errors"
 	"github.com/jsightapi/jsight-schema-go-library/internal/json"
 )
 
-func TestDateTime_IsJsonTypeCompatible(t *testing.T) {
-	cc := map[json.Type]bool{
-		json.TypeObject:  false,
-		json.TypeArray:   false,
-		json.TypeString:  true,
-		json.TypeInteger: false,
-		json.TypeFloat:   false,
-		json.TypeBoolean: false,
-		json.TypeNull:    false,
-		json.TypeMixed:   false,
-	}
+func TestNewDateTime(t *testing.T) {
+	assert.NotNil(t, NewDateTime())
+}
 
-	for typ, expected := range cc {
-		t.Run(typ.String(), func(t *testing.T) {
-			assert.Equal(t, expected, NewDateTime().IsJsonTypeCompatible(typ))
-		})
-	}
+func TestDateTime_IsJsonTypeCompatible(t *testing.T) {
+	testIsJsonTypeCompatible(t, NewDateTime(), json.TypeString)
 }
 
 func TestDateTime_Type(t *testing.T) {
@@ -82,7 +72,7 @@ func TestDateTime_Validate(t *testing.T) {
 
 		for _, value := range tests {
 			t.Run(value, func(t *testing.T) {
-				assert.Panics(t, func() {
+				assert.PanicsWithValue(t, errors.ErrInvalidDateTime, func() {
 					NewDateTime().Validate(bytes.Bytes(value))
 				})
 			})

@@ -7,6 +7,7 @@ import (
 
 	jschema "github.com/jsightapi/jsight-schema-go-library"
 	"github.com/jsightapi/jsight-schema-go-library/bytes"
+	"github.com/jsightapi/jsight-schema-go-library/errors"
 	"github.com/jsightapi/jsight-schema-go-library/internal/json"
 )
 
@@ -16,7 +17,16 @@ func TestNewEnum(t *testing.T) {
 }
 
 func TestEnum_IsJsonTypeCompatible(t *testing.T) {
-	assert.True(t, Enum{}.IsJsonTypeCompatible(json.TypeString))
+	testIsJsonTypeCompatible(
+		t,
+		Enum{},
+		json.TypeString,
+		json.TypeBoolean,
+		json.TypeInteger,
+		json.TypeFloat,
+		json.TypeNull,
+		json.TypeMixed,
+	)
 }
 
 func TestEnum_Type(t *testing.T) {
@@ -133,7 +143,7 @@ func TestEnum_Validate(t *testing.T) {
 	})
 
 	t.Run("negative", func(t *testing.T) {
-		assert.Panics(t, func() {
+		assert.PanicsWithValue(t, errors.ErrDoesNotMatchAnyOfTheEnumValues, func() {
 			Enum{
 				items: []enumItem{
 					{value: bytes.Bytes(`"foo"`)},
@@ -146,59 +156,74 @@ func TestEnum_Validate(t *testing.T) {
 }
 
 func TestEnum_ASTNode(t *testing.T) {
-	e := Enum{
-		items: []enumItem{
-			{value: bytes.Bytes(`"foo"`)},
-			{value: bytes.Bytes("42"), comment: "foo"},
-			{value: bytes.Bytes("3.14")},
-			{value: bytes.Bytes("true")},
-			{value: bytes.Bytes("null"), comment: "bar"},
-			{value: bytes.Bytes("@foo")},
-		},
-	}
-	assert.Equal(t, jschema.RuleASTNode{
-		JSONType:   jschema.JSONTypeArray,
-		Properties: &jschema.RuleASTNodes{},
-		Items: []jschema.RuleASTNode{
-			{
-				JSONType:   jschema.JSONTypeString,
-				Value:      "foo",
-				Properties: &jschema.RuleASTNodes{},
-				Source:     jschema.RuleASTNodeSourceManual,
+	t.Run("with rule name", func(t *testing.T) {
+		e := Enum{
+			ruleName: "@foo",
+		}
+
+		assert.Equal(t, jschema.RuleASTNode{
+			JSONType:   jschema.JSONTypeShortcut,
+			Value:      "@foo",
+			Properties: &jschema.RuleASTNodes{},
+			Source:     jschema.RuleASTNodeSourceManual,
+		}, e.ASTNode())
+	})
+
+	t.Run("without rule name", func(t *testing.T) {
+		e := Enum{
+			items: []enumItem{
+				{value: bytes.Bytes(`"foo"`)},
+				{value: bytes.Bytes("42"), comment: "foo"},
+				{value: bytes.Bytes("3.14")},
+				{value: bytes.Bytes("true")},
+				{value: bytes.Bytes("null"), comment: "bar"},
+				{value: bytes.Bytes("@foo")},
 			},
-			{
-				JSONType:   jschema.JSONTypeNumber,
-				Value:      "42",
-				Properties: &jschema.RuleASTNodes{},
-				Source:     jschema.RuleASTNodeSourceManual,
-				Comment:    "foo",
+		}
+		assert.Equal(t, jschema.RuleASTNode{
+			JSONType:   jschema.JSONTypeArray,
+			Properties: &jschema.RuleASTNodes{},
+			Items: []jschema.RuleASTNode{
+				{
+					JSONType:   jschema.JSONTypeString,
+					Value:      "foo",
+					Properties: &jschema.RuleASTNodes{},
+					Source:     jschema.RuleASTNodeSourceManual,
+				},
+				{
+					JSONType:   jschema.JSONTypeNumber,
+					Value:      "42",
+					Properties: &jschema.RuleASTNodes{},
+					Source:     jschema.RuleASTNodeSourceManual,
+					Comment:    "foo",
+				},
+				{
+					JSONType:   jschema.JSONTypeNumber,
+					Value:      "3.14",
+					Properties: &jschema.RuleASTNodes{},
+					Source:     jschema.RuleASTNodeSourceManual,
+				},
+				{
+					JSONType:   jschema.JSONTypeBoolean,
+					Value:      "true",
+					Properties: &jschema.RuleASTNodes{},
+					Source:     jschema.RuleASTNodeSourceManual,
+				},
+				{
+					JSONType:   jschema.JSONTypeNull,
+					Value:      "null",
+					Properties: &jschema.RuleASTNodes{},
+					Source:     jschema.RuleASTNodeSourceManual,
+					Comment:    "bar",
+				},
+				{
+					JSONType:   jschema.JSONTypeShortcut,
+					Value:      "@foo",
+					Properties: &jschema.RuleASTNodes{},
+					Source:     jschema.RuleASTNodeSourceManual,
+				},
 			},
-			{
-				JSONType:   jschema.JSONTypeNumber,
-				Value:      "3.14",
-				Properties: &jschema.RuleASTNodes{},
-				Source:     jschema.RuleASTNodeSourceManual,
-			},
-			{
-				JSONType:   jschema.JSONTypeBoolean,
-				Value:      "true",
-				Properties: &jschema.RuleASTNodes{},
-				Source:     jschema.RuleASTNodeSourceManual,
-			},
-			{
-				JSONType:   jschema.JSONTypeNull,
-				Value:      "null",
-				Properties: &jschema.RuleASTNodes{},
-				Source:     jschema.RuleASTNodeSourceManual,
-				Comment:    "bar",
-			},
-			{
-				JSONType:   jschema.JSONTypeShortcut,
-				Value:      "@foo",
-				Properties: &jschema.RuleASTNodes{},
-				Source:     jschema.RuleASTNodeSourceManual,
-			},
-		},
-		Source: jschema.RuleASTNodeSourceManual,
-	}, e.ASTNode())
+			Source: jschema.RuleASTNodeSourceManual,
+		}, e.ASTNode())
+	})
 }
