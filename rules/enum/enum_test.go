@@ -33,6 +33,19 @@ func TestEnum_Len(t *testing.T) {
 	3, // Comment for 3
 	4  // Comment for 4
 ]`: 136,
+			`[
+		/* My
+		   Pets */
+		"CAT", /* My
+		          Cat */
+		"DOG", // Dog
+		"PIG", // Pig
+
+		// Wild animals
+		"WOLF", // Wolf
+		"LION", // Lion
+		"TIGER" // Tiger
+]`: 164,
 		}
 
 		for given, expected := range cc {
@@ -104,6 +117,19 @@ func TestEnum_Check(t *testing.T) {
 	// Interline comment 2
 	3, // Comment for 3
 	4  // Comment for 4
+]`,
+			`[
+		/* My
+		   Pets */
+		"CAT", /* My
+		          Cat */
+		"DOG", // Dog
+		"PIG", // Pig
+
+		// Wild animals
+		"WOLF", // Wolf
+		"LION", // Lion
+		"TIGER" // Tiger
 ]`,
 		}
 
@@ -287,6 +313,29 @@ func TestEnum_Values(t *testing.T) {
 				{Value: []byte(`"buzz"`), Type: jschema.SchemaTypeString, Comment: "Buzz comment"},
 				{Comment: "Interline comment 3", Type: jschema.SchemaTypeComment},
 			},
+
+			`[
+		/* My
+		   Pets */
+		"CAT", /* My
+		          Cat */
+		"DOG", // Dog
+		"PIG", // Pig
+
+		// Wild animals
+		"WOLF", // Wolf
+		"LION", // Lion
+		"TIGER" // Tiger
+]`: {
+				{Comment: "My\n\t\t   Pets", Type: jschema.SchemaTypeComment},
+				{Value: []byte(`"CAT"`), Type: jschema.SchemaTypeString, Comment: "My\n\t\t          Cat"},
+				{Value: []byte(`"DOG"`), Type: jschema.SchemaTypeString, Comment: "Dog"},
+				{Value: []byte(`"PIG"`), Type: jschema.SchemaTypeString, Comment: "Pig"},
+				{Comment: "Wild animals", Type: jschema.SchemaTypeComment},
+				{Value: []byte(`"WOLF"`), Type: jschema.SchemaTypeString, Comment: "Wolf"},
+				{Value: []byte(`"LION"`), Type: jschema.SchemaTypeString, Comment: "Lion"},
+				{Value: []byte(`"TIGER"`), Type: jschema.SchemaTypeString, Comment: "Tiger"},
+			},
 		}
 
 		for given, expected := range cc {
@@ -294,7 +343,7 @@ func TestEnum_Values(t *testing.T) {
 				actual, err := New("", given).Values()
 
 				require.NoError(t, err)
-				assert.Equal(t, actual, expected)
+				assert.Equal(t, expected, actual)
 			})
 		}
 	})
