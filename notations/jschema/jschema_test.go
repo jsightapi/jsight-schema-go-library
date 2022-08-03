@@ -1677,7 +1677,7 @@ func TestSchema_GetAST(t *testing.T) {
 					Rules: jschema.NewRuleASTNodes(
 						map[string]jschema.RuleASTNode{
 							"type": {
-								JSONType:   jschema.JSONTypeString,
+								JSONType:   jschema.JSONTypeShortcut,
 								Value:      "@foo",
 								Properties: &jschema.RuleASTNodes{},
 								Source:     jschema.RuleASTNodeSourceGenerated,
@@ -1699,7 +1699,7 @@ func TestSchema_GetAST(t *testing.T) {
 					Rules: jschema.NewRuleASTNodes(
 						map[string]jschema.RuleASTNode{
 							"type": {
-								JSONType:   "string",
+								JSONType:   jschema.JSONTypeShortcut,
 								Value:      "@foo",
 								Properties: &jschema.RuleASTNodes{},
 								Source:     jschema.RuleASTNodeSourceGenerated,
@@ -1784,7 +1784,7 @@ func TestSchema_GetAST(t *testing.T) {
 												Properties: jschema.NewRuleASTNodes(
 													map[string]jschema.RuleASTNode{
 														"type": {
-															JSONType:   jschema.JSONTypeString,
+															JSONType:   jschema.JSONTypeShortcut,
 															Value:      "@bar",
 															Properties: &jschema.RuleASTNodes{},
 															Source:     jschema.RuleASTNodeSourceManual,
@@ -1838,7 +1838,7 @@ func TestSchema_GetAST(t *testing.T) {
 												Properties: jschema.NewRuleASTNodes(
 													map[string]jschema.RuleASTNode{
 														"type": {
-															JSONType:   jschema.JSONTypeString,
+															JSONType:   jschema.JSONTypeShortcut,
 															Value:      "@foo",
 															Properties: &jschema.RuleASTNodes{},
 															Source:     jschema.RuleASTNodeSourceManual,
@@ -1853,7 +1853,7 @@ func TestSchema_GetAST(t *testing.T) {
 												Properties: jschema.NewRuleASTNodes(
 													map[string]jschema.RuleASTNode{
 														"type": {
-															JSONType:   jschema.JSONTypeString,
+															JSONType:   jschema.JSONTypeShortcut,
 															Value:      "@bar",
 															Properties: &jschema.RuleASTNodes{},
 															Source:     jschema.RuleASTNodeSourceManual,
@@ -2100,7 +2100,7 @@ func TestSchema_GetAST(t *testing.T) {
 							Rules: jschema.NewRuleASTNodes(
 								map[string]jschema.RuleASTNode{
 									"type": {
-										JSONType:   jschema.JSONTypeString,
+										JSONType:   jschema.JSONTypeShortcut,
 										Properties: &jschema.RuleASTNodes{},
 										Value:      "@id",
 										Source:     jschema.RuleASTNodeSourceManual,
@@ -2123,7 +2123,7 @@ func TestSchema_GetAST(t *testing.T) {
 							Rules: jschema.NewRuleASTNodes(
 								map[string]jschema.RuleASTNode{
 									"type": {
-										JSONType:   jschema.JSONTypeString,
+										JSONType:   jschema.JSONTypeShortcut,
 										Value:      "@id",
 										Properties: &jschema.RuleASTNodes{},
 										Source:     jschema.RuleASTNodeSourceGenerated,
@@ -2963,7 +2963,7 @@ func TestSchema_GetAST(t *testing.T) {
 							Rules: jschema.NewRuleASTNodes(
 								map[string]jschema.RuleASTNode{
 									"type": {
-										JSONType:   jschema.JSONTypeString,
+										JSONType:   jschema.JSONTypeShortcut,
 										Value:      "@foo",
 										Properties: &jschema.RuleASTNodes{},
 										Source:     jschema.RuleASTNodeSourceGenerated,

@@ -55,32 +55,7 @@ func TestNewAdditionalProperties(t *testing.T) {
 }
 
 func TestAdditionalProperties_IsJsonTypeCompatible(t *testing.T) {
-	cc := map[json.Type]bool{
-		json.TypeUndefined: false,
-		json.TypeObject:    true,
-		json.TypeArray:     false,
-		json.TypeString:    false,
-		json.TypeInteger:   false,
-		json.TypeFloat:     false,
-		json.TypeBoolean:   false,
-		json.TypeNull:      false,
-	}
-
-	toString := func(t json.Type) string {
-		if t == json.TypeUndefined {
-			return "undefined"
-		}
-		return t.String()
-	}
-
-	for typ, expected := range cc {
-		t.Run(toString(typ), func(t *testing.T) {
-			t.Parallel()
-
-			actual := AdditionalProperties{}.IsJsonTypeCompatible(typ)
-			assert.Equal(t, expected, actual)
-		})
-	}
+	testIsJsonTypeCompatible(t, AdditionalProperties{}, json.TypeObject)
 }
 
 func TestAdditionalProperties_Type(t *testing.T) {
@@ -111,8 +86,6 @@ func TestAdditionalProperties_String(t *testing.T) {
 
 		for expected, p := range cc {
 			t.Run(expected, func(t *testing.T) {
-				t.Parallel()
-
 				actual := p.String()
 				assert.Equal(t, expected, actual)
 			})
