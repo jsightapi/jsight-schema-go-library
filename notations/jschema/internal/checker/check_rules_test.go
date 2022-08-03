@@ -56,7 +56,7 @@ func TestCheckRules(t *testing.T) {
 			{
 				`{
 					"object": {} /* {type: "object",
-							enum: ["white", "black"]}
+							enum: ["white", "black"]
 					}*/
 				}`,
 				[]typ{},
@@ -296,7 +296,7 @@ func TestCheckRules(t *testing.T) {
 			{
 				`{
 					"array" : [   /* {type: "array",
-								enum: ["white", "black"]}
+								enum: ["white", "black"]
 						}*/
 						"item"
 					]
@@ -388,7 +388,7 @@ func TestCheckRules(t *testing.T) {
 			{
 				`{
 					"integer": 1 /* {type: "integer",
-							enum: ["white", "black"]}
+							enum: ["white", "black"]
 					}*/
 				}`,
 				[]typ{},
@@ -559,7 +559,7 @@ func TestCheckRules(t *testing.T) {
 			{
 				`{
 					"decimal": 1.23 /* {type: "decimal", precision: 2,
-							enum: ["white", "black"]}
+							enum: ["white", "black"]
 					}*/
 				}`,
 				[]typ{},
@@ -685,7 +685,7 @@ func TestCheckRules(t *testing.T) {
 			{
 				`{
 					"boolean": true /* {type: "boolean",
-							enum: ["white", "black"]}
+							enum: ["white", "black"]
 					}*/
 				}`,
 				[]typ{},
@@ -784,7 +784,7 @@ func TestCheckRules(t *testing.T) {
 			{
 				`{
 					"string": "value" /* {type: "string",
-							enum: ["white", "black"]}
+							enum: ["white", "black"]
 					}*/
 				}`,
 				[]typ{},
@@ -1000,7 +1000,7 @@ func TestCheckRules(t *testing.T) {
 			{
 				`{
 					"uri": "https://t.com" /* {type: "uri",
-							enum: ["white", "black"]}
+							enum: ["white", "black"]
 					}*/
 				}`,
 				[]typ{},
@@ -1126,7 +1126,7 @@ func TestCheckRules(t *testing.T) {
 			{
 				`{
 					"date": "2021-12-16" /* {type: "date",
-							enum: ["white", "black"]}
+							enum: ["white", "black"]
 					}*/
 				}`,
 				[]typ{},
@@ -1252,7 +1252,7 @@ func TestCheckRules(t *testing.T) {
 			{
 				`{
 					"datetime": "2006-01-02T15:04:05+07:00" /* {type: "datetime",
-					   enum: ["white", "black"]}
+					   enum: ["white", "black"]
 						 }*/
 				}`,
 				[]typ{},
@@ -1378,7 +1378,7 @@ func TestCheckRules(t *testing.T) {
 			{
 				`{
 					"uuid": "550e8400-e29b-41d4-a716-446655440000" /* {type: "uuid",
-					   enum: ["white", "black"]}
+					   enum: ["white", "black"]
 						 }*/
 				}`,
 				[]typ{},
@@ -1621,7 +1621,7 @@ func TestCheckRules(t *testing.T) {
 			{
 				`{
 					"mixed": "abc" /* {or: [{type: "string"}, {type: "integer"}],
-							enum: ["white", "black"]}
+							enum: ["white", "black"]
 					}*/
 				}`,
 				[]typ{},
@@ -1747,7 +1747,7 @@ func TestCheckRules(t *testing.T) {
 			{
 				`{
 					"any": 456 /* {type: "any",
-							enum: ["white", "black"]}
+							enum: ["white", "black"]
 					}*/
 				}`,
 				[]typ{},
@@ -1873,7 +1873,7 @@ func TestCheckRules(t *testing.T) {
 			{
 				`{
 					"null": null /* {type: "null",
-							  enum: ["white", "black"]}
+							  enum: ["white", "black"]
 					}*/
 				}`,
 				[]typ{},
@@ -2008,7 +2008,7 @@ func TestCheckRules(t *testing.T) {
 			{
 				`{
 					"userType1": @cat  /* {
-							enum: ["white", "black"]}
+							enum: ["white", "black"]
 					}*/
 				}`,
 				[]typ{},
@@ -2143,7 +2143,7 @@ func TestCheckRules(t *testing.T) {
 			{
 				`{
 					"userType2": 12 /* {type: "@catId",
-							enum: ["white", "black"]}
+							enum: ["white", "black"]
 					}*/
 				}`,
 				[]typ{catID},
