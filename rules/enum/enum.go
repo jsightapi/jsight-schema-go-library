@@ -115,6 +115,7 @@ func (e *Enum) doCompile() (err error) {
 	scan := newScanner(e.file)
 
 	collectLiteral := false
+	inAnnotation := false
 	for {
 		lex, err := scan.Next()
 		if stdErrors.Is(err, errEOS) {
@@ -128,31 +129,48 @@ func (e *Enum) doCompile() (err error) {
 		switch lex.Type() {
 		case lexeme.LiteralEnd:
 			collectLiteral = true
-			v := lex.Value()
-			t, err := jschema.GuessSchemaType(v)
-			if err != nil {
+			if err := e.handleLiteralEnd(lex); err != nil {
 				return err
 			}
 
-			e.values = append(e.values, Value{
-				Value: v,
-				Type:  t,
-			})
-
 		case lexeme.NewLine:
-			collectLiteral = false
-
-		case lexeme.InlineAnnotationTextEnd:
-			comment := lex.Value().TrimSpaces().String()
-			if collectLiteral {
-				e.values[len(e.values)-1].Comment = comment
-			} else {
-				e.values = append(e.values, Value{
-					Comment: comment,
-					Type:    jschema.SchemaTypeComment,
-				})
+			if !inAnnotation {
+				collectLiteral = false
 			}
+
+		case lexeme.MultiLineAnnotationTextBegin:
+			inAnnotation = true
+
+		case lexeme.InlineAnnotationTextEnd, lexeme.MultiLineAnnotationTextEnd:
+			e.handleEndOfComment(lex, collectLiteral)
+			inAnnotation = false
 		}
 	}
 	return nil
+}
+
+func (e *Enum) handleLiteralEnd(lex lexeme.LexEvent) error {
+	v := lex.Value()
+	t, err := jschema.GuessSchemaType(v)
+	if err != nil {
+		return err
+	}
+
+	e.values = append(e.values, Value{
+		Value: v,
+		Type:  t,
+	})
+	return nil
+}
+
+func (e *Enum) handleEndOfComment(lex lexeme.LexEvent, collectLiteral bool) {
+	comment := lex.Value().TrimSpaces().String()
+	if collectLiteral {
+		e.values[len(e.values)-1].Comment = comment
+	} else {
+		e.values = append(e.values, Value{
+			Comment: comment,
+			Type:    jschema.SchemaTypeComment,
+		})
+	}
 }
