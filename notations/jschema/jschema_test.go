@@ -604,6 +604,26 @@ func TestSchema_Check(t *testing.T) {
 					"@enum": "[1, 2, 3]",
 				},
 			},
+
+			`"foo" /* {or: [
+	{type: "string"},
+	{enum: @enum}
+]} - comment */`: {
+				enums: map[string]string{
+					"@enum": "[1, 2, 3]",
+				},
+			},
+
+			`"foo" /* {or: [
+	{type: "string"},
+	{enum: @enum}
+]} - multi
+	line
+	comment */`: {
+				enums: map[string]string{
+					"@enum": "[1, 2, 3]",
+				},
+			},
 		}
 
 		for content, c := range cc {
@@ -1222,6 +1242,26 @@ func TestSchema_Check(t *testing.T) {
 	> 42 // {enum: "@enum"}
 	---------------^`: {
 				given: `42 // {enum: "@enum"}`,
+			},
+
+			`ERROR (code 301): Invalid character "c" after object in inline annotation
+	in line 2 on file 
+	> "field": "value" // {optional: true} comment after rules without using dash
+	---------------------------------------^`: {
+				given: `{
+    "field": "value" // {optional: true} comment after rules without using dash
+  }`,
+			},
+
+			`ERROR (code 301): Invalid character "c" after object in multi-line annotation
+	in line 4 on file 
+	> comment after rules without using dash */
+	--^`: {
+				given: `{
+    "field": "value" /*
+                    {optional: true}
+                    comment after rules without using dash */
+  }`,
 			},
 		}
 
@@ -3629,6 +3669,54 @@ func TestSchema_GetAST(t *testing.T) {
 "bar"  // Comment 4
 // Comment 5
 ]`,
+				},
+			},
+
+			`"foo" /* {
+	type: "string"
+} - comment
+*/`: {
+				expected: jschema.ASTNode{
+					JSONType:   jschema.JSONTypeString,
+					SchemaType: string(jschema.SchemaTypeString),
+					Value:      "foo",
+					Rules: jschema.NewRuleASTNodes(
+						map[string]jschema.RuleASTNode{
+							"type": {
+								JSONType:   jschema.JSONTypeString,
+								Value:      "string",
+								Properties: &jschema.RuleASTNodes{},
+								Source:     jschema.RuleASTNodeSourceManual,
+							},
+						},
+						[]string{"type"},
+					),
+					Comment: "comment",
+				},
+			},
+
+			`"foo" /* {
+	type: "string"
+} - multi
+line
+	comment
+*/`: {
+				expected: jschema.ASTNode{
+					JSONType:   jschema.JSONTypeString,
+					SchemaType: string(jschema.SchemaTypeString),
+					Value:      "foo",
+					Rules: jschema.NewRuleASTNodes(
+						map[string]jschema.RuleASTNode{
+							"type": {
+								JSONType:   jschema.JSONTypeString,
+								Value:      "string",
+								Properties: &jschema.RuleASTNodes{},
+								Source:     jschema.RuleASTNodeSourceManual,
+							},
+						},
+						[]string{"type"},
+					),
+					Comment: "multi\nline\n\tcomment",
 				},
 			},
 		}
