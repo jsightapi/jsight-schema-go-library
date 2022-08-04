@@ -549,6 +549,8 @@ func TestSchema_Check(t *testing.T) {
 				},
 			},
 
+			`3.14 // {type: "decimal", precision: 2}`: {},
+
 			// Valid recursions.
 			`{
 	"foo": @bar
@@ -1262,6 +1264,55 @@ func TestSchema_Check(t *testing.T) {
                     {optional: true}
                     comment after rules without using dash */
   }`,
+			},
+
+			`ERROR (code 1115): Incompatible value of example and "type" rule (decimal)
+	in line 1 on file 
+	> "2" // {type: "decimal", precision: 2}
+	--^`: {
+				given: `"2" // {type: "decimal", precision: 2}`,
+			},
+
+			`ERROR (code 1115): Incompatible value of example and "type" rule (decimal)
+	in line 1 on file 
+	> 2 // {type: "decimal", precision: 2}
+	--^`: {
+				given: `2 // {type: "decimal", precision: 2}`,
+			},
+
+			`ERROR (code 1115): Incompatible value of example and "type" rule (email)
+	in line 1 on file 
+	> 10 // {type: "email"}
+	--^`: {
+				given: `10 // {type: "email"}`,
+			},
+
+			`ERROR (code 1115): Incompatible value of example and "type" rule (uri)
+	in line 1 on file 
+	> 10 // {type: "uri"}
+	--^`: {
+				given: `10 // {type: "uri"}`,
+			},
+
+			`ERROR (code 1115): Incompatible value of example and "type" rule (uuid)
+	in line 1 on file 
+	> 10 // {type: "uuid"}
+	--^`: {
+				given: `10 // {type: "uuid"}`,
+			},
+
+			`ERROR (code 1115): Incompatible value of example and "type" rule (date)
+	in line 1 on file 
+	> 10 // {type: "date"}
+	--^`: {
+				given: `10 // {type: "date"}`,
+			},
+
+			`ERROR (code 1115): Incompatible value of example and "type" rule (datetime)
+	in line 1 on file 
+	> 10 // {type: "datetime"}
+	--^`: {
+				given: `10 // {type: "datetime"}`,
 			},
 		}
 

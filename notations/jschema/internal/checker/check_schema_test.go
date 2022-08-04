@@ -705,7 +705,7 @@ func TestCheckRootSchema(t *testing.T) {
 			{`"str" // {min: 1}`, []typ{}, errors.ErrUnexpectedConstraint},
 
 			// Unable to add constraint "email" to the node "Integer"
-			{`123 // {type: "email"}`, []typ{}, errors.ErrUnexpectedConstraint},
+			{`123 // {type: "email"}`, []typ{}, errors.ErrIncompatibleTypes},
 
 			// email
 			{`"" // {type: "email"}`, []typ{}, errors.ErrEmptyEmail},
