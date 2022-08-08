@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	jschema "github.com/jsightapi/jsight-schema-go-library"
 	"github.com/jsightapi/jsight-schema-go-library/bytes"
@@ -14,20 +13,25 @@ import (
 
 func TestNewMaxItems(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
-		ruleValue := bytes.Bytes("10")
-		cnstr := NewMaxItems(ruleValue)
+		cnstr := NewMaxItems([]byte("10"))
 
-		expectedNumber, err := json.NewNumber(ruleValue)
-		require.NoError(t, err)
-
-		assert.Equal(t, ruleValue, cnstr.rawValue)
-		assert.Equal(t, expectedNumber, cnstr.value)
+		assert.EqualValues(t, 10, cnstr.value)
 	})
 
 	t.Run("negative", func(t *testing.T) {
-		assert.PanicsWithError(t, `Incorrect value "not an integer". Must be an integer.`, func() {
-			NewMaxItems([]byte("not an integer"))
-		})
+		ss := []string{
+			"not a number",
+			"3.14",
+			"-12",
+		}
+
+		for _, s := range ss {
+			t.Run(s, func(t *testing.T) {
+				assert.PanicsWithError(t, `Invalid value of "maxItems" constraint`, func() {
+					NewMaxItems([]byte(s))
+				})
+			})
+		}
 	})
 }
 
@@ -67,11 +71,7 @@ func TestMaxItems_ValidateTheArray(t *testing.T) {
 }
 
 func TestMaxItems_Value(t *testing.T) {
-	given := []byte("2")
-	expected, err := json.NewNumber(given)
-	require.NoError(t, err)
-
-	assert.Equal(t, expected, NewMaxItems(given).Value())
+	assert.EqualValues(t, 2, NewMaxItems([]byte("2")).Value())
 }
 
 func TestMaxItems_ASTNode(t *testing.T) {
