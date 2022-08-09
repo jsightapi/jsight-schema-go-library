@@ -626,6 +626,15 @@ func TestSchema_Check(t *testing.T) {
 					"@enum": "[1, 2, 3]",
 				},
 			},
+
+			`{
+  @catId: 1,
+  "@catId": 1
+}`: {
+				types: map[string]string{
+					"@catId": "12 // {min: 1} - A cat's id.",
+				},
+			},
 		}
 
 		for content, c := range cc {
@@ -1313,6 +1322,16 @@ func TestSchema_Check(t *testing.T) {
 	> 10 // {type: "datetime"}
 	--^`: {
 				given: `10 // {type: "datetime"}`,
+			},
+
+			`ERROR (code 402): Duplicate keys (@catId) in the schema
+	in line 3 on file 
+	> "@catId": 2
+	--^`: {
+				given: `{
+  "@catId": 1,
+  "@catId": 2
+}`,
 			},
 		}
 
