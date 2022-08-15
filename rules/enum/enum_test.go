@@ -131,6 +131,8 @@ func TestEnum_Check(t *testing.T) {
 		"LION", // Lion
 		"TIGER" // Tiger
 ]`,
+			`[3.14, 3.146]`,
+			`["foo", "Foo"]`,
 		}
 
 		for _, enum := range testList {
@@ -191,6 +193,36 @@ func TestEnum_Check(t *testing.T) {
 	in line 1 on file enum
 	> [ [] ]
 	----^`,
+
+			"[1, 1]": `ERROR (code 810): 1 value duplicates in "enum"
+	in line 1 on file enum
+	> [1, 1]
+	------^`,
+
+			"[3.14, 3.14]": `ERROR (code 810): 3.14 value duplicates in "enum"
+	in line 1 on file enum
+	> [3.14, 3.14]
+	---------^`,
+
+			`["foo", "bar", "foo"]`: `ERROR (code 810): "foo" value duplicates in "enum"
+	in line 1 on file enum
+	> ["foo", "bar", "foo"]
+	-----------------^`,
+
+			"[true, true]": `ERROR (code 810): true value duplicates in "enum"
+	in line 1 on file enum
+	> [true, true]
+	---------^`,
+
+			"[null, null]": `ERROR (code 810): null value duplicates in "enum"
+	in line 1 on file enum
+	> [null, null]
+	---------^`,
+
+			"[   1\t,\n\n  1\t]": `ERROR (code 810): 1 value duplicates in "enum"
+	in line 3 on file enum
+	> 1	]
+	--^`,
 		}
 
 		for enum, expected := range cc {
