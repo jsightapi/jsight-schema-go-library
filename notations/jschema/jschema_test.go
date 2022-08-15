@@ -123,7 +123,12 @@ func BenchmarkSchema_Len(b *testing.B) {
 
 func TestSchema_Example(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
-		s := New("@main", `
+		cc := map[string]struct {
+			enums    map[string]string
+			types    map[string]string
+			expected string
+		}{
+			`
 { //{allOf: ["@allOf1", "@allOf2"]}
 	"i": 123, // {min: 1}
 	"s": "str",
@@ -141,41 +146,38 @@ func TestSchema_Example(t *testing.T) {
 	"enum_rule": 2, // {enum: @enum}
 	"recursion": @recursion,
 	"deep_recursion": @deep_recursion,
-	@keyName: 100500
+	@keyName: 100,
+	"@keyName": 500
 }
-`)
-
-		require.NoError(t, s.AddRule("@enum", enum.New("@enum", `[
-	1,
-	2,
-	3
-]`)))
-		require.NoError(t, s.AddType("@foo", New("@foo", `{
+`: {
+				enums: map[string]string{
+					"@enum": "[1, 2, 3]",
+				},
+				types: map[string]string{
+					"@foo": `{
 	"foo": 42
-}`)))
-		require.NoError(t, s.AddType("@bar", New("@bar", `{
+}`,
+					"@bar": `{
 	"bar": 42
-}`)))
-		require.NoError(t, s.AddType("@recursion", New("@recursion", `{
+}`,
+					"@recursion": `{
 	"recursion": @recursion // {optional: true}
-}`)))
-		require.NoError(t, s.AddType("@deep_recursion", New("@deep_recursion", `{
+}`,
+					"@deep_recursion": `{
 	"bar": @nested
-}`)))
-		require.NoError(t, s.AddType("@nested", New("@nested", `{
+}`,
+					"@nested": `{
 	"fizz": @deep_recursion
-}`)))
-		require.NoError(t, s.AddType("@keyName", New("@keyName", `"key_name_1" // {regex: "key_name_\\d+"}`)))
-		require.NoError(t, s.AddType("@allOf1", New("@allOf1", `{
+}`,
+					"@keyName": `"key_name_1" // {regex: "key_name_\\d+"}`,
+					"@allOf1": `{
 	"allOf1": 42
-}`)))
-		require.NoError(t, s.AddType("@allOf2", New("@allOf2", `{
+}`,
+					"@allOf2": `{
 	"allOf2": @recursion // {optional: true}
-}`)))
-
-		actual, err := s.Example()
-		require.NoError(t, err)
-		assert.JSONEq(t, `{
+}`,
+				},
+				expected: `{
 	"i": 123,
 	"s": "str",
 	"b": true,
@@ -209,14 +211,50 @@ func TestSchema_Example(t *testing.T) {
 			}
 		}
 	},
-	"key_name_1": 100500,
+	"key_name_1": 100,
+	"@keyName": 500,
 	"allOf1": 42,
 	"allOf2": {
 		"recursion": {}
 	}
 }`,
-			string(actual),
-		)
+			},
+
+			`{
+	"main1": @main, // {optional: true}
+	"main2": @main // {optional: true}
+}`: {
+				expected: `{
+	"main1": {
+		"main1": {},
+		"main2": {}
+	},
+	"main2": {
+		"main1": {},
+		"main2": {}
+	}
+}`,
+			},
+		}
+
+		for given, c := range cc {
+			t.Run(given, func(t *testing.T) {
+				s := New("@main", given)
+
+				for n, b := range c.enums {
+					require.NoError(t, s.AddRule(n, enum.New(n, b)))
+				}
+
+				for n, b := range c.types {
+					require.NoError(t, s.AddType(n, New(n, b)))
+				}
+				require.NoError(t, s.AddType("@main", s))
+
+				actual, err := s.Example()
+				require.NoError(t, err)
+				assert.JSONEq(t, c.expected, string(actual))
+			})
+		}
 	})
 
 	t.Run("negative", func(t *testing.T) {
