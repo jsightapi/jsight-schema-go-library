@@ -8,7 +8,7 @@ import (
 
 // unquoteBytes converts a quoted JSON string literal s into an actual string.
 // The copy of the function from the encoding/json package.
-func unquoteBytes(s []byte) (t []byte, ok bool) {
+func unquoteBytes(s []byte) (t []byte, ok bool) { //nolint:gocyclo // It's OK.
 	if len(s) < 2 || s[0] != '"' || s[len(s)-1] != '"' {
 		return
 	}
@@ -124,7 +124,7 @@ func unquoteBytes(s []byte) (t []byte, ok bool) {
 
 // getu4 decodes \uXXXX from the beginning of s, returning the hex value,
 // or it returns -1.
-func getu4(s []byte) rune {
+func getu4(s []byte) rune { //nolint:gocyclo // It's OK.
 	if len(s) < 6 || s[0] != '\\' || s[1] != 'u' {
 		return -1
 	}
@@ -132,7 +132,7 @@ func getu4(s []byte) rune {
 	for _, c := range s[2:6] {
 		switch {
 		case '0' <= c && c <= '9':
-			c = c - '0'
+			c -= '0'
 		case 'a' <= c && c <= 'f':
 			c = c - 'a' + 10
 		case 'A' <= c && c <= 'F':
