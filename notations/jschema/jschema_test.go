@@ -1371,6 +1371,29 @@ func TestSchema_Check(t *testing.T) {
   "@catId": 2
 }`,
 			},
+
+			`ERROR (code 617): Value of constraint "min" should be less or equal to value of "max" constraint
+	in line 1 on file 
+	> 42 // {min: 45, max: 42}
+	--^`: {
+				given: "42 // {min: 45, max: 42}",
+			},
+
+			`ERROR (code 617): Value of constraint "minItems" should be less or equal to value of "maxItems" constraint
+	in line 1 on file 
+	> [ // {minItems: 2, maxItems: 1}
+	--^`: {
+				given: `[ // {minItems: 2, maxItems: 1}
+    1,2
+  ]`,
+			},
+
+			`ERROR (code 617): Value of constraint "minLength" should be less or equal to value of "maxLength" constraint
+	in line 1 on file 
+	> "foo" // {minLength: 2, maxLength: 1}
+	--^`: {
+				given: `"foo" // {minLength: 2, maxLength: 1}`,
+			},
 		}
 
 		for expected, c := range cc {
