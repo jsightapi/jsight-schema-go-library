@@ -66,6 +66,16 @@ func TestMin_SetExclusive(t *testing.T) {
 	assert.False(t, cnstr.exclusive)
 }
 
+func TestMin_Exclusive(t *testing.T) {
+	cnstr := Min{}
+
+	cnstr.exclusive = true
+	assert.True(t, cnstr.Exclusive())
+
+	cnstr.exclusive = false
+	assert.False(t, cnstr.Exclusive())
+}
+
 func TestMin_Validate(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
 		newMin := func(max string, exclusive bool) *Min {
@@ -137,4 +147,14 @@ func TestMin_ASTNode(t *testing.T) {
 		Properties: &jschema.RuleASTNodes{},
 		Source:     jschema.RuleASTNodeSourceManual,
 	}, NewMin(bytes.Bytes("1")).ASTNode())
+}
+
+func TestMin_Value(t *testing.T) {
+	num, err := json.NewNumber([]byte("42"))
+	require.NoError(t, err)
+
+	cnstr := Min{
+		min: num,
+	}
+	assert.Equal(t, num, cnstr.Value())
 }

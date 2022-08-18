@@ -78,3 +78,7 @@ func TestMinLength_ASTNode(t *testing.T) {
 		Source:     jschema.RuleASTNodeSourceManual,
 	}, NewMinLength(bytes.Bytes("1")).ASTNode())
 }
+
+func TestMinLength_Value(t *testing.T) {
+	assert.Equal(t, uint(1), NewMinLength([]byte("1")).Value())
+}

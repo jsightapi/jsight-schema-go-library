@@ -78,3 +78,7 @@ func TestMaxLength_ASTNode(t *testing.T) {
 		Source:     jschema.RuleASTNodeSourceManual,
 	}, NewMaxLength(bytes.Bytes("1")).ASTNode())
 }
+
+func TestMaxLength_Value(t *testing.T) {
+	assert.Equal(t, uint(1), NewMaxLength([]byte("1")).Value())
+}
