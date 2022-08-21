@@ -579,12 +579,12 @@ func TestCheckRootSchema(t *testing.T) {
 
 			{
 				`[ // {minItems: 2}
-				1
+				1,2
 			]`,
 				[]typ{},
 			},
 			{
-				`[ // {maxItems: 2}
+				`[ // {maxItems: 3}
 				1,2,3
 			]`,
 				[]typ{},
