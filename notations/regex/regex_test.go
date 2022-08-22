@@ -68,9 +68,22 @@ func TestSchema_Len(t *testing.T) {
 
 func TestSchema_Example(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
-		actual, err := New("", complexRegex, WithGeneratorSeed(0)).Example()
-		require.NoError(t, err)
-		assert.Equal(t, "d@[228.255.2.a:\\`]", string(actual))
+		cc := map[string]string{
+			"/foo/":          "foo",
+			"/bar-\\d{0,2}/": "bar-",
+			complexRegex:     "d@[228.255.2.a:\\`]",
+		}
+
+		for given, expected := range cc {
+			t.Run(given, func(t *testing.T) {
+				s := New("", given, WithGeneratorSeed(0))
+				actual, err := s.Example()
+				require.NoError(t, err)
+
+				assert.Equal(t, expected, string(actual))
+				assert.True(t, regexp.MustCompile(s.pattern).Match(actual))
+			})
+		}
 	})
 
 	t.Run("negative", func(t *testing.T) {
@@ -80,26 +93,6 @@ func TestSchema_Example(t *testing.T) {
 	> invalid
 	--^`)
 	})
-}
-
-func TestSchema_generateExample(t *testing.T) {
-	ss := []string{
-		"foo",
-		"bar-\\d{0,2}",
-		complexRegexPattern,
-	}
-
-	for _, s := range ss {
-		t.Run(s, func(t *testing.T) {
-			sch := New("", s)
-			sch.pattern = s
-
-			actual, err := sch.generateExample()
-			require.NoError(t, err)
-
-			assert.True(t, regexp.MustCompile(s).Match(actual))
-		})
-	}
 }
 
 func TestSchema_AddType(t *testing.T) {
@@ -188,6 +181,10 @@ func TestSchema_doCompile(t *testing.T) {
 	in line 1 on file 
 	> /foo
 	-----^`,
+			"/[-1}/": `ERROR (code 1502): Invalid regex /[-1}/
+	in line 1 on file 
+	> /[-1}/
+	--^`,
 		}
 
 		for given, expected := range cc {
