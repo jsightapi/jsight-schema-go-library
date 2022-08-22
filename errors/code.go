@@ -119,6 +119,7 @@ const (
 	ErrIncorrectUserType                              ErrorCode = 1301
 	ErrTypeNotFound                                   ErrorCode = 1302
 	ErrImpossibleToDetermineTheJsonTypeDueToRecursion ErrorCode = 1303
+	ErrInvalidKeyShortcutType                         ErrorCode = 1304
 
 	// sdk
 	ErrEmptyType                          ErrorCode = 1401
@@ -247,9 +248,10 @@ var errorFormat = map[ErrorCode]string{
 	ErrIncorrectConstraintValueForEmptyArray: `Incorrect constraint value for empty array`,
 
 	// link checker
-	ErrIncorrectUserType: `Incorrect type of user type`,
-	ErrTypeNotFound:      `Type "%s" not found`,
-	ErrImpossibleToDetermineTheJsonTypeDueToRecursion: `It is impossible to determine the json type due to recursion of type "%s"`, //nolint:lll
+	ErrIncorrectUserType: "Incorrect type of user type",
+	ErrTypeNotFound:      "Type %q not found",
+	ErrImpossibleToDetermineTheJsonTypeDueToRecursion: `It is impossible to determine the json type due to recursion of type %q`, //nolint:lll
+	ErrInvalidKeyShortcutType:                         "Key shortcut %q should be string but %q given",
 
 	// sdk
 	ErrEmptyType:                          `Type "%s" must not be empty`,
