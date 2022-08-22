@@ -54,7 +54,7 @@ func (c *validatorListConstructor) appendTypeValidators(names []string) {
 	for _, name := range names {
 		if _, ok := c.addedTypeNames[name]; !ok {
 			c.addedTypeNames[name] = struct{}{}
-			c.buildList(c.rootSchema.Type(name).RootNode()) // can panic
+			c.buildList(c.rootSchema.MustType(name).RootNode()) // can panic
 		}
 	}
 }

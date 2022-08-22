@@ -276,7 +276,7 @@ func TestSchema_AddType(t *testing.T) {
 			require.NoError(t, err)
 
 			require.NotNil(t, root.inner)
-			assert.Equal(t, typ.inner, root.inner.Type("@foo"))
+			assert.Equal(t, typ.inner, root.inner.MustType("@foo"))
 		})
 
 		t.Run("regex", func(t *testing.T) {
@@ -670,7 +670,7 @@ func TestSchema_Check(t *testing.T) {
   "@catId": 1
 }`: {
 				types: map[string]string{
-					"@catId": "12 // {min: 1} - A cat's id.",
+					"@catId": `"foo"`,
 				},
 			},
 		}
@@ -1439,6 +1439,78 @@ func TestSchema_Check(t *testing.T) {
 	> "foo" // {minLength: 1, maxLength: 2}
 	--^`: {
 				given: `"foo" // {minLength: 1, maxLength: 2}`,
+			},
+
+			`ERROR (code 1304): Key shortcut "@foo" should be string but "integer" given
+	in line 2 on file 
+	> @foo: 42
+	--^`: {
+				given: `{
+	@foo: 42
+}`,
+				types: map[string]string{
+					"@foo": "42",
+				},
+			},
+
+			`ERROR (code 1304): Key shortcut "@foo" should be string but "float" given
+	in line 2 on file 
+	> @foo: 42
+	--^`: {
+				given: `{
+	@foo: 42
+}`,
+				types: map[string]string{
+					"@foo": "3.14",
+				},
+			},
+
+			`ERROR (code 1304): Key shortcut "@foo" should be string but "boolean" given
+	in line 2 on file 
+	> @foo: 42
+	--^`: {
+				given: `{
+	@foo: 42
+}`,
+				types: map[string]string{
+					"@foo": "true",
+				},
+			},
+
+			`ERROR (code 1304): Key shortcut "@foo" should be string but "null" given
+	in line 2 on file 
+	> @foo: 42
+	--^`: {
+				given: `{
+	@foo: 42
+}`,
+				types: map[string]string{
+					"@foo": "null",
+				},
+			},
+
+			`ERROR (code 1304): Key shortcut "@foo" should be string but "array" given
+	in line 2 on file 
+	> @foo: 42
+	--^`: {
+				given: `{
+	@foo: 42
+}`,
+				types: map[string]string{
+					"@foo": "[1,2,3]",
+				},
+			},
+
+			`ERROR (code 1304): Key shortcut "@foo" should be string but "object" given
+	in line 2 on file 
+	> @foo: 42
+	--^`: {
+				given: `{
+	@foo: 42
+}`,
+				types: map[string]string{
+					"@foo": `{"fizz": "buzz"}`,
+				},
 			},
 		}
 
