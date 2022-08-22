@@ -1394,6 +1394,52 @@ func TestSchema_Check(t *testing.T) {
 	--^`: {
 				given: `"foo" // {minLength: 2, maxLength: 1}`,
 			},
+
+			`ERROR (code 602): Invalid value for "min" = 43 constraint 
+	in line 1 on file 
+	> 42 // {min: 43, max: 44}
+	--^`: {
+				given: "42 // {min: 43, max: 44}",
+			},
+
+			`ERROR (code 602): Invalid value for "max" = 41 constraint 
+	in line 1 on file 
+	> 42 // {min: 30, max: 41}
+	--^`: {
+				given: "42 // {min: 30, max: 41}",
+			},
+
+			`ERROR (code 608): The number of array elements does not match the "minItems" rule
+	in line 1 on file 
+	> [ // {minItems: 2, maxItems: 3}
+	--^`: {
+				given: `[ // {minItems: 2, maxItems: 3}
+    1
+  ]`,
+			},
+
+			`ERROR (code 609): The number of array elements does not match the "maxItems" rule
+	in line 1 on file 
+	> [ // {minItems: 1, maxItems: 2}
+	--^`: {
+				given: `[ // {minItems: 1, maxItems: 2}
+    1,2,3
+  ]`,
+			},
+
+			`ERROR (code 603): Invalid string length for "minLength" = "4" constraint
+	in line 1 on file 
+	> "foo" // {minLength: 4, maxLength: 5}
+	--^`: {
+				given: `"foo" // {minLength: 4, maxLength: 5}`,
+			},
+
+			`ERROR (code 603): Invalid string length for "maxLength" = "2" constraint
+	in line 1 on file 
+	> "foo" // {minLength: 1, maxLength: 2}
+	--^`: {
+				given: `"foo" // {minLength: 1, maxLength: 2}`,
+			},
 		}
 
 		for expected, c := range cc {
