@@ -1512,6 +1512,21 @@ func TestSchema_Check(t *testing.T) {
 					"@foo": `{"fizz": "buzz"}`,
 				},
 			},
+
+			`ERROR (code 402): Duplicate keys (@catId) in the schema
+	in line 4 on file 
+	> "@catId": 3,
+	--^`: {
+				given: `{
+  "@catId": 1,
+  @catId: 2,
+  "@catId": 3,
+  @catId: 4
+}`,
+				types: map[string]string{
+					"@catId": `"12" // A cat's id.`,
+				},
+			},
 		}
 
 		for expected, c := range cc {
@@ -1523,7 +1538,10 @@ func TestSchema_Check(t *testing.T) {
 				}
 
 				for n, b := range c.types {
-					require.NoError(t, s.AddType(n, New(n, b)))
+					err := s.AddType(n, New(n, b))
+					if err != nil {
+						require.EqualError(t, err, expected)
+					}
 				}
 
 				err := s.Check()
