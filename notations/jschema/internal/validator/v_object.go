@@ -86,12 +86,12 @@ func (v *objectValidator) feed(jsonLexeme lexeme.LexEvent) ([]validator, bool) {
 
 	case lexeme.ObjectValueBegin:
 		if objectNode, ok := v.node_.(*schema.ObjectNode); ok {
-			childNode, ok := objectNode.Child(v.lastFoundKeyLex.Value().Unquote().String())
+			childNode, ok := objectNode.ChildByRawKey(v.lastFoundKeyLex.Value())
 			if !ok { // child node not found on schema object
 				if c := v.node_.Constraint(constraint.RequiredKeysConstraintType); c != nil {
 					key, ok := v.validateTypeRules(v.lastFoundKeyLex.Value())
 					if ok {
-						child, ok := objectNode.Child(key)
+						child, ok := objectNode.ChildByRawKey([]byte(key))
 						if ok {
 							delete(v.requiredKeys, key)
 							return NodeValidatorList(child, v.rootSchema, v), false
