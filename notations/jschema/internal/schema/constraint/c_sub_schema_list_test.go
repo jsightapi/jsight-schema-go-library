@@ -52,7 +52,7 @@ func TestTypesList_AddName(t *testing.T) {
 	assert.Equal(t, []string{"bar"}, c.typeNames)
 	assert.Equal(t, []jschema.RuleASTNode{
 		{
-			JSONType:   jschema.JSONTypeString,
+			TokenType:  jschema.TokenTypeString,
 			Value:      "bar",
 			Properties: &jschema.RuleASTNodes{},
 			Source:     jschema.RuleASTNodeSourceGenerated,
@@ -63,7 +63,7 @@ func TestTypesList_AddName(t *testing.T) {
 
 func TestTypesList_AddNameWithASTNode(t *testing.T) {
 	an := jschema.RuleASTNode{
-		JSONType: jschema.JSONTypeString,
+		TokenType: jschema.TokenTypeString,
 	}
 
 	c := NewTypesList(jschema.RuleASTNodeSourceManual)
@@ -93,10 +93,10 @@ func TestTypesList_ASTNode(t *testing.T) {
 	l := NewTypesList(jschema.RuleASTNodeSourceManual)
 
 	an := jschema.RuleASTNode{
-		JSONType: jschema.JSONTypeObject,
+		TokenType: jschema.TokenTypeObject,
 		Properties: jschema.NewRuleASTNodes(
 			map[string]jschema.RuleASTNode{
-				"type": newRuleASTNode(jschema.JSONTypeString, "foo", jschema.RuleASTNodeSourceManual),
+				"type": newRuleASTNode(jschema.TokenTypeString, "foo", jschema.RuleASTNodeSourceManual),
 			},
 			[]string{"type"},
 		),
@@ -106,12 +106,12 @@ func TestTypesList_ASTNode(t *testing.T) {
 	l.AddName("bar", "bar", jschema.RuleASTNodeSourceManual)
 
 	assert.Equal(t, jschema.RuleASTNode{
-		JSONType:   jschema.JSONTypeArray,
+		TokenType:  jschema.TokenTypeArray,
 		Properties: &jschema.RuleASTNodes{},
 		Items: []jschema.RuleASTNode{
 			an,
 			{
-				JSONType:   jschema.JSONTypeString,
+				TokenType:  jschema.TokenTypeString,
 				Value:      "bar",
 				Properties: &jschema.RuleASTNodes{},
 				Source:     jschema.RuleASTNodeSourceManual,

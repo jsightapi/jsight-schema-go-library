@@ -57,14 +57,14 @@ func TestTypeConstraint_Bytes(t *testing.T) {
 func TestTypeConstraint_ASTNode(t *testing.T) {
 	cc := map[string]jschema.RuleASTNode{
 		"foo": {
-			JSONType:   jschema.JSONTypeString,
+			TokenType:  jschema.TokenTypeString,
 			Value:      "foo",
 			Properties: &jschema.RuleASTNodes{},
 			Source:     jschema.RuleASTNodeSourceGenerated,
 		},
 
 		"@foo": {
-			JSONType:   jschema.JSONTypeShortcut,
+			TokenType:  jschema.TokenTypeShortcut,
 			Value:      "@foo",
 			Properties: &jschema.RuleASTNodes{},
 			Source:     jschema.RuleASTNodeSourceGenerated,

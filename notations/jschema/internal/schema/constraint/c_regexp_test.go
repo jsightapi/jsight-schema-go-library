@@ -64,7 +64,7 @@ func TestRegex_Validate(t *testing.T) {
 
 func TestRegexp_ASTNode(t *testing.T) {
 	assert.Equal(t, jschema.RuleASTNode{
-		JSONType:   jschema.JSONTypeString,
+		TokenType:  jschema.TokenTypeString,
 		Value:      "foo",
 		Properties: &jschema.RuleASTNodes{},
 		Source:     jschema.RuleASTNodeSourceManual,

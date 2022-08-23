@@ -49,7 +49,7 @@ func TestConst_IsJsonTypeCompatible(t *testing.T) {
 }
 
 func TestConst_Type(t *testing.T) {
-	assert.Equal(t, ConstType, Const{}.Type())
+	assert.Equal(t, ConstConstraintType, Const{}.Type())
 }
 
 func TestConst_String(t *testing.T) {
@@ -108,7 +108,7 @@ func TestConst_ASTNode(t *testing.T) {
 	for _, c := range cc {
 		t.Run(strconv.FormatBool(c), func(t *testing.T) {
 			assert.Equal(t, jschema.RuleASTNode{
-				JSONType:   jschema.JSONTypeBoolean,
+				TokenType:  jschema.TokenTypeBoolean,
 				Value:      strconv.FormatBool(c),
 				Properties: &jschema.RuleASTNodes{},
 				Source:     jschema.RuleASTNodeSourceManual,

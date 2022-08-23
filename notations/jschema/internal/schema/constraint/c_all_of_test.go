@@ -83,7 +83,7 @@ func TestAllOf_ASTNode(t *testing.T) {
 			},
 
 			expected: jschema.RuleASTNode{
-				JSONType:   jschema.JSONTypeArray,
+				TokenType:  jschema.TokenTypeArray,
 				Properties: &jschema.RuleASTNodes{},
 				Items:      []jschema.RuleASTNode{},
 				Source:     jschema.RuleASTNodeSourceManual,
@@ -98,7 +98,7 @@ func TestAllOf_ASTNode(t *testing.T) {
 			},
 
 			expected: jschema.RuleASTNode{
-				JSONType:   jschema.JSONTypeShortcut,
+				TokenType:  jschema.TokenTypeShortcut,
 				Properties: &jschema.RuleASTNodes{},
 				Value:      "@foo",
 				Source:     jschema.RuleASTNodeSourceManual,
@@ -116,29 +116,29 @@ func TestAllOf_ASTNode(t *testing.T) {
 			},
 
 			expected: jschema.RuleASTNode{
-				JSONType:   jschema.JSONTypeArray,
+				TokenType:  jschema.TokenTypeArray,
 				Properties: &jschema.RuleASTNodes{},
 				Items: []jschema.RuleASTNode{
 					{
-						JSONType:   jschema.JSONTypeShortcut,
+						TokenType:  jschema.TokenTypeShortcut,
 						Value:      "@foo",
 						Properties: &jschema.RuleASTNodes{},
 						Source:     jschema.RuleASTNodeSourceManual,
 					},
 					{
-						JSONType:   jschema.JSONTypeShortcut,
+						TokenType:  jschema.TokenTypeShortcut,
 						Value:      "@bar",
 						Properties: &jschema.RuleASTNodes{},
 						Source:     jschema.RuleASTNodeSourceManual,
 					},
 					{
-						JSONType:   jschema.JSONTypeShortcut,
+						TokenType:  jschema.TokenTypeShortcut,
 						Value:      "@fizz",
 						Properties: &jschema.RuleASTNodes{},
 						Source:     jschema.RuleASTNodeSourceManual,
 					},
 					{
-						JSONType:   jschema.JSONTypeShortcut,
+						TokenType:  jschema.TokenTypeShortcut,
 						Value:      "@buzz",
 						Properties: &jschema.RuleASTNodes{},
 						Source:     jschema.RuleASTNodeSourceManual,

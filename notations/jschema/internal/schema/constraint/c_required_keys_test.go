@@ -55,17 +55,17 @@ func TestRequiredKeys_ASTNode(t *testing.T) {
 	c.AddKey("bar")
 
 	assert.Equal(t, jschema.RuleASTNode{
-		JSONType:   jschema.JSONTypeArray,
+		TokenType:  jschema.TokenTypeArray,
 		Properties: &jschema.RuleASTNodes{},
 		Items: []jschema.RuleASTNode{
 			{
-				JSONType:   jschema.JSONTypeString,
+				TokenType:  jschema.TokenTypeString,
 				Value:      "foo",
 				Properties: &jschema.RuleASTNodes{},
 				Source:     jschema.RuleASTNodeSourceManual,
 			},
 			{
-				JSONType:   jschema.JSONTypeString,
+				TokenType:  jschema.TokenTypeString,
 				Value:      "bar",
 				Properties: &jschema.RuleASTNodes{},
 				Source:     jschema.RuleASTNodeSourceManual,

@@ -72,7 +72,7 @@ func TestMinLength_Validate(t *testing.T) {
 
 func TestMinLength_ASTNode(t *testing.T) {
 	assert.Equal(t, jschema.RuleASTNode{
-		JSONType:   jschema.JSONTypeNumber,
+		TokenType:  jschema.TokenTypeNumber,
 		Value:      "1",
 		Properties: &jschema.RuleASTNodes{},
 		Source:     jschema.RuleASTNodeSourceManual,

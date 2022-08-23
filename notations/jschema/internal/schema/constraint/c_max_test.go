@@ -142,7 +142,7 @@ func TestMax_Validate(t *testing.T) {
 
 func TestMax_ASTNode(t *testing.T) {
 	assert.Equal(t, jschema.RuleASTNode{
-		JSONType:   jschema.JSONTypeNumber,
+		TokenType:  jschema.TokenTypeNumber,
 		Value:      "1",
 		Properties: &jschema.RuleASTNodes{},
 		Source:     jschema.RuleASTNodeSourceManual,
