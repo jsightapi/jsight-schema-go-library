@@ -235,6 +235,10 @@ func TestSchema_Example(t *testing.T) {
 	}
 }`,
 			},
+
+			`"\" \\ /"`: {
+				expected: `"\" \\ /"`,
+			},
 		}
 
 		for given, c := range cc {
