@@ -66,7 +66,7 @@ func (c *validatorListConstructor) appendNodeValidators(node schema.Node) {
 
 	var v validator
 
-	if node.Constraint(constraint.AnyConstraintType) != nil && node.Constraint(constraint.ConstType) == nil {
+	if node.Constraint(constraint.AnyConstraintType) != nil && node.Constraint(constraint.ConstConstraintType) == nil {
 		v = newAnyNestedStructureValidator(node, c.parent)
 	} else {
 		switch node.Type() {

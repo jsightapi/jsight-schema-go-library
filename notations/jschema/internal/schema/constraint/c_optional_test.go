@@ -72,7 +72,7 @@ func TestOptional_ASTNode(t *testing.T) {
 	for _, c := range cc {
 		t.Run(strconv.FormatBool(c), func(t *testing.T) {
 			assert.Equal(t, jschema.RuleASTNode{
-				JSONType:   jschema.JSONTypeBoolean,
+				TokenType:  jschema.TokenTypeBoolean,
 				Value:      strconv.FormatBool(c),
 				Properties: &jschema.RuleASTNodes{},
 				Source:     jschema.RuleASTNodeSourceManual,

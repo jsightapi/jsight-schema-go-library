@@ -187,42 +187,42 @@ func TestAdditionalProperties_IsEqual(t *testing.T) {
 func TestAdditionalProperties_ASTNode(t *testing.T) {
 	cc := map[string]jschema.RuleASTNode{
 		`"any"`: {
-			JSONType:   jschema.JSONTypeString,
+			TokenType:  jschema.TokenTypeString,
 			Value:      "any",
 			Properties: &jschema.RuleASTNodes{},
 			Source:     jschema.RuleASTNodeSourceManual,
 		},
 
 		"true": {
-			JSONType:   jschema.JSONTypeBoolean,
+			TokenType:  jschema.TokenTypeBoolean,
 			Value:      "true",
 			Properties: &jschema.RuleASTNodes{},
 			Source:     jschema.RuleASTNodeSourceManual,
 		},
 
 		"false": {
-			JSONType:   jschema.JSONTypeBoolean,
+			TokenType:  jschema.TokenTypeBoolean,
 			Value:      "false",
 			Properties: &jschema.RuleASTNodes{},
 			Source:     jschema.RuleASTNodeSourceManual,
 		},
 
 		`"@foo"`: {
-			JSONType:   jschema.JSONTypeString,
+			TokenType:  jschema.TokenTypeString,
 			Value:      "@foo",
 			Properties: &jschema.RuleASTNodes{},
 			Source:     jschema.RuleASTNodeSourceManual,
 		},
 
 		`"string"`: {
-			JSONType:   jschema.JSONTypeString,
+			TokenType:  jschema.TokenTypeString,
 			Value:      "string",
 			Properties: &jschema.RuleASTNodes{},
 			Source:     jschema.RuleASTNodeSourceManual,
 		},
 
 		`"integer"`: {
-			JSONType:   jschema.JSONTypeString,
+			TokenType:  jschema.TokenTypeString,
 			Value:      "integer",
 			Properties: &jschema.RuleASTNodes{},
 			Source:     jschema.RuleASTNodeSourceManual,

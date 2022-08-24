@@ -95,10 +95,10 @@ func (c Enum) ASTNode() jschema.RuleASTNode {
 	const source = jschema.RuleASTNodeSourceManual
 
 	if c.ruleName != "" {
-		return newRuleASTNode(jschema.JSONTypeShortcut, c.ruleName, source)
+		return newRuleASTNode(jschema.TokenTypeShortcut, c.ruleName, source)
 	}
 
-	n := newRuleASTNode(jschema.JSONTypeArray, "", source)
+	n := newRuleASTNode(jschema.TokenTypeArray, "", source)
 	n.Items = make([]jschema.RuleASTNode, 0, len(c.items))
 
 	for _, b := range c.items {

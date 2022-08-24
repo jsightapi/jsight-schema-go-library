@@ -162,7 +162,7 @@ func TestEnum_ASTNode(t *testing.T) {
 		}
 
 		assert.Equal(t, jschema.RuleASTNode{
-			JSONType:   jschema.JSONTypeShortcut,
+			TokenType:  jschema.TokenTypeShortcut,
 			Value:      "@foo",
 			Properties: &jschema.RuleASTNodes{},
 			Source:     jschema.RuleASTNodeSourceManual,
@@ -181,43 +181,43 @@ func TestEnum_ASTNode(t *testing.T) {
 			},
 		}
 		assert.Equal(t, jschema.RuleASTNode{
-			JSONType:   jschema.JSONTypeArray,
+			TokenType:  jschema.TokenTypeArray,
 			Properties: &jschema.RuleASTNodes{},
 			Items: []jschema.RuleASTNode{
 				{
-					JSONType:   jschema.JSONTypeString,
+					TokenType:  jschema.TokenTypeString,
 					Value:      "foo",
 					Properties: &jschema.RuleASTNodes{},
 					Source:     jschema.RuleASTNodeSourceManual,
 				},
 				{
-					JSONType:   jschema.JSONTypeNumber,
+					TokenType:  jschema.TokenTypeNumber,
 					Value:      "42",
 					Properties: &jschema.RuleASTNodes{},
 					Source:     jschema.RuleASTNodeSourceManual,
 					Comment:    "foo",
 				},
 				{
-					JSONType:   jschema.JSONTypeNumber,
+					TokenType:  jschema.TokenTypeNumber,
 					Value:      "3.14",
 					Properties: &jschema.RuleASTNodes{},
 					Source:     jschema.RuleASTNodeSourceManual,
 				},
 				{
-					JSONType:   jschema.JSONTypeBoolean,
+					TokenType:  jschema.TokenTypeBoolean,
 					Value:      "true",
 					Properties: &jschema.RuleASTNodes{},
 					Source:     jschema.RuleASTNodeSourceManual,
 				},
 				{
-					JSONType:   jschema.JSONTypeNull,
+					TokenType:  jschema.TokenTypeNull,
 					Value:      "null",
 					Properties: &jschema.RuleASTNodes{},
 					Source:     jschema.RuleASTNodeSourceManual,
 					Comment:    "bar",
 				},
 				{
-					JSONType:   jschema.JSONTypeShortcut,
+					TokenType:  jschema.TokenTypeShortcut,
 					Value:      "@foo",
 					Properties: &jschema.RuleASTNodes{},
 					Source:     jschema.RuleASTNodeSourceManual,

@@ -317,11 +317,11 @@ func TestEnumValueLoader_commentEnd(t *testing.T) {
 
 				assert.NotNil(t, l.stateFunc)
 				assert.Equal(t, jschema.RuleASTNode{
-					JSONType:   jschema.JSONTypeArray,
+					TokenType:  jschema.TokenTypeArray,
 					Properties: &jschema.RuleASTNodes{},
 					Items: []jschema.RuleASTNode{
 						{
-							JSONType:   jschema.JSONTypeNumber,
+							TokenType:  jschema.TokenTypeNumber,
 							Value:      "42",
 							Comment:    "comment",
 							Properties: &jschema.RuleASTNodes{},
@@ -436,11 +436,11 @@ func TestEnumValueLoader_literal(t *testing.T) {
 		assert.EqualValues(t, 0, l.lastIdx)
 		assert.NotNil(t, l.stateFunc)
 		assert.Equal(t, jschema.RuleASTNode{
-			JSONType:   jschema.JSONTypeArray,
+			TokenType:  jschema.TokenTypeArray,
 			Properties: &jschema.RuleASTNodes{},
 			Items: []jschema.RuleASTNode{
 				{
-					JSONType:   jschema.JSONTypeNumber,
+					TokenType:  jschema.TokenTypeNumber,
 					Value:      "42",
 					Properties: &jschema.RuleASTNodes{},
 					Source:     jschema.RuleASTNodeSourceManual,

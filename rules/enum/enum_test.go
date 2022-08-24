@@ -251,54 +251,54 @@ func TestEnum_GetAST(t *testing.T) {
 
 		require.NoError(t, err)
 		assert.Equal(t, jschema.ASTNode{
-			JSONType:   jschema.JSONTypeArray,
+			TokenType:  jschema.TokenTypeArray,
 			SchemaType: string(jschema.SchemaTypeEnum),
 			Children: []jschema.ASTNode{
 				{
-					JSONType:   jschema.JSONTypeNull,
+					TokenType:  jschema.TokenTypeNull,
 					SchemaType: string(jschema.SchemaTypeComment),
 					Comment:    "first comment",
 				},
 				{
-					JSONType:   jschema.JSONTypeString,
+					TokenType:  jschema.TokenTypeString,
 					SchemaType: string(jschema.SchemaTypeString),
 					Value:      `"foo"`,
 				},
 				{
-					JSONType:   jschema.JSONTypeNumber,
+					TokenType:  jschema.TokenTypeNumber,
 					SchemaType: string(jschema.SchemaTypeInteger),
 					Value:      "42",
 					Comment:    "42 comment",
 				},
 				{
-					JSONType:   jschema.JSONTypeNumber,
+					TokenType:  jschema.TokenTypeNumber,
 					SchemaType: string(jschema.SchemaTypeFloat),
 					Value:      "3.14",
 				},
 				{
-					JSONType:   jschema.JSONTypeBoolean,
+					TokenType:  jschema.TokenTypeBoolean,
 					SchemaType: string(jschema.SchemaTypeBoolean),
 					Value:      "true",
 				},
 				{
-					JSONType:   jschema.JSONTypeBoolean,
+					TokenType:  jschema.TokenTypeBoolean,
 					SchemaType: string(jschema.SchemaTypeBoolean),
 					Value:      "false",
 					Comment:    "false comment",
 				},
 				{
-					JSONType:   jschema.JSONTypeNull,
+					TokenType:  jschema.TokenTypeNull,
 					SchemaType: string(jschema.SchemaTypeComment),
 					Comment:    "before null comment",
 				},
 				{
-					JSONType:   jschema.JSONTypeNull,
+					TokenType:  jschema.TokenTypeNull,
 					SchemaType: string(jschema.SchemaTypeNull),
 					Value:      "null",
 					Comment:    "null comment",
 				},
 				{
-					JSONType:   jschema.JSONTypeNull,
+					TokenType:  jschema.TokenTypeNull,
 					SchemaType: string(jschema.SchemaTypeComment),
 					Comment:    "last comment",
 				},

@@ -31,8 +31,10 @@ func TestType_String(t *testing.T) {
 			NullableConstraintType:             "nullable",
 			RegexConstraintType:                "regex",
 			UriConstraintType:                  "uri",
+			DateConstraintType:                 "date",
 			DateTimeConstraintType:             "datetime",
 			UuidConstraintType:                 "uuid",
+			ConstConstraintType:                "const",
 		}
 
 		for typ, expected := range cc {

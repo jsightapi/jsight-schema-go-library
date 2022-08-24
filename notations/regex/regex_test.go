@@ -130,7 +130,7 @@ func TestSchema_GetAST(t *testing.T) {
 		actual, err := New("", complexRegex, WithGeneratorSeed(0)).GetAST()
 		require.NoError(t, err)
 		assert.Equal(t, jschema.ASTNode{
-			JSONType:   jschema.JSONTypeString,
+			TokenType:  jschema.TokenTypeString,
 			SchemaType: string(jschema.SchemaTypeString),
 			Value:      "/" + complexRegexPattern + "/",
 		}, actual)
