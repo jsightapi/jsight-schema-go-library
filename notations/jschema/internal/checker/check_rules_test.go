@@ -32,12 +32,12 @@ func TestCheckRules(t *testing.T) {
 	}
 
 	check := func(schema string, types []typ) {
-		schemaFile := fs.NewFile("schema", schema)
+		schemaFile := fs.MustNewFile("schema", schema)
 
 		rootSchema := loader.LoadSchema(scanner.New(schemaFile), nil)
 
 		for _, typ := range types {
-			f := fs.NewFile(typ.name, typ.schema)
+			f := fs.MustNewFile(typ.name, typ.schema)
 			ty := loader.LoadSchema(scanner.New(f), rootSchema)
 			rootSchema.AddNamedType(typ.name, ty, f, 0)
 		}

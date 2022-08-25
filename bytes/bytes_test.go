@@ -421,6 +421,48 @@ func TestBytes_LineFrom(t *testing.T) {
 	}
 }
 
+func TestBytes_Normalize(t *testing.T) {
+	t.Run("positive", func(t *testing.T) {
+		cc := map[string]string{
+			"foo":        "foo",
+			"\u0061":     "a",
+			`\u0061`:     "a",
+			`""\u0062""`: `""b""`,
+			`""`:         `""`,
+		}
+
+		for given, expected := range cc {
+			t.Run(given, func(t *testing.T) {
+				actual, err := Bytes(given).Normalize()
+
+				require.NoError(t, err)
+				assert.Equal(t, expected, string(actual))
+			})
+		}
+	})
+
+	t.Run("negative", func(t *testing.T) {
+		_, err := Bytes(`\u00`).Normalize()
+		assert.ErrorIs(t, err, strconv.ErrSyntax)
+	})
+}
+
+func BenchmarkBytes_Normalize(b *testing.B) {
+	given := Bytes(`hf1hv09  \u0021 afs\u4214\u0038\u1839\u7314 asljad as dl
+asdasdalasf \u3294 \ua123\u7136\u1111
+asfasfa
+asfsafas
+`)
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		_, err := given.Normalize()
+		require.NoError(b, err)
+	}
+}
+
 func TestQuoteChar(t *testing.T) {
 	cc := map[byte]string{
 		'\'': "'\\''",

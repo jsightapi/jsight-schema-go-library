@@ -36,7 +36,7 @@ func TestDocument_Len(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
 		for name, c := range cases {
 			t.Run(name, func(t *testing.T) {
-				actual, err := New("", c.data, AllowTrailingNonSpaceCharacters()).Len()
+				actual, err := MustNew("", c.data, AllowTrailingNonSpaceCharacters()).Len()
 				require.NoError(t, err)
 				assert.Equal(t, c.expectedLen, actual)
 			})
@@ -44,7 +44,7 @@ func TestDocument_Len(t *testing.T) {
 	})
 
 	t.Run("negative", func(t *testing.T) {
-		_, err := New("", "foo", AllowTrailingNonSpaceCharacters()).Len()
+		_, err := MustNew("", "foo", AllowTrailingNonSpaceCharacters()).Len()
 		assert.EqualError(t, err, `ERROR (code 301): Invalid character "o" in literal false (expecting 'a')
 	in line 1 on file 
 	> foo
@@ -69,7 +69,7 @@ func TestDocument_Check(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
 		for name, c := range cases {
 			t.Run(name, func(t *testing.T) {
-				err := New("", c.data, AllowTrailingNonSpaceCharacters()).Check()
+				err := MustNew("", c.data, AllowTrailingNonSpaceCharacters()).Check()
 				require.NoError(t, err)
 			})
 		}
@@ -77,7 +77,7 @@ func TestDocument_Check(t *testing.T) {
 
 	t.Run("negative", func(t *testing.T) {
 		t.Run("invalid character", func(t *testing.T) {
-			err := New("", "foo", AllowTrailingNonSpaceCharacters()).Check()
+			err := MustNew("", "foo", AllowTrailingNonSpaceCharacters()).Check()
 			assert.EqualError(t, err, `ERROR (code 301): Invalid character "o" in literal false (expecting 'a')
 	in line 1 on file 
 	> foo
@@ -133,7 +133,7 @@ some trailing data`,
 
 			for _, given := range cc {
 				t.Run(given, func(t *testing.T) {
-					err := New("", given).Check()
+					err := MustNew("", given).Check()
 					assert.True(t, strings.HasPrefix(
 						err.Error(),
 						"ERROR (code 301): Invalid character \"s\" non-space byte after top-level value",

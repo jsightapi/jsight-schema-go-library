@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/jsightapi/jsight-schema-go-library/bytes"
 )
@@ -27,7 +28,8 @@ func TestNewFile(t *testing.T) {
 func testNewFile[T FileContent](t *testing.T, given T, expected bytes.Bytes) {
 	const name = "foo"
 
-	f := NewFile(name, given)
+	f, err := NewFile(name, given)
+	require.NoError(t, err)
 
 	assert.Equal(t, name, f.name)
 	assert.Equal(t, name, f.Name())

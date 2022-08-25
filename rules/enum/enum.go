@@ -35,8 +35,22 @@ type Value struct {
 var _ jschema.Rule = (*Enum)(nil)
 
 // New creates new Enum rule with specified name and content.
-func New[T fs.FileContent](name string, content T) *Enum {
-	return FromFile(fs.NewFile(name, content))
+func New[T fs.FileContent](name string, content T) (*Enum, error) {
+	f, err := fs.NewFile(name, content)
+	if err != nil {
+		return nil, err
+	}
+	return FromFile(f), nil
+}
+
+// MustNew the same as New but panics on error.
+// Should be used where we're sure about content.
+func MustNew[T fs.FileContent](name string, content T) *Enum {
+	e, err := New(name, content)
+	if err != nil {
+		panic(err)
+	}
+	return e
 }
 
 // FromFile creates Enum rule from specified file.

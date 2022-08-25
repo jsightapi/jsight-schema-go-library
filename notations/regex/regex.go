@@ -35,8 +35,22 @@ func WithGeneratorSeed(seed int64) Option {
 }
 
 // New creates a Regex schema with specified name and content.
-func New[T fs.FileContent](name string, content T, oo ...Option) *Schema {
-	return FromFile(fs.NewFile(name, content), oo...)
+func New[T fs.FileContent](name string, content T, oo ...Option) (*Schema, error) {
+	f, err := fs.NewFile(name, content)
+	if err != nil {
+		return nil, err
+	}
+	return FromFile(f, oo...), nil
+}
+
+// MustNew the same as New but panics on error.
+// Should be used where we're sure about content.
+func MustNew[T fs.FileContent](name string, content T, oo ...Option) *Schema {
+	s, err := New(name, content, oo...)
+	if err != nil {
+		panic(err)
+	}
+	return s
 }
 
 // FromFile creates a Regex schema from file.

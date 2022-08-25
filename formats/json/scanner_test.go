@@ -21,7 +21,7 @@ func TestScanner_Next(t *testing.T) {
 			"12.34 \r\n":          {lexeme.LiteralBegin, lexeme.LiteralEnd},
 			`"str"`:               {lexeme.LiteralBegin, lexeme.LiteralEnd},
 			`"str" `:              {lexeme.LiteralBegin, lexeme.LiteralEnd},
-			`"\u0000"`:            {lexeme.LiteralBegin, lexeme.LiteralEnd},
+			`"\u0061"`:            {lexeme.LiteralBegin, lexeme.LiteralEnd},
 			`"\\" `:               {lexeme.LiteralBegin, lexeme.LiteralEnd},
 			"true":                {lexeme.LiteralBegin, lexeme.LiteralEnd},
 			"false":               {lexeme.LiteralBegin, lexeme.LiteralEnd},
@@ -129,7 +129,7 @@ func TestScanner_Next(t *testing.T) {
 
 		for json, expected := range jsonValidResults {
 			t.Run("json", func(t *testing.T) {
-				s := newScanner(fs.NewFile("", json))
+				s := newScanner(fs.MustNewFile("", json))
 				var results []lexeme.LexEventType
 
 				for {
@@ -215,26 +215,6 @@ func TestScanner_Next(t *testing.T) {
 	in line 1 on file 
 	> "\x"
 	----^`,
-			`"\uZ"`: `ERROR (code 301): Invalid character "Z" in \u hexadecimal character escape
-	in line 1 on file 
-	> "\uZ"
-	-----^`,
-			`"\u1Z"`: `ERROR (code 301): Invalid character "Z" in \u hexadecimal character escape
-	in line 1 on file 
-	> "\u1Z"
-	------^`,
-			`"\u22Z"`: `ERROR (code 301): Invalid character "Z" in \u hexadecimal character escape
-	in line 1 on file 
-	> "\u22Z"
-	-------^`,
-			`"\u33Z"`: `ERROR (code 301): Invalid character "Z" in \u hexadecimal character escape
-	in line 1 on file 
-	> "\u33Z"
-	-------^`,
-			`"\u444Z"`: `ERROR (code 301): Invalid character "Z" in \u hexadecimal character escape
-	in line 1 on file 
-	> "\u444Z"
-	--------^`,
 			"-z": `ERROR (code 301): Invalid character "z" in numeric literal
 	in line 1 on file 
 	> -z
@@ -319,7 +299,7 @@ func TestScanner_Next(t *testing.T) {
 
 		for given, expected := range cc {
 			t.Run(given, func(t *testing.T) {
-				d := FromFile(fs.NewFile("", given))
+				d := FromFile(fs.MustNewFile("", given))
 
 				var foundError bool
 				for {

@@ -14,3 +14,8 @@ func IsSpace(c byte) bool {
 func IsNewLine(c byte) bool {
 	return c == '\n' || c == '\r'
 }
+
+// IsDigit returns true if provided byte is digit.
+func IsDigit(c byte) bool {
+	return c >= '0' && c <= '9'
+}

@@ -19,5 +19,11 @@ func ReadWithName(filename, name string) *fs.File {
 		docErr.SetMessage(err.Error())
 		panic(docErr)
 	}
-	return fs.NewFile(name, data)
+	f, err := fs.NewFile(name, data)
+	if err != nil {
+		docErr := errors.DocumentError{}
+		docErr.SetMessage(err.Error())
+		panic(docErr)
+	}
+	return f
 }

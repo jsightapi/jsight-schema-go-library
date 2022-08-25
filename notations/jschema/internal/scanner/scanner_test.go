@@ -13,7 +13,7 @@ func Test_newScanner(t *testing.T) {
 	const content = "bar"
 	contentLen := len(content)
 
-	f := fs.NewFile("foo", content)
+	f := fs.MustNewFile("foo", content)
 
 	s := New(f)
 
@@ -28,7 +28,7 @@ func Test_newScanner(t *testing.T) {
 }
 
 func BenchmarkScanner_Length(b *testing.B) {
-	file := fs.NewFile("", `
+	file := fs.MustNewFile("", `
 /*
 {}
 */
@@ -65,7 +65,7 @@ func TestScanner_Length(t *testing.T) {
 	for given, expected := range tests {
 		t.Run(given, func(t *testing.T) {
 			assert.NotPanics(t, func() {
-				actual := New(fs.NewFile("", given), ComputeLength).
+				actual := New(fs.MustNewFile("", given), ComputeLength).
 					Length()
 				assert.Equal(t, expected, actual)
 			})
@@ -85,7 +85,7 @@ func TestScanner_Next(t *testing.T) {
 			{"12.34 \r\n", []lexeme.LexEventType{lexeme.LiteralBegin, lexeme.LiteralEnd, lexeme.NewLine, lexeme.NewLine}},
 			{`"str"`, []lexeme.LexEventType{lexeme.LiteralBegin, lexeme.LiteralEnd}},
 			{`"str" `, []lexeme.LexEventType{lexeme.LiteralBegin, lexeme.LiteralEnd}},
-			{`"\u0000"`, []lexeme.LexEventType{lexeme.LiteralBegin, lexeme.LiteralEnd}},
+			{`"\u0061"`, []lexeme.LexEventType{lexeme.LiteralBegin, lexeme.LiteralEnd}},
 			{`"\\" `, []lexeme.LexEventType{lexeme.LiteralBegin, lexeme.LiteralEnd}},
 			{`true`, []lexeme.LexEventType{lexeme.LiteralBegin, lexeme.LiteralEnd}},
 			{`false`, []lexeme.LexEventType{lexeme.LiteralBegin, lexeme.LiteralEnd}},
@@ -699,7 +699,7 @@ func TestScanner_Next(t *testing.T) {
 
 		for _, tst := range cc {
 			t.Run(tst.content, func(t *testing.T) {
-				file := fs.NewFile("", tst.content)
+				file := fs.MustNewFile("", tst.content)
 				s := New(file)
 				processingValid(t, s, tst)
 			})
@@ -764,7 +764,7 @@ bbb"}`,
 		for _, content := range cc {
 			t.Run(content, func(t *testing.T) {
 				assert.Panics(t, func() {
-					s := New(fs.NewFile("", content))
+					s := New(fs.MustNewFile("", content))
 					for {
 						if _, ok := s.Next(); ok == false {
 							break

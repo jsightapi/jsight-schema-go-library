@@ -154,7 +154,7 @@ func TestMixedValueNode_Grow(t *testing.T) {
 
 		for lexType, expected := range cc {
 			t.Run(lexType.String(), func(t *testing.T) {
-				actual, ok := n.Grow(lexeme.NewLexEvent(lexType, 0, 0, fs.NewFile("", "foo")))
+				actual, ok := n.Grow(lexeme.NewLexEvent(lexType, 0, 0, fs.MustNewFile("", "foo")))
 				assert.Equal(t, expected, actual)
 				assert.False(t, ok)
 			})

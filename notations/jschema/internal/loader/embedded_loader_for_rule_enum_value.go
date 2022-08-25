@@ -111,7 +111,11 @@ func (l *enumValueLoader) literal(lex lexeme.LexEvent) {
 	switch lex.Type() {
 	case lexeme.LiteralBegin:
 	case lexeme.LiteralEnd:
-		l.lastIdx = l.enumConstraint.Append(lex.Value())
+		var err error
+		l.lastIdx, err = l.enumConstraint.Append(lex.Value())
+		if err != nil {
+			panic(err)
+		}
 		l.stateFunc = l.arrayItemEnd
 	default:
 		panic(errors.ErrIncorrectArrayItemTypeInEnumRule)
@@ -159,7 +163,9 @@ func (l *enumValueLoader) ruleName(lex lexeme.LexEvent) {
 
 	l.enumConstraint.SetRuleName(v)
 	for i, v := range vv {
-		l.enumConstraint.Append(v.Value)
+		if _, err := l.enumConstraint.Append(v.Value); err != nil {
+			panic(err)
+		}
 		l.enumConstraint.SetComment(i, v.Comment)
 	}
 	l.stateFunc = l.endOfLoading

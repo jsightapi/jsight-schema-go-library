@@ -24,8 +24,22 @@ type Document struct {
 var _ jschema.Document = &Document{}
 
 // New creates a JSON document with specified name and content.
-func New[T fs.FileContent](name string, content T, oo ...Option) jschema.Document {
-	return FromFile(fs.NewFile(name, content), oo...)
+func New[T fs.FileContent](name string, content T, oo ...Option) (jschema.Document, error) {
+	f, err := fs.NewFile(name, content)
+	if err != nil {
+		return nil, err
+	}
+	return FromFile(f, oo...), nil
+}
+
+// MustNew the same as New but panics on error.
+// Should be used where we're sure about content.
+func MustNew[T fs.FileContent](name string, content T, oo ...Option) jschema.Document {
+	d, err := New(name, content, oo...)
+	if err != nil {
+		panic(err)
+	}
+	return d
 }
 
 // FromFile creates a JSON document from file.

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	jschema "github.com/jsightapi/jsight-schema-go-library"
 	"github.com/jsightapi/jsight-schema-go-library/bytes"
@@ -50,18 +51,21 @@ func TestEnum_Append(t *testing.T) {
 		c := NewEnum()
 		assert.Equal(t, []enumItem{}, c.items)
 
-		c.Append(bytes.Bytes(`"foo"`))
+		_, err := c.Append(bytes.Bytes(`"foo"`))
+		require.NoError(t, err)
 		assert.Equal(t, []enumItem{
 			{value: bytes.Bytes(`"foo"`)},
 		}, c.items)
 
-		c.Append(bytes.Bytes(`"bar"`))
+		_, err = c.Append(bytes.Bytes(`"bar"`))
+		require.NoError(t, err)
 		assert.Equal(t, []enumItem{
 			{value: bytes.Bytes(`"foo"`)},
 			{value: bytes.Bytes(`"bar"`)},
 		}, c.items)
 
-		c.Append(bytes.Bytes(`"FoO"`))
+		_, err = c.Append(bytes.Bytes(`"FoO"`))
+		require.NoError(t, err)
 		assert.Equal(t, []enumItem{
 			{value: bytes.Bytes(`"foo"`)},
 			{value: bytes.Bytes(`"bar"`)},
@@ -71,18 +75,19 @@ func TestEnum_Append(t *testing.T) {
 
 	t.Run("negative", func(t *testing.T) {
 		cc := map[string]string{
-			`"foo" value duplicates in "enum"`:  `"foo"`,
-			` "foo" value duplicates in "enum"`: ` "foo"`,
-			`"foo"  value duplicates in "enum"`: `"foo" `,
+			`"foo" value duplicates in "enum"`:   `"foo"`,
+			` "foo" value duplicates in "enum"`:  ` "foo"`,
+			`"foo"  value duplicates in "enum"`:  `"foo" `,
+			` "foo"  value duplicates in "enum"`: " \"\u0066\u006f\u006f\" ",
 		}
 
 		for expected, given := range cc {
 			t.Run(expected, func(t *testing.T) {
-				assert.PanicsWithError(t, expected, func() {
-					c := NewEnum()
-					c.Append(bytes.Bytes(`"foo"`))
-					c.Append(bytes.Bytes(given))
-				})
+				c := NewEnum()
+				_, err := c.Append(bytes.Bytes(`"foo"`))
+				require.NoError(t, err)
+				_, err = c.Append(bytes.Bytes(given))
+				assert.EqualError(t, err, expected)
 			})
 		}
 	})

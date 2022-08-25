@@ -57,17 +57,17 @@ func (c Enum) String() string {
 	return str.String()
 }
 
-func (c *Enum) Append(b jbytes.Bytes) int {
+func (c *Enum) Append(b jbytes.Bytes) (int, error) {
 	key := b.TrimSpaces().String()
 	if key != "" {
 		if _, ok := c.uniqueIdx[key]; ok {
-			panic(errors.Format(errors.ErrDuplicationInEnumRule, b.String()))
+			return 0, errors.Format(errors.ErrDuplicationInEnumRule, b.String())
 		}
 	}
 	idx := len(c.items)
 	c.items = append(c.items, enumItem{value: b})
 	c.uniqueIdx[key] = struct{}{}
-	return idx
+	return idx, nil
 }
 
 func (c *Enum) SetComment(idx int, comment string) {

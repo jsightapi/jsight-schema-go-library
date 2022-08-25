@@ -1,6 +1,7 @@
 package fs
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/jsightapi/jsight-schema-go-library/bytes"
@@ -13,11 +14,26 @@ type File struct {
 }
 
 // NewFile creates new File instance.
-func NewFile[T FileContent](name string, content T) *File {
+func NewFile[T FileContent](name string, content T) (*File, error) {
+	normalizedContent, err := normalizeFileContent(content).Normalize()
+	if err != nil {
+		return nil, errors.New("normalize content")
+	}
+
 	return &File{
 		name:    name,
-		content: normalizeFileContent(content),
+		content: normalizedContent,
+	}, nil
+}
+
+// MustNewFile the same as NewFile but panics on error.
+// Should be used where we're sure about content.
+func MustNewFile[T FileContent](name string, content T) *File {
+	f, err := NewFile(name, content)
+	if err != nil {
+		panic(err)
 	}
+	return f
 }
 
 // FileContent all allowed types for specifying File's content.

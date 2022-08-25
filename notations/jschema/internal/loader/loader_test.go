@@ -26,7 +26,7 @@ func TestLoadSchemaWithoutCompile(t *testing.T) {
 		for _, s := range ss {
 			t.Run(s, func(t *testing.T) {
 				assert.NotPanics(t, func() {
-					scan := scanner.New(fs.NewFile("", s))
+					scan := scanner.New(fs.MustNewFile("", s))
 					LoadSchemaWithoutCompile(scan, nil, nil)
 				})
 			})
@@ -48,7 +48,7 @@ func TestLoadSchemaWithoutCompile(t *testing.T) {
 		for expected, s := range ss {
 			t.Run(s, func(t *testing.T) {
 				assert.PanicsWithError(t, expected, func() {
-					scan := scanner.New(fs.NewFile("", s))
+					scan := scanner.New(fs.MustNewFile("", s))
 					LoadSchemaWithoutCompile(scan, nil, nil)
 				})
 			})
@@ -57,7 +57,7 @@ func TestLoadSchemaWithoutCompile(t *testing.T) {
 }
 
 func BenchmarkLoadSchemaWithoutCompile(b *testing.B) {
-	file := fs.NewFile("", `{
+	file := fs.MustNewFile("", `{
 	"foo": "bar"
 }`)
 	scan := scanner.New(file)

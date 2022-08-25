@@ -7,7 +7,7 @@ import (
 )
 
 func Benchmark_buildExample(b *testing.B) {
-	s := New("", `{
+	s := MustNew("", `{
 	"foo": "bar",
 	"fizz": [
 		1,

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"math"
 	"strconv"
+	"strings"
 )
 
 type Index uint
@@ -190,6 +191,15 @@ func (b Bytes) LineFrom(start Index) (Bytes, error) {
 		}
 	}
 	return b[start:], nil
+}
+
+// Normalize normalize this sequence of bytes.
+func (b Bytes) Normalize() (Bytes, error) {
+	str, err := strconv.Unquote(strings.ReplaceAll(strconv.Quote(string(b)), `\\u`, `\u`))
+	if err != nil {
+		return nil, err
+	}
+	return Bytes(str), nil
 }
 
 // IsValidUserTypeNameByte returns true if specified rune can be a part of user

@@ -17,15 +17,16 @@ func TestNew(t *testing.T) {
 		content = "bar"
 	)
 
-	s := New(name, content, WithGeneratorSeed(42))
+	s, err := New(name, content, WithGeneratorSeed(42))
 
-	assert.Equal(t, fs.NewFile(name, content), s.file)
+	require.NoError(t, err)
+	assert.Equal(t, fs.MustNewFile(name, content), s.file)
 	assert.Equal(t, int64(42), s.generatorSeed)
 	assert.Equal(t, "", s.pattern)
 }
 
 func TestFromFile(t *testing.T) {
-	file := fs.NewFile("foo", "bar")
+	file := fs.MustNewFile("foo", "bar")
 
 	s := FromFile(file, WithGeneratorSeed(42))
 
@@ -36,13 +37,13 @@ func TestFromFile(t *testing.T) {
 
 func TestSchema_Pattern(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
-		actual, err := New("", complexRegex).Pattern()
+		actual, err := MustNew("", complexRegex).Pattern()
 		require.NoError(t, err)
 		assert.Equal(t, complexRegexPattern, actual)
 	})
 
 	t.Run("negative", func(t *testing.T) {
-		_, err := New("", "invalid").Pattern()
+		_, err := MustNew("", "invalid").Pattern()
 		assert.EqualError(t, err, `ERROR (code 1500): Regex should starts with '/' character, but found 'i'
 	in line 1 on file 
 	> invalid
@@ -52,13 +53,13 @@ func TestSchema_Pattern(t *testing.T) {
 
 func TestSchema_Len(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
-		actual, err := New("", complexRegex).Len()
+		actual, err := MustNew("", complexRegex).Len()
 		require.NoError(t, err)
 		assert.Equal(t, 430, int(actual))
 	})
 
 	t.Run("negative", func(t *testing.T) {
-		_, err := New("", "invalid").Len()
+		_, err := MustNew("", "invalid").Len()
 		assert.EqualError(t, err, `ERROR (code 1500): Regex should starts with '/' character, but found 'i'
 	in line 1 on file 
 	> invalid
@@ -76,7 +77,7 @@ func TestSchema_Example(t *testing.T) {
 
 		for given, expected := range cc {
 			t.Run(given, func(t *testing.T) {
-				s := New("", given, WithGeneratorSeed(0))
+				s := MustNew("", given, WithGeneratorSeed(0))
 				actual, err := s.Example()
 				require.NoError(t, err)
 
@@ -87,7 +88,7 @@ func TestSchema_Example(t *testing.T) {
 	})
 
 	t.Run("negative", func(t *testing.T) {
-		_, err := New("", "invalid").Len()
+		_, err := MustNew("", "invalid").Len()
 		assert.EqualError(t, err, `ERROR (code 1500): Regex should starts with '/' character, but found 'i'
 	in line 1 on file 
 	> invalid
@@ -107,12 +108,12 @@ func TestSchema_AddRule(t *testing.T) {
 
 func TestSchema_Check(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
-		err := New("", complexRegex, WithGeneratorSeed(0)).Check()
+		err := MustNew("", complexRegex, WithGeneratorSeed(0)).Check()
 		require.NoError(t, err)
 	})
 
 	t.Run("negative", func(t *testing.T) {
-		err := New("", "invalid").Check()
+		err := MustNew("", "invalid").Check()
 		assert.EqualError(t, err, `ERROR (code 1500): Regex should starts with '/' character, but found 'i'
 	in line 1 on file 
 	> invalid
@@ -127,7 +128,7 @@ func TestSchema_Validate(t *testing.T) {
 
 func TestSchema_GetAST(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
-		actual, err := New("", complexRegex, WithGeneratorSeed(0)).GetAST()
+		actual, err := MustNew("", complexRegex, WithGeneratorSeed(0)).GetAST()
 		require.NoError(t, err)
 		assert.Equal(t, jschema.ASTNode{
 			TokenType:  jschema.TokenTypeString,
@@ -137,7 +138,7 @@ func TestSchema_GetAST(t *testing.T) {
 	})
 
 	t.Run("negative", func(t *testing.T) {
-		_, err := New("", "invalid").GetAST()
+		_, err := MustNew("", "invalid").GetAST()
 		assert.EqualError(t, err, `ERROR (code 1500): Regex should starts with '/' character, but found 'i'
 	in line 1 on file 
 	> invalid
@@ -163,7 +164,7 @@ func TestSchema_doCompile(t *testing.T) {
 
 		for given, expected := range cc {
 			t.Run(given, func(t *testing.T) {
-				s := New("", given)
+				s := MustNew("", given)
 				err := s.doCompile()
 				require.NoError(t, err)
 				assert.Equal(t, expected, s.pattern)
@@ -189,7 +190,7 @@ func TestSchema_doCompile(t *testing.T) {
 
 		for given, expected := range cc {
 			t.Run(given, func(t *testing.T) {
-				err := New("", given).doCompile()
+				err := MustNew("", given).doCompile()
 				assert.EqualError(t, err, expected)
 			})
 		}

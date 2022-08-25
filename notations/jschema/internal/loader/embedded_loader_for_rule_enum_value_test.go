@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	jschema "github.com/jsightapi/jsight-schema-go-library"
 	"github.com/jsightapi/jsight-schema-go-library/bytes"
@@ -304,7 +305,8 @@ func TestEnumValueLoader_commentEnd(t *testing.T) {
 	for typ, shouldPanic := range cc {
 		t.Run(typ.String(), func(t *testing.T) {
 			c := constraint.NewEnum()
-			c.Append([]byte("42"))
+			_, err := c.Append([]byte("42"))
+			require.NoError(t, err)
 
 			l := newEnumValueLoader(c, nil)
 
@@ -551,7 +553,7 @@ func TestEnumValueLoader_ruleName(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
 		ec := constraint.NewEnum()
 		el := newEnumValueLoader(ec, map[string]jschema.Rule{
-			"foo": enum.New("foo", `[42, 3.14, "foo", false, true, null]`),
+			"foo": enum.MustNew("foo", `[42, 3.14, "foo", false, true, null]`),
 		})
 		el.stateFunc = nil
 		el.ruleName(newFakeLexEventWithValue(lexeme.TypesShortcutEnd, " \nfoo\t \r"))
@@ -607,7 +609,7 @@ func TestEnumValueLoader_ruleName(t *testing.T) {
 				"ruleName": mocks.NewRule(t),
 			},
 			`Invalid enum "ruleName": An array was expected as a value for the "enum"`: {
-				"ruleName": enum.New("ruleName", "invalid"),
+				"ruleName": enum.MustNew("ruleName", "invalid"),
 			},
 		}
 
@@ -670,6 +672,6 @@ func newFakeLexEvent(t lexeme.LexEventType) lexeme.LexEvent {
 }
 
 func newFakeLexEventWithValue(t lexeme.LexEventType, s string) lexeme.LexEvent {
-	f := fs.NewFile("", s)
+	f := fs.MustNewFile("", s)
 	return lexeme.NewLexEvent(t, 0, bytes.Index(len(s)-1), f)
 }

@@ -50,7 +50,7 @@ func TestEnum_Len(t *testing.T) {
 
 		for given, expected := range cc {
 			t.Run(given, func(t *testing.T) {
-				actual, err := New("", given).Len()
+				actual, err := MustNew("", given).Len()
 				require.NoError(t, err)
 				assert.Equal(t, expected, actual)
 			})
@@ -77,7 +77,7 @@ func TestEnum_Len(t *testing.T) {
 
 		for expected, given := range cc {
 			t.Run(expected, func(t *testing.T) {
-				_, err := New("", given).Len()
+				_, err := MustNew("", given).Len()
 				assert.EqualError(t, err, expected)
 			})
 		}
@@ -133,11 +133,12 @@ func TestEnum_Check(t *testing.T) {
 ]`,
 			`[3.14, 3.146]`,
 			`["foo", "Foo"]`,
+			"[\"a\", \"\u0062\"]",
 		}
 
 		for _, enum := range testList {
 			t.Run(enum, func(t *testing.T) {
-				err := New("enum", enum).Check()
+				err := MustNew("enum", enum).Check()
 				require.NoError(t, err)
 			})
 		}
@@ -223,11 +224,16 @@ func TestEnum_Check(t *testing.T) {
 	in line 3 on file enum
 	> 1	]
 	--^`,
+
+			"[\"a\", \"\u0061\"]": `ERROR (code 810): "a" value duplicates in "enum"
+	in line 1 on file enum
+	> ["a", "a"]
+	--------^`,
 		}
 
 		for enum, expected := range cc {
 			t.Run(enum, func(t *testing.T) {
-				err := New("enum", enum).Check()
+				err := MustNew("enum", enum).Check()
 				assert.EqualError(t, err, expected)
 			})
 		}
@@ -236,7 +242,7 @@ func TestEnum_Check(t *testing.T) {
 
 func TestEnum_GetAST(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
-		actual, err := New("", `[
+		actual, err := MustNew("", `[
 	// first comment
 	"foo",
 	42, // 42 comment
@@ -372,7 +378,7 @@ func TestEnum_Values(t *testing.T) {
 
 		for given, expected := range cc {
 			t.Run(given, func(t *testing.T) {
-				actual, err := New("", given).Values()
+				actual, err := MustNew("", given).Values()
 
 				require.NoError(t, err)
 				assert.Equal(t, expected, actual)
@@ -381,7 +387,7 @@ func TestEnum_Values(t *testing.T) {
 	})
 
 	t.Run("negative", func(t *testing.T) {
-		_, err := New("", "123").Values()
+		_, err := MustNew("", "123").Values()
 		assert.EqualError(t, err, `ERROR (code 1600): An array was expected as a value for the "enum"
 	in line 1 on file 
 	> 123
