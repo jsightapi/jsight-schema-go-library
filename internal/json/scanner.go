@@ -213,3 +213,25 @@ func (s *scanner) stateExpSignFound(c byte) bool {
 func (*scanner) stateExpNumberFound(c byte) bool {
 	return '0' <= c && c <= '9'
 }
+
+func appendZeros(to bytes.Bytes, n int) bytes.Bytes {
+	for ; n > 0; n-- {
+		to = append(to, '0')
+	}
+	return to
+}
+
+func appendDigits(from bytes.Bytes, to bytes.Bytes) bytes.Bytes {
+loop:
+	for _, c := range from {
+		switch c {
+		case '-', '.':
+			continue
+		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+			to = append(to, c)
+		default:
+			break loop
+		}
+	}
+	return to
+}

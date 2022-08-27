@@ -19,62 +19,8 @@ type Number struct {
 	neg bool
 }
 
-func NewNumberFromInt(i int) *Number {
-	var natural bytes.Bytes
-	negative := false
-	if i < 0 {
-		negative = true
-		natural = bytes.Bytes(strconv.FormatUint(uint64(-i), 10))
-	} else {
-		natural = bytes.Bytes(strconv.FormatUint(uint64(i), 10))
-	}
-	n := Number{
-		neg: negative,
-		nat: natural,
-		exp: 0,
-	}
-	if err := n.trimLeadingZerosInTheIntegerPart(); err != nil {
-		panic(err)
-	}
-	return &n
-}
-
-func NewIntegerNumber(bytes bytes.Bytes) (*Number, error) {
-	g := Guess(bytes)
-	if !g.IsInteger() {
-		return nil, errors.New(`Incorrect value "` + bytes.Unquote().String() + `". Must be an integer.`)
-	}
-	n, err := g.Number()
-	if err != nil {
-		return nil, errors.New(`Incorrect value "` + bytes.Unquote().String() + `". Unable to get number.`)
-	}
-	return n, nil
-}
-
 func NewNumber(b bytes.Bytes) (*Number, error) {
 	return newScanner().Scan(b)
-}
-
-func appendZeros(to bytes.Bytes, n int) bytes.Bytes {
-	for ; n > 0; n-- {
-		to = append(to, '0')
-	}
-	return to
-}
-
-func appendDigits(from bytes.Bytes, to bytes.Bytes) bytes.Bytes {
-loop:
-	for _, c := range from {
-		switch c {
-		case '-', '.':
-			continue
-		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-			to = append(to, c)
-		default:
-			break loop
-		}
-	}
-	return to
 }
 
 // trimLeadingZerosInTheIntegerPart removes zeros from the beginning of the integer
