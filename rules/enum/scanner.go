@@ -371,14 +371,15 @@ func (s *scanner) stateEndValue(c byte) (state, error) {
 func (s *scanner) validateValue() error {
 	begin := s.stack.Peek().Begin()
 
-	v := s.file.Content().Slice(begin, s.index-2).String()
-	if _, ok := s.uniqueValues[v]; ok {
+	v := s.file.Content().Slice(begin, s.index-2)
+	key := v.Normalize().String()
+	if _, ok := s.uniqueValues[key]; ok {
 		e := errors.Format(errors.ErrDuplicationInEnumRule, v)
 		err := errors.NewDocumentError(s.file, e)
 		err.SetIndex(begin)
 		return err
 	}
-	s.uniqueValues[v] = struct{}{}
+	s.uniqueValues[key] = struct{}{}
 	return nil
 }
 

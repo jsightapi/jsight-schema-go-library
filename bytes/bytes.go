@@ -167,3 +167,7 @@ func (b Bytes) LineFrom(start Index) (Bytes, error) {
 	}
 	return b[start:], nil
 }
+
+func (b Bytes) Normalize() Bytes {
+	return normalizeBytes(b)
+}

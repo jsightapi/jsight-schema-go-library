@@ -46,6 +46,8 @@ func TestEnum_Len(t *testing.T) {
 		"LION", // Lion
 		"TIGER" // Tiger
 ]`: 164,
+
+			`["\u0061"]`: 10,
 		}
 
 		for given, expected := range cc {
@@ -133,6 +135,8 @@ func TestEnum_Check(t *testing.T) {
 ]`,
 			`[3.14, 3.146]`,
 			`["foo", "Foo"]`,
+			`["a", "\u0062"]`,
+			`["a", "\\u0061"]`,
 		}
 
 		for _, enum := range testList {
@@ -223,6 +227,11 @@ func TestEnum_Check(t *testing.T) {
 	in line 3 on file enum
 	> 1	]
 	--^`,
+
+			`["a", "\u0061"]`: `ERROR (code 810): "\u0061" value duplicates in "enum"
+	in line 1 on file enum
+	> ["a", "\u0061"]
+	--------^`,
 		}
 
 		for enum, expected := range cc {
