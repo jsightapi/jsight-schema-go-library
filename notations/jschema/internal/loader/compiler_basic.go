@@ -225,8 +225,6 @@ func (schemaCompiler) typeConstraintForUserType(
 	}
 
 	if _, ok := node.(*schema.MixedValueNode); ok && !typeConstraint.IsGenerated() {
-		// Since "req.jschema.rules.type.reference 0.2" we didn't allow
-		// empty object and arrays as well for the type constraint.
 		panic(errors.ErrInvalidChildNodeTogetherWithTypeReference)
 	}
 
