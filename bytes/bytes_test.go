@@ -10,85 +10,26 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestBytes_CountSpacesFromLeft(t *testing.T) {
-	cc := map[string]int{
-		"":           0,
-		"foo":        0,
-		" \t\r\nfoo": 4,
+func TestBytes_Equals(t *testing.T) {
+	const given = "foo"
+	cc := map[string]bool{
+		given: true,
+		"":    false,
+		"fOo": false,
+		"bar": false,
 	}
 
-	for given, expected := range cc {
-		t.Run(given, func(t *testing.T) {
-			actual := Bytes(given).CountSpacesFromLeft()
+	for bb, expected := range cc {
+		t.Run(bb, func(t *testing.T) {
+			actual := Bytes(given).Equals(Bytes(bb))
 			assert.Equal(t, expected, actual)
 		})
 	}
 }
 
-func TestBytes_OneOf(t *testing.T) {
-	b := Bytes("foo")
-
-	cc := []struct {
-		given    []string
-		expected bool
-	}{
-		{[]string{"foo", "bar", "fizz", "buzz"}, true},
-		{[]string{"buzz", "bar", "fizz", "foo"}, true},
-		{[]string{"buzz", "foo", "fizz", "bar"}, true},
-		{[]string{"foo", "foo"}, true},
-		{nil, false},
-		{[]string{}, false},
-		{[]string{"bar"}, false},
-		{[]string{" foo", "Foo"}, false},
-	}
-
-	for _, c := range cc {
-		t.Run(fmt.Sprintf("%v", c.given), func(t *testing.T) {
-			actual := b.OneOf(c.given...)
-			assert.Equal(t, c.expected, actual)
-		})
-	}
-}
-
-func BenchmarkBytes_OneOf(b *testing.B) {
-	pp := []string{"foo", "bar", "fizz", "buzz"}
-
-	bytes := Bytes("buzz")
-
-	b.ResetTimer()
-
-	for i := 0; i < b.N; i++ {
-		bytes.OneOf(pp...)
-	}
-}
-
-var benchmarkParseIntBytes = Bytes("1234567890")
-
-func BenchmarkParseUint(b *testing.B) {
-	b.ReportAllocs()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_, err := benchmarkParseIntBytes.ParseUint()
-		assert.NoError(b, err)
-	}
-}
-
-func BenchmarkParseInt(b *testing.B) {
-	b.ReportAllocs()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_, err := benchmarkParseIntBytes.ParseInt()
-		assert.NoError(b, err)
-	}
-}
-
-func BenchmarkAtoi(b *testing.B) {
-	b.ReportAllocs()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_, err := strconv.Atoi(string(benchmarkParseIntBytes))
-		assert.NoError(b, err)
-	}
+func TestBytes_Slice(t *testing.T) {
+	actual := Bytes("1234567890").Slice(2, 6)
+	assert.Equal(t, "34567", string(actual))
 }
 
 func TestBytes_Unquote(t *testing.T) {
@@ -108,6 +49,26 @@ func TestBytes_Unquote(t *testing.T) {
 	for given, expected := range cc {
 		t.Run(given, func(t *testing.T) {
 			actual := Bytes(given).Unquote()
+			assert.Equal(t, expected, string(actual))
+		})
+	}
+}
+
+func TestBytes_TrimSquareBrackets(t *testing.T) {
+	cc := map[string]string{
+		"":        "",
+		"foo":     "foo",
+		"[foo":    "[foo",
+		"foo]":    "foo]",
+		"[foo]":   "foo",
+		"{foo}":   "{foo}",
+		"(foo)":   "(foo)",
+		"[[foo]]": "[foo]",
+	}
+
+	for given, expected := range cc {
+		t.Run(given, func(t *testing.T) {
+			actual := Bytes(given).TrimSquareBrackets()
 			assert.Equal(t, expected, string(actual))
 		})
 	}
@@ -176,6 +137,137 @@ func TestBytes_TrimSpacesFromLeft(t *testing.T) {
 	}
 }
 
+func TestBytes_CountSpacesFromLeft(t *testing.T) {
+	cc := map[string]int{
+		"":           0,
+		"foo":        0,
+		" \t\r\nfoo": 4,
+	}
+
+	for given, expected := range cc {
+		t.Run(given, func(t *testing.T) {
+			actual := Bytes(given).CountSpacesFromLeft()
+			assert.Equal(t, expected, actual)
+		})
+	}
+}
+
+func TestBytes_OneOf(t *testing.T) {
+	b := Bytes("foo")
+
+	cc := []struct {
+		given    []string
+		expected bool
+	}{
+		{[]string{"foo", "bar", "fizz", "buzz"}, true},
+		{[]string{"buzz", "bar", "fizz", "foo"}, true},
+		{[]string{"buzz", "foo", "fizz", "bar"}, true},
+		{[]string{"foo", "foo"}, true},
+		{nil, false},
+		{[]string{}, false},
+		{[]string{"bar"}, false},
+		{[]string{" foo", "Foo"}, false},
+	}
+
+	for _, c := range cc {
+		t.Run(fmt.Sprintf("%v", c.given), func(t *testing.T) {
+			actual := b.OneOf(c.given...)
+			assert.Equal(t, c.expected, actual)
+		})
+	}
+}
+
+func BenchmarkBytes_OneOf(b *testing.B) {
+	pp := []string{"foo", "bar", "fizz", "buzz"}
+
+	bytes := Bytes("buzz")
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		bytes.OneOf(pp...)
+	}
+}
+
+func TestBytes_ParseBool(t *testing.T) {
+	t.Run("positive", func(t *testing.T) {
+		cc := map[string]bool{
+			"true":  true,
+			"false": false,
+		}
+
+		for given, expected := range cc {
+			t.Run(given, func(t *testing.T) {
+				actual, err := Bytes(given).ParseBool()
+				require.NoError(t, err)
+				assert.Equal(t, expected, actual)
+			})
+		}
+	})
+
+	t.Run("negative", func(t *testing.T) {
+		ss := []string{
+			"",
+			"True",
+			"fAlSe",
+			"foo",
+		}
+
+		for _, s := range ss {
+			t.Run(s, func(t *testing.T) {
+				_, err := Bytes(s).ParseBool()
+				assert.EqualError(t, err, "invalid bool value")
+			})
+		}
+	})
+}
+
+var benchmarkParseIntBytes = Bytes("1234567890")
+
+func TestBytes_ParseUint(t *testing.T) {
+	t.Run("positive", func(t *testing.T) {
+		cc := map[string]uint{
+			"42":    42,
+			"00000": 0,
+			"00042": 42,
+		}
+
+		for given, expected := range cc {
+			t.Run(given, func(t *testing.T) {
+				actual, err := Bytes(given).ParseUint()
+
+				require.NoError(t, err)
+				assert.Equal(t, expected, actual)
+			})
+		}
+	})
+
+	t.Run("negative", func(t *testing.T) {
+		cc := map[string]string{
+			"":     "not enough data in ParseUint",
+			"3.14": "invalid byte (.) found in ParseUint (3.14)",
+			"-1":   "invalid byte (-) found in ParseUint (-1)",
+		}
+
+		for given, expected := range cc {
+			t.Run(given, func(t *testing.T) {
+				_, err := Bytes(given).ParseUint()
+
+				assert.EqualError(t, err, expected)
+			})
+		}
+	})
+}
+
+func BenchmarkParseUint(b *testing.B) {
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, err := benchmarkParseIntBytes.ParseUint()
+		assert.NoError(b, err)
+	}
+}
+
 func TestBytes_ParseInt(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
 		cc := map[string]int{
@@ -208,6 +300,15 @@ func TestBytes_ParseInt(t *testing.T) {
 			})
 		}
 	})
+}
+
+func BenchmarkParseInt(b *testing.B) {
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, err := benchmarkParseIntBytes.ParseInt()
+		assert.NoError(b, err)
+	}
 }
 
 func TestBytes_IsUserTypeName(t *testing.T) {
@@ -249,52 +350,22 @@ func TestBytes_IsUserTypeName(t *testing.T) {
 	})
 }
 
-func TestIsValidSchemaNameByte(t *testing.T) {
-	t.Run("positive", func(t *testing.T) {
-		// Allowed special symbols.
-		cc := []byte{
-			'-',
-			'_',
-		}
+func TestBytes_String(t *testing.T) {
+	assert.Equal(t, "foo", Bytes{'f', 'o', 'o'}.String())
+}
 
-		// Any english lower letters.
-		for i := 'a'; i <= 'z'; i++ {
-			cc = append(cc, byte(i))
-		}
+func TestBytes_Len(t *testing.T) {
+	cc := map[string]int{
+		"":    0,
+		"foo": 3,
+	}
 
-		// Any english capital letters.
-		for i := 'A'; i <= 'Z'; i++ {
-			cc = append(cc, byte(i))
-		}
-
-		// Any digits.
-		for i := '0'; i <= '9'; i++ {
-			cc = append(cc, byte(i))
-		}
-
-		for _, c := range cc {
-			t.Run(string(c), func(t *testing.T) {
-				assert.True(t, IsValidUserTypeNameByte(c))
-			})
-		}
-	})
-
-	t.Run("negative", func(t *testing.T) {
-		cc := make([]byte, 0, 255)
-
-		for i := 0; i <= 255; i++ {
-			if i == '-' || i == '_' || ('a' <= i && i <= 'z') || ('A' <= i && i <= 'Z') || ('0' <= i && i <= '9') {
-				continue
-			}
-			cc = append(cc, byte(i))
-		}
-
-		for _, c := range cc {
-			t.Run(string(c), func(t *testing.T) {
-				assert.False(t, IsValidUserTypeNameByte(c))
-			})
-		}
-	})
+	for given, expected := range cc {
+		t.Run(given, func(t *testing.T) {
+			actual := Bytes(given).Len()
+			assert.Equal(t, expected, actual)
+		})
+	}
 }
 
 func TestBytes_LineFrom(t *testing.T) {
@@ -421,35 +492,39 @@ func TestBytes_LineFrom(t *testing.T) {
 	}
 }
 
-func TestQuoteChar(t *testing.T) {
-	cc := map[byte]string{
-		'\'': "'\\''",
-		'"':  `'"'`,
-		'c':  "'c'",
+func TestBytes_Normalize(t *testing.T) {
+	cc := map[string]string{
+		"foo":          "foo",
+		"\u0061":       "a",
+		`\u0061`:       "a",
+		`\uD83E\uDD10`: "🤐",
+		"foo bar":      "foo bar",
+		`
+\u0061
+foo bar
+	\uD83E\uDD10 smile
+fizz	buzz
+`: `
+a
+foo bar
+	🤐 smile
+fizz	buzz
+`,
+		`\\u0061`:  `\u0061`,
+		`\\\u0061`: `\a`,
+		`\uffff`:   `￿`,
+		`\b`:       "\b",
+		`\f`:       "\f",
+		`\n`:       "\n",
+		`\r`:       "\r",
+		`\t`:       "\t",
+		`"\t\u0063"`: `"	c"`,
 	}
 
 	for given, expected := range cc {
-		t.Run(string(given), func(t *testing.T) {
-			actual := QuoteChar(given)
-			assert.Equal(t, expected, actual)
-		})
-	}
-}
-
-func BenchmarkQuoteChar(b *testing.B) {
-	cc := []byte{
-		'\'',
-		'"',
-		'c',
-	}
-
-	b.ReportAllocs()
-
-	for _, c := range cc {
-		b.Run(string(c), func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
-				QuoteChar(c)
-			}
+		t.Run(given, func(t *testing.T) {
+			actual := Bytes(given).Normalize()
+			assert.Equal(t, expected, string(actual))
 		})
 	}
 }

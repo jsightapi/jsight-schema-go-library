@@ -22,14 +22,6 @@ func BenchmarkNewNumber(b *testing.B) {
 	}
 }
 
-func BenchmarkNewNumberFromInt(b *testing.B) {
-	b.ReportAllocs()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		NewNumberFromInt(-123456)
-	}
-}
-
 func BenchmarkNumber_Equal(b *testing.B) {
 	number1, err := NewNumber(bytes.Bytes("-123456E-3"))
 	require.NoError(b, err)
@@ -403,24 +395,6 @@ func TestNumber_LengthOfFractionalPart(t *testing.T) {
 			n, err := NewNumber(bytes.Bytes(given))
 			require.NoError(t, err)
 			assert.Equal(t, expected, n.LengthOfFractionalPart())
-		})
-	}
-}
-
-func TestNewNumberFromInt(t *testing.T) {
-	cc := map[int]string{
-		-12: "-12",
-		-1:  "-1",
-		0:   "0",
-		1:   "1",
-		12:  "12",
-		123: "123",
-	}
-
-	for given, expected := range cc {
-		t.Run(expected, func(t *testing.T) {
-			actual := NewNumberFromInt(given).String()
-			assert.Equal(t, expected, actual)
 		})
 	}
 }

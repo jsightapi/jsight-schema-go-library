@@ -679,6 +679,38 @@ func TestSchema_Check(t *testing.T) {
 					"@catId": `"foo"`,
 				},
 			},
+
+			`"a" // {enum: ["a", "\u0062"]}`: {},
+
+			`"b" // {enum: ["a", "\u0062"]}`: {},
+
+			`"\u0061" // {enum: ["a", "\u0062"]}`: {},
+
+			`"\u0062" // {enum: ["a", "\u0062"]}`: {},
+
+			`"a" // {enum: @foo}`: {
+				enums: map[string]string{
+					"@foo": `["a", "\u0062"]`,
+				},
+			},
+
+			`"b" // {enum: @foo}`: {
+				enums: map[string]string{
+					"@foo": `["a", "\u0062"]`,
+				},
+			},
+
+			`"\u0061" // {enum: @foo}`: {
+				enums: map[string]string{
+					"@foo": `["a", "\u0062"]`,
+				},
+			},
+
+			`"\u0062" // {enum: @foo}`: {
+				enums: map[string]string{
+					"@foo": `["a", "\u0062"]`,
+				},
+			},
 		}
 
 		for content, c := range cc {
@@ -1532,6 +1564,20 @@ func TestSchema_Check(t *testing.T) {
 				types: map[string]string{
 					"@catId": `"12" // A cat's id.`,
 				},
+			},
+
+			`ERROR (code 810): "\u0061" value duplicates in "enum"
+	in line 1 on file 
+	> "a" // {enum: ["a", "\u0061"]}
+	----------------------^`: {
+				given: `"a" // {enum: ["a", "\u0061"]}`,
+			},
+
+			`ERROR (code 610): Does not match any of the enumeration values
+	in line 1 on file 
+	> "c" // {enum: ["a", "\u0062"]}
+	--^`: {
+				given: `"c" // {enum: ["a", "\u0062"]}`,
 			},
 		}
 

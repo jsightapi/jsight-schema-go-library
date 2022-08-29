@@ -371,14 +371,15 @@ func (s *scanner) stateEndValue(c byte) (state, error) {
 func (s *scanner) validateValue() error {
 	begin := s.stack.Peek().Begin()
 
-	v := s.file.Content().Slice(begin, s.index-2).String()
-	if _, ok := s.uniqueValues[v]; ok {
+	v := s.file.Content().Slice(begin, s.index-2)
+	key := v.Normalize().String()
+	if _, ok := s.uniqueValues[key]; ok {
 		e := errors.Format(errors.ErrDuplicationInEnumRule, v)
 		err := errors.NewDocumentError(s.file, e)
 		err.SetIndex(begin)
 		return err
 	}
-	s.uniqueValues[v] = struct{}{}
+	s.uniqueValues[key] = struct{}{}
 	return nil
 }
 
@@ -485,7 +486,7 @@ func (s *scanner) stateInStringEsc(c byte) (state, error) {
 
 // After reading `"\u` during a quoted string.
 func (s *scanner) stateInStringEscU(c byte) (state, error) {
-	if '0' <= c && c <= '9' || 'a' <= c && c <= 'f' || 'A' <= c && c <= 'F' {
+	if bytes.IsHexDigit(c) {
 		s.step = s.stateInStringEscU1
 		return scanSkip, nil
 	}
@@ -494,7 +495,7 @@ func (s *scanner) stateInStringEscU(c byte) (state, error) {
 
 // After reading `"\u1` during a quoted string.
 func (s *scanner) stateInStringEscU1(c byte) (state, error) {
-	if '0' <= c && c <= '9' || 'a' <= c && c <= 'f' || 'A' <= c && c <= 'F' {
+	if bytes.IsHexDigit(c) {
 		s.step = s.stateInStringEscU12
 		return scanSkip, nil
 	}
@@ -503,7 +504,7 @@ func (s *scanner) stateInStringEscU1(c byte) (state, error) {
 
 // After reading `"\u12` during a quoted string.
 func (s *scanner) stateInStringEscU12(c byte) (state, error) {
-	if '0' <= c && c <= '9' || 'a' <= c && c <= 'f' || 'A' <= c && c <= 'F' {
+	if bytes.IsHexDigit(c) {
 		s.step = s.stateInStringEscU123
 		return scanSkip, nil
 	}
@@ -512,7 +513,7 @@ func (s *scanner) stateInStringEscU12(c byte) (state, error) {
 
 // After reading `"\u123` during a quoted string.
 func (s *scanner) stateInStringEscU123(c byte) (state, error) {
-	if '0' <= c && c <= '9' || 'a' <= c && c <= 'f' || 'A' <= c && c <= 'F' {
+	if bytes.IsHexDigit(c) {
 		s.step = s.returnToStep.Pop()
 		return scanSkip, nil
 	}
@@ -537,7 +538,7 @@ func (s *scanner) stateNeg(c byte) (state, error) {
 // After reading a non-zero integer during a number, such as after reading `1` or
 // `100` but not `0`.
 func (s *scanner) state1(c byte) (state, error) {
-	if '0' <= c && c <= '9' {
+	if bytes.IsDigit(c) {
 		s.step = s.state1
 		return scanSkip, nil
 	}
@@ -559,7 +560,7 @@ func (s *scanner) state0(c byte) (state, error) {
 
 // After reading the integer and decimal point in a number, such as after reading `1.`.
 func (s *scanner) stateDot(c byte) (state, error) {
-	if '0' <= c && c <= '9' {
+	if bytes.IsDigit(c) {
 		s.unfinishedLiteral = false
 		s.step = s.stateDot0
 		return scanSkip, nil
@@ -570,7 +571,7 @@ func (s *scanner) stateDot(c byte) (state, error) {
 // After reading the integer, decimal point, and subsequent digits of a number,
 // such as after reading `3.14`.
 func (s *scanner) stateDot0(c byte) (state, error) {
-	if '0' <= c && c <= '9' {
+	if bytes.IsDigit(c) {
 		return scanSkip, nil
 	}
 	if c == 'e' || c == 'E' {

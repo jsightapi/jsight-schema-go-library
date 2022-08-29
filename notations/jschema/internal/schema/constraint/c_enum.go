@@ -58,14 +58,14 @@ func (c Enum) String() string {
 }
 
 func (c *Enum) Append(b jbytes.Bytes) int {
-	key := b.TrimSpaces().String()
+	key := b.TrimSpaces().Normalize().String()
 	if key != "" {
 		if _, ok := c.uniqueIdx[key]; ok {
 			panic(errors.Format(errors.ErrDuplicationInEnumRule, b.String()))
 		}
 	}
 	idx := len(c.items)
-	c.items = append(c.items, enumItem{value: b})
+	c.items = append(c.items, enumItem{value: b.Normalize()})
 	c.uniqueIdx[key] = struct{}{}
 	return idx
 }
@@ -83,6 +83,7 @@ func (c *Enum) RuleName() string {
 }
 
 func (c Enum) Validate(a jbytes.Bytes) {
+	a = a.Normalize()
 	for _, b := range c.items {
 		if bytes.Equal(a, b.value) {
 			return

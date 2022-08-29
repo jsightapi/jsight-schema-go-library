@@ -394,7 +394,7 @@ func isScalarPair(pairType, lexType lexeme.LexEventType) bool { //nolint:gocyclo
 }
 
 func (s *Scanner) isNewLine(c byte) bool {
-	if c != '\n' && c != '\r' {
+	if !bytes.IsNewLine(c) {
 		return false
 	}
 
@@ -968,7 +968,7 @@ func stateInStringEsc(s *Scanner, c byte) state {
 
 // after reading `"\u` during a quoted string
 func stateInStringEscU(s *Scanner, c byte) state {
-	if '0' <= c && c <= '9' || 'a' <= c && c <= 'f' || 'A' <= c && c <= 'F' {
+	if bytes.IsHexDigit(c) {
 		s.step = stateInStringEscU1
 		return scanContinue
 	}
@@ -977,7 +977,7 @@ func stateInStringEscU(s *Scanner, c byte) state {
 
 // after reading `"\u1` during a quoted string
 func stateInStringEscU1(s *Scanner, c byte) state {
-	if '0' <= c && c <= '9' || 'a' <= c && c <= 'f' || 'A' <= c && c <= 'F' {
+	if bytes.IsHexDigit(c) {
 		s.step = stateInStringEscU12
 		return scanContinue
 	}
@@ -986,7 +986,7 @@ func stateInStringEscU1(s *Scanner, c byte) state {
 
 // after reading `"\u12` during a quoted string
 func stateInStringEscU12(s *Scanner, c byte) state {
-	if '0' <= c && c <= '9' || 'a' <= c && c <= 'f' || 'A' <= c && c <= 'F' {
+	if bytes.IsHexDigit(c) {
 		s.step = stateInStringEscU123
 		return scanContinue
 	}
@@ -995,7 +995,7 @@ func stateInStringEscU12(s *Scanner, c byte) state {
 
 // after reading `"\u123` during a quoted string
 func stateInStringEscU123(s *Scanner, c byte) state {
-	if '0' <= c && c <= '9' || 'a' <= c && c <= 'f' || 'A' <= c && c <= 'F' {
+	if bytes.IsHexDigit(c) {
 		s.step = s.returnToStep.Pop() // = stateInAnnotationObjectKey for AnnotationObject
 		return scanContinue
 	}
@@ -1020,7 +1020,7 @@ func stateNeg(s *Scanner, c byte) state {
 // after reading a non-zero integer during a number,
 // such as after reading `1` or `100` but not `0`
 func state1(s *Scanner, c byte) state {
-	if '0' <= c && c <= '9' {
+	if bytes.IsDigit(c) {
 		s.step = state1
 		return scanContinue
 	}
@@ -1042,7 +1042,7 @@ func state0(s *Scanner, c byte) state {
 
 // after reading the integer and decimal point in a number, such as after reading `1.`
 func stateDot(s *Scanner, c byte) state {
-	if '0' <= c && c <= '9' {
+	if bytes.IsDigit(c) {
 		s.unfinishedLiteral = false
 		s.step = stateDot0
 		return scanContinue
@@ -1053,7 +1053,7 @@ func stateDot(s *Scanner, c byte) state {
 // after reading the integer, decimal point, and subsequent
 // digits of a number, such as after reading `3.14`
 func stateDot0(s *Scanner, c byte) state {
-	if '0' <= c && c <= '9' {
+	if bytes.IsDigit(c) {
 		return scanContinue
 	}
 	if c == 'e' || c == 'E' {

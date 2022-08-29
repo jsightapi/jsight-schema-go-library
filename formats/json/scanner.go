@@ -521,7 +521,7 @@ func stateInStringEsc(s *scanner, c byte) state {
 
 // After reading `"\u` during a quoted string.
 func stateInStringEscU(s *scanner, c byte) state {
-	if '0' <= c && c <= '9' || 'a' <= c && c <= 'f' || 'A' <= c && c <= 'F' {
+	if bytes.IsHexDigit(c) {
 		s.step = stateInStringEscU1
 		return scanContinue
 	}
@@ -530,7 +530,7 @@ func stateInStringEscU(s *scanner, c byte) state {
 
 // After reading `"\u1` during a quoted string.
 func stateInStringEscU1(s *scanner, c byte) state {
-	if '0' <= c && c <= '9' || 'a' <= c && c <= 'f' || 'A' <= c && c <= 'F' {
+	if bytes.IsHexDigit(c) {
 		s.step = stateInStringEscU12
 		return scanContinue
 	}
@@ -539,7 +539,7 @@ func stateInStringEscU1(s *scanner, c byte) state {
 
 // After reading `"\u12` during a quoted string.
 func stateInStringEscU12(s *scanner, c byte) state {
-	if '0' <= c && c <= '9' || 'a' <= c && c <= 'f' || 'A' <= c && c <= 'F' {
+	if bytes.IsHexDigit(c) {
 		s.step = stateInStringEscU123
 		return scanContinue
 	}
@@ -548,7 +548,7 @@ func stateInStringEscU12(s *scanner, c byte) state {
 
 // After reading `"\u123` during a quoted string.
 func stateInStringEscU123(s *scanner, c byte) state {
-	if '0' <= c && c <= '9' || 'a' <= c && c <= 'f' || 'A' <= c && c <= 'F' {
+	if bytes.IsHexDigit(c) {
 		s.step = s.returnToStep.Pop() // = stateInString for JSON, = stateInAnnotationObjectKey for AnnotationObject
 		return scanContinue
 	}
@@ -573,7 +573,7 @@ func stateNeg(s *scanner, c byte) state {
 // After reading a non-zero integer during a number, such as after reading `1` or
 // `100` but not `0`.
 func state1(s *scanner, c byte) state {
-	if '0' <= c && c <= '9' {
+	if bytes.IsDigit(c) {
 		s.step = state1
 		return scanContinue
 	}
@@ -596,7 +596,7 @@ func state0(s *scanner, c byte) state {
 // After reading the integer and decimal point in a number, such as after reading
 // `1.`.
 func stateDot(s *scanner, c byte) state {
-	if '0' <= c && c <= '9' {
+	if bytes.IsDigit(c) {
 		s.step = stateDot0
 		return scanContinue
 	}
@@ -606,7 +606,7 @@ func stateDot(s *scanner, c byte) state {
 // After reading the integer, decimal point, and subsequent digits of a number,
 // such as after reading `3.14`.
 func stateDot0(s *scanner, c byte) state {
-	if '0' <= c && c <= '9' {
+	if bytes.IsDigit(c) {
 		return scanContinue
 	}
 	if c == 'e' || c == 'E' {
@@ -629,7 +629,7 @@ func stateE(s *scanner, c byte) state {
 // After reading the mantissa, e, and sign in a number, such as after reading
 // `314e-` or `0.314e+`.
 func stateESign(s *scanner, c byte) state {
-	if '0' <= c && c <= '9' {
+	if bytes.IsDigit(c) {
 		s.step = stateE0
 		return scanContinue
 	}
@@ -639,7 +639,7 @@ func stateESign(s *scanner, c byte) state {
 // After reading the mantissa, e, optional sign, and at least one digit of the
 // exponent in a number, such as after reading `314e-2` or `0.314e+1` or `3.14e0`.
 func stateE0(s *scanner, c byte) state {
-	if '0' <= c && c <= '9' {
+	if bytes.IsDigit(c) {
 		return scanContinue
 	}
 	return stateEndValue(s, c)
