@@ -4038,6 +4038,119 @@ line
 					Comment: "multi\nline\n\tcomment",
 				},
 			},
+
+			`"foo" /* {or: [
+	"any",
+	"array",
+	"boolean",
+	"date",
+	"datetime",
+	"email",
+	"float",
+	"integer",
+	"null",
+	"object",
+	"string",
+	"uri",
+	"uuid"
+]}
+*/`: {
+				expected: jschema.ASTNode{
+					TokenType:  jschema.TokenTypeString,
+					SchemaType: string(jschema.SchemaTypeMixed),
+					Value:      "foo",
+					Rules: jschema.NewRuleASTNodes(
+						map[string]jschema.RuleASTNode{
+							"or": {
+								TokenType:  jschema.TokenTypeArray,
+								Properties: &jschema.RuleASTNodes{},
+								Items: []jschema.RuleASTNode{
+									{
+										TokenType:  jschema.TokenTypeString,
+										Value:      "any",
+										Properties: &jschema.RuleASTNodes{},
+										Source:     jschema.RuleASTNodeSourceManual,
+									},
+									{
+										TokenType:  jschema.TokenTypeString,
+										Value:      "array",
+										Properties: &jschema.RuleASTNodes{},
+										Source:     jschema.RuleASTNodeSourceManual,
+									},
+									{
+										TokenType:  jschema.TokenTypeString,
+										Value:      "boolean",
+										Properties: &jschema.RuleASTNodes{},
+										Source:     jschema.RuleASTNodeSourceManual,
+									},
+									{
+										TokenType:  jschema.TokenTypeString,
+										Value:      "date",
+										Properties: &jschema.RuleASTNodes{},
+										Source:     jschema.RuleASTNodeSourceManual,
+									},
+									{
+										TokenType:  jschema.TokenTypeString,
+										Value:      "datetime",
+										Properties: &jschema.RuleASTNodes{},
+										Source:     jschema.RuleASTNodeSourceManual,
+									},
+									{
+										TokenType:  jschema.TokenTypeString,
+										Value:      "email",
+										Properties: &jschema.RuleASTNodes{},
+										Source:     jschema.RuleASTNodeSourceManual,
+									},
+									{
+										TokenType:  jschema.TokenTypeString,
+										Value:      "float",
+										Properties: &jschema.RuleASTNodes{},
+										Source:     jschema.RuleASTNodeSourceManual,
+									},
+									{
+										TokenType:  jschema.TokenTypeString,
+										Value:      "integer",
+										Properties: &jschema.RuleASTNodes{},
+										Source:     jschema.RuleASTNodeSourceManual,
+									},
+									{
+										TokenType:  jschema.TokenTypeString,
+										Value:      "null",
+										Properties: &jschema.RuleASTNodes{},
+										Source:     jschema.RuleASTNodeSourceManual,
+									},
+									{
+										TokenType:  jschema.TokenTypeString,
+										Value:      "object",
+										Properties: &jschema.RuleASTNodes{},
+										Source:     jschema.RuleASTNodeSourceManual,
+									},
+									{
+										TokenType:  jschema.TokenTypeString,
+										Value:      "string",
+										Properties: &jschema.RuleASTNodes{},
+										Source:     jschema.RuleASTNodeSourceManual,
+									},
+									{
+										TokenType:  jschema.TokenTypeString,
+										Value:      "uri",
+										Properties: &jschema.RuleASTNodes{},
+										Source:     jschema.RuleASTNodeSourceManual,
+									},
+									{
+										TokenType:  jschema.TokenTypeString,
+										Value:      "uuid",
+										Properties: &jschema.RuleASTNodes{},
+										Source:     jschema.RuleASTNodeSourceManual,
+									},
+								},
+								Source: jschema.RuleASTNodeSourceManual,
+							},
+						},
+						[]string{"or"},
+					),
+				},
+			},
 		}
 
 		for given, c := range cc {
