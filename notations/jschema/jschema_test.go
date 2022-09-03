@@ -2133,7 +2133,7 @@ func TestSchema_GetAST(t *testing.T) {
 										Properties: &jschema.RuleASTNodes{},
 										Items: []jschema.RuleASTNode{
 											{
-												TokenType:  jschema.TokenTypeString,
+												TokenType:  jschema.TokenTypeShortcut,
 												Value:      "@foo",
 												Properties: &jschema.RuleASTNodes{},
 												Source:     jschema.RuleASTNodeSourceManual,
@@ -2332,13 +2332,13 @@ func TestSchema_GetAST(t *testing.T) {
 								Properties: &jschema.RuleASTNodes{},
 								Items: []jschema.RuleASTNode{
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  jschema.TokenTypeShortcut,
 										Value:      "@foo",
 										Properties: &jschema.RuleASTNodes{},
 										Source:     jschema.RuleASTNodeSourceManual,
 									},
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  jschema.TokenTypeShortcut,
 										Value:      "@bar",
 										Properties: &jschema.RuleASTNodes{},
 										Source:     jschema.RuleASTNodeSourceManual,
@@ -2353,48 +2353,6 @@ func TestSchema_GetAST(t *testing.T) {
 				types: map[string]string{
 					"@foo": `42`,
 					"@bar": `"bar"`,
-				},
-			},
-
-			`1 // {type: "mixed", or: ["@fizz", "@buzz"]}`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeNumber,
-					SchemaType: string(jschema.SchemaTypeMixed),
-					Value:      "1",
-					Rules: jschema.NewRuleASTNodes(
-						map[string]jschema.RuleASTNode{
-							"type": {
-								TokenType:  jschema.TokenTypeString,
-								Value:      "mixed",
-								Properties: &jschema.RuleASTNodes{},
-								Source:     jschema.RuleASTNodeSourceManual,
-							},
-							"or": {
-								TokenType:  jschema.TokenTypeArray,
-								Properties: &jschema.RuleASTNodes{},
-								Items: []jschema.RuleASTNode{
-									{
-										TokenType:  jschema.TokenTypeString,
-										Value:      "@fizz",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
-									},
-									{
-										TokenType:  jschema.TokenTypeString,
-										Value:      "@buzz",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
-									},
-								},
-								Source: jschema.RuleASTNodeSourceManual,
-							},
-						},
-						[]string{"type", "or"},
-					),
-				},
-				types: map[string]string{
-					"@fizz": `42`,
-					"@buzz": `"buzz"`,
 				},
 			},
 
@@ -4149,6 +4107,42 @@ line
 						},
 						[]string{"or"},
 					),
+				},
+			},
+
+			`123 // {or: ["@dogId", "@catId"]}`: {
+				expected: jschema.ASTNode{
+					TokenType:  jschema.TokenTypeNumber,
+					SchemaType: string(jschema.SchemaTypeMixed),
+					Value:      "123",
+					Rules: jschema.NewRuleASTNodes(
+						map[string]jschema.RuleASTNode{
+							"or": {
+								TokenType:  jschema.TokenTypeArray,
+								Properties: &jschema.RuleASTNodes{},
+								Items: []jschema.RuleASTNode{
+									{
+										TokenType:  jschema.TokenTypeShortcut,
+										Value:      "@dogId",
+										Properties: &jschema.RuleASTNodes{},
+										Source:     jschema.RuleASTNodeSourceManual,
+									},
+									{
+										TokenType:  jschema.TokenTypeShortcut,
+										Value:      "@catId",
+										Properties: &jschema.RuleASTNodes{},
+										Source:     jschema.RuleASTNodeSourceManual,
+									},
+								},
+								Source: jschema.RuleASTNodeSourceManual,
+							},
+						},
+						[]string{"or"},
+					),
+				},
+				types: map[string]string{
+					"@catId": "12 // {min: 1}",
+					"@dogId": `"DOG-123" // Dog's id.`,
 				},
 			},
 		}
