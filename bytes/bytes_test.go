@@ -37,6 +37,7 @@ func TestBytes_Unquote(t *testing.T) {
 		// trimmed
 		`""`:    "",
 		`"123"`: `123`,
+		`"\\n"`: `\n`,
 
 		// no trimmed
 		"":     "",
@@ -44,6 +45,8 @@ func TestBytes_Unquote(t *testing.T) {
 		"123":  "123",
 		`"123`: `"123`,
 		`123"`: `123"`,
+
+		`"\"\u0061bc\""`: `"abc"`,
 	}
 
 	for given, expected := range cc {
@@ -351,7 +354,16 @@ func TestBytes_IsUserTypeName(t *testing.T) {
 }
 
 func TestBytes_String(t *testing.T) {
-	assert.Equal(t, "foo", Bytes{'f', 'o', 'o'}.String())
+	cc := map[string]Bytes{
+		"foo":          []byte("foo"),
+		"\u0001\u0002": []byte{1, 2},
+	}
+
+	for expected, given := range cc {
+		t.Run(expected, func(t *testing.T) {
+			assert.Equal(t, expected, given.String())
+		})
+	}
 }
 
 func TestBytes_Len(t *testing.T) {
@@ -510,8 +522,8 @@ foo bar
 	🤐 smile
 fizz	buzz
 `,
-		`\\u0061`:  `\u0061`,
-		`\\\u0061`: `\a`,
+		`\\u0061`:  `\\u0061`,
+		`\\\u0061`: `\\a`,
 		`\uffff`:   `￿`,
 		`\b`:       "\b",
 		`\f`:       "\f",
@@ -519,6 +531,8 @@ fizz	buzz
 		`\r`:       "\r",
 		`\t`:       "\t",
 		`"\t\u0063"`: `"	c"`,
+		`\\`:             `\\`,
+		`"\"\u0061bc\""`: `"\"abc\""`,
 	}
 
 	for given, expected := range cc {

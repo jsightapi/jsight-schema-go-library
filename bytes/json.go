@@ -8,6 +8,10 @@ import (
 
 // unquoteBytes converts a quoted JSON string literal s into an actual string.
 // The copy of the function from the encoding/json package.
+// This function correctly unquote JSON string into golang string.
+//
+// Example:
+//  "\"\u0061bc\"" => "abc"
 func unquoteBytes(s []byte) (t []byte) { //nolint:gocyclo // It's OK.
 	if len(s) < 2 || s[0] != '"' || s[len(s)-1] != '"' {
 		return s
@@ -20,7 +24,7 @@ func unquoteBytes(s []byte) (t []byte) { //nolint:gocyclo // It's OK.
 	r := 0
 	for r < len(s) {
 		c := s[r]
-		if c == '\\' || c == '"' || c < ' ' {
+		if c == '\\' || c == '"' {
 			break
 		}
 		if c < utf8.RuneSelf {
@@ -123,6 +127,13 @@ func unquoteBytes(s []byte) (t []byte) { //nolint:gocyclo // It's OK.
 }
 
 // normalizeBytes decodes all UTF-8 and UTF-16 characters in the byte's stream.
+// This function correctly decode unicode characters from string passed from any
+// source into correct golang string.
+//
+// This function is exists because Golang doesn't recognize and parse UTF-16 characters.
+//
+// Example:
+//  "\"\u0061bc\"" => "\"abc\""
 func normalizeBytes(s []byte) []byte { //nolint:gocyclo // It's OK.
 	b := make([]byte, len(s)+2*utf8.UTFMax)
 	idx := 0
@@ -146,9 +157,10 @@ func normalizeBytes(s []byte) []byte { //nolint:gocyclo // It's OK.
 			default:
 				return nil
 			case '"', '\\', '/', '\'':
-				b[realPos] = s[idx]
+				b[realPos] = s[idx-1]
+				b[realPos+1] = s[idx]
 				idx++
-				realPos++
+				realPos += 2
 			case 'b':
 				b[realPos] = '\b'
 				idx++
