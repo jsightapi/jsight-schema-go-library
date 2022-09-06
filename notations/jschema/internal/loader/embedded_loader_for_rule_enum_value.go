@@ -158,8 +158,11 @@ func (l *enumValueLoader) ruleName(lex lexeme.LexEvent) {
 	}
 
 	l.enumConstraint.SetRuleName(v)
-	for i, v := range vv {
-		l.enumConstraint.Append(v.Value)
+	for _, v := range vv {
+		if v.Type == jschemaLib.SchemaTypeComment {
+			continue
+		}
+		i := l.enumConstraint.Append(v.Value)
 		l.enumConstraint.SetComment(i, v.Comment)
 	}
 	l.stateFunc = l.endOfLoading

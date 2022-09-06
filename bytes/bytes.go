@@ -18,8 +18,19 @@ func (b Bytes) Slice(begin, end Index) Bytes {
 	return b[begin : end+1]
 }
 
+func (b Bytes) InQuotes() bool {
+	return len(b) >= 2 && b[0] == '"' && b[len(b)-1] == '"'
+}
+
 func (b Bytes) Unquote() Bytes {
-	return unquoteBytes(b)
+	if b.InQuotes() {
+		bb, ok := unquoteBytes(b)
+		if !ok {
+			panic("Internal server error by function unquoteBytes()")
+		}
+		return bb
+	}
+	return b
 }
 
 func (b Bytes) TrimSquareBrackets() Bytes {
@@ -165,6 +176,7 @@ func (b Bytes) LineFrom(start Index) (Bytes, error) {
 	return b[start:], nil
 }
 
+// Deprecated: Normalize is deprecated
 func (b Bytes) Normalize() Bytes {
 	return normalizeBytes(b)
 }

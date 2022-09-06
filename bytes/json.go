@@ -8,13 +8,9 @@ import (
 
 // unquoteBytes converts a quoted JSON string literal s into an actual string.
 // The copy of the function from the encoding/json package.
-// This function correctly unquote JSON string into golang string.
-//
-// Example:
-//  "\"\u0061bc\"" => "abc"
-func unquoteBytes(s []byte) (t []byte) { //nolint:gocyclo // It's OK.
+func unquoteBytes(s []byte) (t []byte, ok bool) {
 	if len(s) < 2 || s[0] != '"' || s[len(s)-1] != '"' {
-		return s
+		return
 	}
 	s = s[1 : len(s)-1]
 
@@ -24,7 +20,7 @@ func unquoteBytes(s []byte) (t []byte) { //nolint:gocyclo // It's OK.
 	r := 0
 	for r < len(s) {
 		c := s[r]
-		if c == '\\' || c == '"' {
+		if c == '\\' || c == '"' || c < ' ' {
 			break
 		}
 		if c < utf8.RuneSelf {
@@ -38,7 +34,7 @@ func unquoteBytes(s []byte) (t []byte) { //nolint:gocyclo // It's OK.
 		r += size
 	}
 	if r == len(s) {
-		return s
+		return s, true
 	}
 
 	b := make([]byte, len(s)+2*utf8.UTFMax)
@@ -123,7 +119,7 @@ func unquoteBytes(s []byte) (t []byte) { //nolint:gocyclo // It's OK.
 			w += utf8.EncodeRune(b[w:], rr)
 		}
 	}
-	return b[0:w]
+	return b[0:w], true
 }
 
 // normalizeBytes decodes all UTF-8 and UTF-16 characters in the byte's stream.
@@ -133,7 +129,10 @@ func unquoteBytes(s []byte) (t []byte) { //nolint:gocyclo // It's OK.
 // This function is exists because Golang doesn't recognize and parse UTF-16 characters.
 //
 // Example:
-//  "\"\u0061bc\"" => "\"abc\""
+//
+//	"\"\u0061bc\"" => "\"abc\""
+//
+// Deprecated: normalizeBytes is deprecated
 func normalizeBytes(s []byte) []byte { //nolint:gocyclo // It's OK.
 	b := make([]byte, len(s)+2*utf8.UTFMax)
 	idx := 0

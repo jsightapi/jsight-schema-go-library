@@ -1,7 +1,6 @@
 package constraint
 
 import (
-	"bytes"
 	"strings"
 
 	jschema "github.com/jsightapi/jsight-schema-go-library"
@@ -11,14 +10,36 @@ import (
 )
 
 type Enum struct {
-	uniqueIdx map[string]struct{}
+	uniqueIdx map[enumItemValue]struct{}
 	ruleName  string
 	items     []enumItem
 }
 
 type enumItem struct {
 	comment string
-	value   jbytes.Bytes
+	enumItemValue
+}
+
+type enumItemValue struct {
+	value    string
+	jsonType json.Type
+}
+
+func newEnumItemValue(b jbytes.Bytes) enumItemValue {
+	b = b.TrimSpaces()
+	t := json.Guess(b).JsonType()
+	if t == json.TypeString {
+		b = b.Unquote()
+	}
+	return enumItemValue{value: b.String(), jsonType: t}
+}
+
+func (v enumItemValue) String() string {
+	if v.jsonType == json.TypeString {
+		return `"` + v.value + `"`
+	} else {
+		return v.value
+	}
 }
 
 var (
@@ -30,7 +51,7 @@ var (
 
 func NewEnum() *Enum {
 	return &Enum{
-		uniqueIdx: make(map[string]struct{}),
+		uniqueIdx: make(map[enumItemValue]struct{}),
 		items:     make([]enumItem, 0, 5),
 	}
 }
@@ -48,7 +69,7 @@ func (c Enum) String() string {
 	str.WriteString(EnumConstraintType.String())
 	str.WriteString(": [")
 	for i, v := range c.items {
-		str.WriteString(v.value.String())
+		str.WriteString(v.enumItemValue.String())
 		if len(c.items)-1 != i {
 			str.WriteString(", ")
 		}
@@ -58,15 +79,13 @@ func (c Enum) String() string {
 }
 
 func (c *Enum) Append(b jbytes.Bytes) int {
-	key := b.TrimSpaces().Normalize().String()
-	if key != "" {
-		if _, ok := c.uniqueIdx[key]; ok {
-			panic(errors.Format(errors.ErrDuplicationInEnumRule, b.String()))
-		}
+	v := newEnumItemValue(b)
+	if _, ok := c.uniqueIdx[v]; ok {
+		panic(errors.Format(errors.ErrDuplicationInEnumRule, b.String()))
 	}
 	idx := len(c.items)
-	c.items = append(c.items, enumItem{value: b.Normalize()})
-	c.uniqueIdx[key] = struct{}{}
+	c.items = append(c.items, enumItem{comment: "", enumItemValue: v})
+	c.uniqueIdx[v] = struct{}{}
 	return idx
 }
 
@@ -83,9 +102,9 @@ func (c *Enum) RuleName() string {
 }
 
 func (c Enum) Validate(a jbytes.Bytes) {
-	a = a.Normalize()
+	v := newEnumItemValue(a)
 	for _, b := range c.items {
-		if bytes.Equal(a, b.value) {
+		if v == b.enumItemValue {
 			return
 		}
 	}
@@ -104,8 +123,8 @@ func (c Enum) ASTNode() jschema.RuleASTNode {
 
 	for _, b := range c.items {
 		an := newRuleASTNode(
-			json.Guess(b.value).JsonType().ToTokenType(),
-			b.value.Unquote().String(),
+			b.jsonType.ToTokenType(),
+			b.value,
 			source,
 		)
 		an.Comment = b.comment
