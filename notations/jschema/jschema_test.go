@@ -4145,6 +4145,68 @@ line
 					"@dogId": `"DOG-123" // Dog's id.`,
 				},
 			},
+
+			`"\n" // {enum: ["\u0001", "\u0002", "\n", "\t", "n \n nn n", "b \n b", "a \\n a"]}`: {
+				expected: jschema.ASTNode{
+					TokenType:  jschema.TokenTypeString,
+					SchemaType: string(jschema.SchemaTypeEnum),
+					Value:      "\n",
+					Rules: jschema.NewRuleASTNodes(
+						map[string]jschema.RuleASTNode{
+							"enum": {
+								TokenType:  jschema.TokenTypeArray,
+								Properties: &jschema.RuleASTNodes{},
+								Items: []jschema.RuleASTNode{
+									{
+										TokenType:  jschema.TokenTypeString,
+										Value:      "\u0001",
+										Properties: &jschema.RuleASTNodes{},
+										Source:     jschema.RuleASTNodeSourceManual,
+									},
+									{
+										TokenType:  jschema.TokenTypeString,
+										Value:      "\u0002",
+										Properties: &jschema.RuleASTNodes{},
+										Source:     jschema.RuleASTNodeSourceManual,
+									},
+									{
+										TokenType:  jschema.TokenTypeString,
+										Value:      "\n",
+										Properties: &jschema.RuleASTNodes{},
+										Source:     jschema.RuleASTNodeSourceManual,
+									},
+									{
+										TokenType:  jschema.TokenTypeString,
+										Value:      "\t",
+										Properties: &jschema.RuleASTNodes{},
+										Source:     jschema.RuleASTNodeSourceManual,
+									},
+									{
+										TokenType:  jschema.TokenTypeString,
+										Value:      "n \n nn n",
+										Properties: &jschema.RuleASTNodes{},
+										Source:     jschema.RuleASTNodeSourceManual,
+									},
+									{
+										TokenType:  jschema.TokenTypeString,
+										Value:      "b \n b",
+										Properties: &jschema.RuleASTNodes{},
+										Source:     jschema.RuleASTNodeSourceManual,
+									},
+									{
+										TokenType:  jschema.TokenTypeString,
+										Value:      "a \\n a",
+										Properties: &jschema.RuleASTNodes{},
+										Source:     jschema.RuleASTNodeSourceManual,
+									},
+								},
+								Source: jschema.RuleASTNodeSourceManual,
+							},
+						},
+						[]string{"enum"},
+					),
+				},
+			},
 		}
 
 		for given, c := range cc {
