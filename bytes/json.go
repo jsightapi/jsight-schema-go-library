@@ -8,13 +8,9 @@ import (
 
 // unquoteBytes converts a quoted JSON string literal s into an actual string.
 // The copy of the function from the encoding/json package.
-// This function correctly unquote JSON string into golang string.
-//
-// Example:
-//  "\"\u0061bc\"" => "abc"
-func unquoteBytes(s []byte) (t []byte) { //nolint:gocyclo // It's OK.
+func unquoteBytes(s []byte) (t []byte, ok bool) { //nolint:gocyclo // It's ok.
 	if len(s) < 2 || s[0] != '"' || s[len(s)-1] != '"' {
-		return s
+		return
 	}
 	s = s[1 : len(s)-1]
 
@@ -24,7 +20,7 @@ func unquoteBytes(s []byte) (t []byte) { //nolint:gocyclo // It's OK.
 	r := 0
 	for r < len(s) {
 		c := s[r]
-		if c == '\\' || c == '"' {
+		if c == '\\' || c == '"' || c < ' ' {
 			break
 		}
 		if c < utf8.RuneSelf {
@@ -38,7 +34,7 @@ func unquoteBytes(s []byte) (t []byte) { //nolint:gocyclo // It's OK.
 		r += size
 	}
 	if r == len(s) {
-		return s
+		return s, true
 	}
 
 	b := make([]byte, len(s)+2*utf8.UTFMax)
@@ -123,94 +119,7 @@ func unquoteBytes(s []byte) (t []byte) { //nolint:gocyclo // It's OK.
 			w += utf8.EncodeRune(b[w:], rr)
 		}
 	}
-	return b[0:w]
-}
-
-// normalizeBytes decodes all UTF-8 and UTF-16 characters in the byte's stream.
-// This function correctly decode unicode characters from string passed from any
-// source into correct golang string.
-//
-// This function is exists because Golang doesn't recognize and parse UTF-16 characters.
-//
-// Example:
-//  "\"\u0061bc\"" => "\"abc\""
-func normalizeBytes(s []byte) []byte { //nolint:gocyclo // It's OK.
-	b := make([]byte, len(s)+2*utf8.UTFMax)
-	idx := 0
-	realPos := 0
-	for idx < len(s) {
-		// Out of room? Can only happen if s is full of
-		// malformed UTF-8, and we're replacing each
-		// byte with RuneError.
-		if realPos >= len(b)-2*utf8.UTFMax {
-			nb := make([]byte, (len(b)+utf8.UTFMax)*2)
-			copy(nb, b[0:realPos])
-			b = nb
-		}
-		switch c := s[idx]; {
-		case c == '\\':
-			idx++
-			if idx >= len(s) {
-				return nil
-			}
-			switch s[idx] {
-			default:
-				return nil
-			case '"', '\\', '/', '\'':
-				b[realPos] = s[idx-1]
-				b[realPos+1] = s[idx]
-				idx++
-				realPos += 2
-			case 'b':
-				b[realPos] = '\b'
-				idx++
-				realPos++
-			case 'f':
-				b[realPos] = '\f'
-				idx++
-				realPos++
-			case 'n':
-				b[realPos] = '\n'
-				idx++
-				realPos++
-			case 'r':
-				b[realPos] = '\r'
-				idx++
-				realPos++
-			case 't':
-				b[realPos] = '\t'
-				idx++
-				realPos++
-			case 'u':
-				idx--
-				rr := getu4(s[idx:])
-				if rr < 0 {
-					return nil
-				}
-				idx += 6
-				if utf16.IsSurrogate(rr) {
-					rr = utf16.DecodeRune(rr, getu4(s[idx:]))
-					if rr != unicode.ReplacementChar {
-						idx += 6
-					}
-				}
-				realPos += utf8.EncodeRune(b[realPos:], rr)
-			}
-
-		// ASCII
-		case c < utf8.RuneSelf:
-			b[realPos] = c
-			idx++
-			realPos++
-
-		// Coerce to well-formed UTF-8.
-		default:
-			rr, size := utf8.DecodeRune(s[idx:])
-			idx += size
-			realPos += utf8.EncodeRune(b[realPos:], rr)
-		}
-	}
-	return b[:realPos]
+	return b[0:w], true
 }
 
 // getu4 decodes \uXXXX from the beginning of s, returning the hex value,
