@@ -34,43 +34,55 @@ func TestEnum_Type(t *testing.T) {
 }
 
 func TestEnum_String(t *testing.T) {
-	actual := Enum{items: []enumItem{
-		{"", enumItemValue{value: `foo`, jsonType: json.TypeString}},
-		{"", enumItemValue{value: `bar`, jsonType: json.TypeString}},
-		{"", enumItemValue{value: `fizz`, jsonType: json.TypeString}},
-		{"", enumItemValue{value: `buzz`, jsonType: json.TypeString}},
-		{"", enumItemValue{value: `123`, jsonType: json.TypeInteger}},
-		{"", enumItemValue{value: `45.67`, jsonType: json.TypeFloat}},
-		{"", enumItemValue{value: `true`, jsonType: json.TypeBoolean}},
-		{"", enumItemValue{value: `false`, jsonType: json.TypeBoolean}},
-		{"", enumItemValue{value: `null`, jsonType: json.TypeNull}},
+	actual := Enum{items: []EnumItem{
+		NewEnumItem(bytes.Bytes(`"foo"`), ""),
+		NewEnumItem(bytes.Bytes(`"bar"`), ""),
+		NewEnumItem(bytes.Bytes(`"fizz"`), ""),
+		NewEnumItem(bytes.Bytes(`"buzz"`), ""),
+		NewEnumItem(bytes.Bytes(`123`), ""),
+		NewEnumItem(bytes.Bytes(`45.67`), ""),
+		NewEnumItem(bytes.Bytes(`true`), ""),
+		NewEnumItem(bytes.Bytes(`false`), ""),
+		NewEnumItem(bytes.Bytes(`null`), ""),
+		NewEnumItem(bytes.Bytes(`"\""`), ""),
+		NewEnumItem(bytes.Bytes(`"\\"`), ""),
+		NewEnumItem(bytes.Bytes(`"\/"`), ""),
+		NewEnumItem(bytes.Bytes(`"\b"`), ""),
+		NewEnumItem(bytes.Bytes(`"\f"`), ""),
+		NewEnumItem(bytes.Bytes(`"\n"`), ""),
+		NewEnumItem(bytes.Bytes(`"\r"`), ""),
+		NewEnumItem(bytes.Bytes(`"\t"`), ""),
+		NewEnumItem(bytes.Bytes(`"\u0001"`), ""),
+		NewEnumItem(bytes.Bytes(`"\u000A"`), ""),
+		NewEnumItem(bytes.Bytes(`"\u20AC"`), ""),
+		NewEnumItem(bytes.Bytes(`"\uD83C\uDFC6"`), ""),
 	}}.
 		String()
 
-	assert.Equal(t, `enum: ["foo", "bar", "fizz", "buzz", 123, 45.67, true, false, null]`, actual)
+	assert.Equal(t, `enum: ["foo", "bar", "fizz", "buzz", 123, 45.67, true, false, null, "\"", "\\", "/", "\u0008", "\u000c", "\n", "\r", "\t", "\u0001", "\n", "€", "🏆"]`, actual)
 }
 
 func TestEnum_Append(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
 		c := NewEnum()
-		assert.Equal(t, []enumItem{}, c.items)
+		assert.Equal(t, []EnumItem{}, c.items)
 
-		c.Append(bytes.Bytes(`"foo"`))
-		assert.Equal(t, []enumItem{
-			{"", enumItemValue{value: `foo`, jsonType: json.TypeString}},
+		c.Append(NewEnumItem(bytes.Bytes(`"foo"`), ""))
+		assert.Equal(t, []EnumItem{
+			NewEnumItem(bytes.Bytes(`"foo"`), ""),
 		}, c.items)
 
-		c.Append(bytes.Bytes(`"bar"`))
-		assert.Equal(t, []enumItem{
-			{"", enumItemValue{value: `foo`, jsonType: json.TypeString}},
-			{"", enumItemValue{value: `bar`, jsonType: json.TypeString}},
+		c.Append(NewEnumItem(bytes.Bytes(`"bar"`), ""))
+		assert.Equal(t, []EnumItem{
+			NewEnumItem(bytes.Bytes(`"foo"`), ""),
+			NewEnumItem(bytes.Bytes(`"bar"`), ""),
 		}, c.items)
 
-		c.Append(bytes.Bytes(`"FoO"`))
-		assert.Equal(t, []enumItem{
-			{"", enumItemValue{value: `foo`, jsonType: json.TypeString}},
-			{"", enumItemValue{value: `bar`, jsonType: json.TypeString}},
-			{"", enumItemValue{value: `FoO`, jsonType: json.TypeString}},
+		c.Append(NewEnumItem(bytes.Bytes(`"FoO"`), ""))
+		assert.Equal(t, []EnumItem{
+			NewEnumItem(bytes.Bytes(`"foo"`), ""),
+			NewEnumItem(bytes.Bytes(`"bar"`), ""),
+			NewEnumItem(bytes.Bytes(`"FoO"`), ""),
 		}, c.items)
 	})
 
@@ -85,8 +97,8 @@ func TestEnum_Append(t *testing.T) {
 			t.Run(expected, func(t *testing.T) {
 				assert.PanicsWithError(t, expected, func() {
 					c := NewEnum()
-					c.Append(bytes.Bytes(`"foo"`))
-					c.Append(bytes.Bytes(given))
+					c.Append(NewEnumItem(bytes.Bytes(`"foo"`), ""))
+					c.Append(NewEnumItem(bytes.Bytes(given), ""))
 				})
 			})
 		}
@@ -96,18 +108,18 @@ func TestEnum_Append(t *testing.T) {
 func TestEnum_SetComment(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
 		e := &Enum{
-			items: []enumItem{
-				{"", enumItemValue{value: `foo`, jsonType: json.TypeString}},
-				{"old bar comment", enumItemValue{value: `bar`, jsonType: json.TypeString}},
+			items: []EnumItem{
+				NewEnumItem(bytes.Bytes(`"foo"`), ""),
+				NewEnumItem(bytes.Bytes(`"bar"`), "old bar comment"),
 			},
 		}
 
 		e.SetComment(0, "foo comment")
 		e.SetComment(1, "new bar comment")
 
-		assert.Equal(t, []enumItem{
-			{"foo comment", enumItemValue{value: `foo`, jsonType: json.TypeString}},
-			{"new bar comment", enumItemValue{value: `bar`, jsonType: json.TypeString}},
+		assert.Equal(t, []EnumItem{
+			NewEnumItem(bytes.Bytes(`"foo"`), "foo comment"),
+			NewEnumItem(bytes.Bytes(`"bar"`), "new bar comment"),
 		}, e.items)
 	})
 
@@ -139,9 +151,9 @@ func TestEnum_SetRuleName(t *testing.T) {
 func TestEnum_Validate(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
 		Enum{
-			items: []enumItem{
-				{"", enumItemValue{value: `foo`, jsonType: json.TypeString}},
-				{"", enumItemValue{value: `bar`, jsonType: json.TypeString}},
+			items: []EnumItem{
+				NewEnumItem(bytes.Bytes(`"foo"`), ""),
+				NewEnumItem(bytes.Bytes(`"bar"`), ""),
 			},
 		}.
 			Validate(bytes.Bytes(`"bar"`))
@@ -150,9 +162,9 @@ func TestEnum_Validate(t *testing.T) {
 	t.Run("negative", func(t *testing.T) {
 		assert.PanicsWithValue(t, errors.ErrDoesNotMatchAnyOfTheEnumValues, func() {
 			Enum{
-				items: []enumItem{
-					{"", enumItemValue{value: `foo`, jsonType: json.TypeString}},
-					{"", enumItemValue{value: `bar`, jsonType: json.TypeString}},
+				items: []EnumItem{
+					NewEnumItem(bytes.Bytes(`"foo"`), ""),
+					NewEnumItem(bytes.Bytes(`"bar"`), ""),
 				},
 			}.
 				Validate(bytes.Bytes(`"fizz"`))
@@ -176,13 +188,13 @@ func TestEnum_ASTNode(t *testing.T) {
 
 	t.Run("without rule name", func(t *testing.T) {
 		e := Enum{
-			items: []enumItem{
-				{"", enumItemValue{value: `foo`, jsonType: json.TypeString}},
-				{"foo", enumItemValue{value: `42`, jsonType: json.TypeInteger}},
-				{"", enumItemValue{value: `3.14`, jsonType: json.TypeFloat}},
-				{"", enumItemValue{value: `true`, jsonType: json.TypeBoolean}},
-				{"bar", enumItemValue{value: `null`, jsonType: json.TypeNull}},
-				{"", enumItemValue{value: `@foo`, jsonType: json.TypeMixed}},
+			items: []EnumItem{
+				NewEnumItem(bytes.Bytes(`"foo"`), ""),
+				NewEnumItem(bytes.Bytes(`42`), "foo"),
+				NewEnumItem(bytes.Bytes(`3.14`), ""),
+				NewEnumItem(bytes.Bytes(`true`), ""),
+				NewEnumItem(bytes.Bytes(`null`), "bar"),
+				NewEnumItem(bytes.Bytes(`@foo`), ""),
 			},
 		}
 		assert.Equal(t, jschema.RuleASTNode{
