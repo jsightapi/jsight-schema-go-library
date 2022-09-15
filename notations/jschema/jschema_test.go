@@ -711,6 +711,19 @@ func TestSchema_Check(t *testing.T) {
 					"@foo": `["a", "\u0062"]`,
 				},
 			},
+
+			`
+{
+  "interactions": {
+    @interactionId : 123
+  }
+}`: {
+				types: map[string]string{
+					"@interactionId":        `@httpInteractionId | @jsonRpcInteractionId`,
+					"@httpInteractionId":    `"http GET /cats/{id}" // {regex: "^http (?:GET|POST|PUT|PATCH|DELETE) \/.*"}`,
+					"@jsonRpcInteractionId": `"json-rpc-2.0 /cats foo" // {regex: "^json-rpc-2.0 \/.* .+"}`,
+				},
+			},
 		}
 
 		for content, c := range cc {
