@@ -14,7 +14,7 @@ workflows:
           context: online-editor-development
           go-version: << pipeline.parameters.go-version >>
           run-mod-vendor: true
-          golangci-lint-version: 1.47.2
+          golangci-lint-version: 1.49.0
 
       - common/go-test:
           context: online-editor-development
