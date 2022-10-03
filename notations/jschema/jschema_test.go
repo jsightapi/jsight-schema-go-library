@@ -1592,6 +1592,18 @@ func TestSchema_Check(t *testing.T) {
 	--^`: {
 				given: `"c" // {enum: ["a", "\u0062"]}`,
 			},
+
+			`ERROR (code 1302): Type "@unknown" not found
+	in line 1 on file 
+	> { // {additionalProperties: "@unknown"}
+	--^`: {
+				given: `{ // {additionalProperties: "@unknown"}
+  "key" : 123 // {type: "@num"}
+}`,
+				types: map[string]string{
+					"@num": `12`,
+				},
+			},
 		}
 
 		for expected, c := range cc {
@@ -4402,7 +4414,7 @@ func TestSchema_UsedUserTypes(t *testing.T) {
 			"@foo | @bar": {"@foo", "@bar"},
 			`{
 	"foo": @foo,
-	"bar": {
+	"bar": { // {additionalProperties: "@addProp"}
 		"fizz": @bar | @fizz,
 		"buzz": 42, // {type: "@buzz"}
 		"foobar": 42 // {or: ["@foobar", {type: "@fizzbuzz"}]}
@@ -4430,6 +4442,7 @@ func TestSchema_UsedUserTypes(t *testing.T) {
 				"@base1",
 				"@base2",
 				"@shortcut",
+				"@addProp",
 			},
 		}
 

@@ -27,7 +27,7 @@ func TestNewAdditionalProperties(t *testing.T) {
 			},
 
 			"@type": {
-				mode:     AdditionalPropertiesMustBeType,
+				mode:     AdditionalPropertiesMustBeUserType,
 				typeName: jbytes.Bytes("@type"),
 			},
 
@@ -76,7 +76,7 @@ func TestAdditionalProperties_String(t *testing.T) {
 				schemaType: jschema.SchemaTypeObject,
 			},
 			"additionalProperties: @foo": {
-				mode:     AdditionalPropertiesMustBeType,
+				mode:     AdditionalPropertiesMustBeUserType,
 				typeName: jbytes.Bytes("@foo"),
 			},
 			"additionalProperties: false": {
@@ -105,7 +105,7 @@ func TestAdditionalProperties_Mode(t *testing.T) {
 	cc := []AdditionalPropertiesMode{
 		AdditionalPropertiesCanBeAny,
 		AdditionalPropertiesMustBeSchemaType,
-		AdditionalPropertiesMustBeType,
+		AdditionalPropertiesMustBeUserType,
 	}
 
 	for _, m := range cc {
@@ -151,7 +151,7 @@ func TestAdditionalProperties_IsEqual(t *testing.T) {
 
 		"same but with different modes": {
 			AdditionalProperties{
-				mode:       AdditionalPropertiesMustBeType,
+				mode:       AdditionalPropertiesMustBeUserType,
 				schemaType: jschema.SchemaTypeObject,
 				typeName:   jbytes.Bytes("foo"),
 			},
