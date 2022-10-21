@@ -34,7 +34,7 @@ type Schema struct {
 	loadOnce    sync.ErrOnce
 	compileOnce sync.ErrOnce
 
-	astNode                  jschema.ASTNode
+	ASTNode                  jschema.ASTNode
 	areKeysOptionalByDefault bool
 }
 
@@ -222,7 +222,7 @@ func (s *Schema) GetAST() (an jschema.ASTNode, err error) {
 		return jschema.ASTNode{}, err
 	}
 
-	return s.astNode, nil
+	return s.ASTNode, nil
 }
 
 func (s *Schema) UsedUserTypes() ([]string, error) {
@@ -243,7 +243,7 @@ func (s *Schema) load() error {
 			s.rules,
 		)
 		s.inner = &sc
-		s.astNode = s.buildASTNode()
+		s.ASTNode = s.buildASTNode()
 		s.collectUserTypes()
 		loader.CompileBasic(s.inner, s.areKeysOptionalByDefault)
 		return nil

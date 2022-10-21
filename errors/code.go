@@ -32,6 +32,8 @@ const (
 	ErrInvalidValueType                ErrorCode = 210
 	ErrInvalidKeyType                  ErrorCode = 211
 	ErrUnexpectedLexInMixedValidator   ErrorCode = 212
+	ErrObjectExpected                  ErrorCode = 213
+	ErrPropertyNotFound                ErrorCode = 214
 
 	// Scanner.
 
@@ -178,6 +180,8 @@ var errorFormat = map[ErrorCode]string{
 	ErrUnexpectedLexInMixedValidator:   `Invalid value, scalar, array, or object expected`,
 	ErrInvalidValueType:                `Invalid value type "%s", expected "%s"`,
 	ErrInvalidKeyType:                  `Incorrect key type "%s"`,
+	ErrObjectExpected:                  `An object is expected to validate the property`,
+	ErrPropertyNotFound:                `The %q property was not found`,
 
 	// scanner
 	ErrInvalidCharacter:                      "Invalid character %q %s",
