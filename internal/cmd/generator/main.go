@@ -27,6 +27,7 @@ func run() error {
 		gg: []generator{
 			orderedMapGenerator{},
 			stringerGenerator{},
+			newSetGenerator(),
 		},
 	}
 

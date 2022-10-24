@@ -67,7 +67,7 @@ type Schema interface {
 }
 
 // ASTNode an AST node.
-type ASTNode struct {
+type ASTNode struct { //nolint:govet // This is okay.
 	// TokenType corresponding JSON type for this AST node's value.
 	TokenType TokenType
 
@@ -94,6 +94,22 @@ type ASTNode struct {
 	// IsKeyShortcut will be true if this property key is shortcut.
 	// Make sense only for AST nodes which are represents object property.
 	IsKeyShortcut bool
+
+	// InheritedFrom a user type from which this property is inherited.
+	InheritedFrom string
+}
+
+func (c *ASTNode) ObjectProperty(k string) *ASTNode {
+	for _, v := range c.Children {
+		if v.Key == k {
+			return &v
+		}
+	}
+	return nil
+}
+
+func (c *ASTNode) Unshift(n ASTNode) {
+	c.Children = append([]ASTNode{n}, c.Children...)
 }
 
 // ASTNodes an ordered map of AST nodes.

@@ -22,13 +22,13 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/notations/regex"
 )
 
-type Schema struct {
+type Schema struct { //nolint:govet // This is okay.
 	file  *fs.File
 	inner *internalSchema.Schema
 
 	rules map[string]jschema.Rule
 
-	usedUserTypes []string
+	usedUserTypes *StringSet
 
 	lenOnce     sync.ErrOnceWithValue[uint]
 	loadOnce    sync.ErrOnce
@@ -48,8 +48,9 @@ func New[T fs.FileContent](name string, content T, oo ...Option) *Schema {
 // FromFile creates a Jsight schema from file.
 func FromFile(f *fs.File, oo ...Option) *Schema {
 	s := &Schema{
-		file:  f,
-		rules: map[string]jschema.Rule{},
+		file:          f,
+		rules:         map[string]jschema.Rule{},
+		usedUserTypes: &StringSet{},
 	}
 
 	for _, o := range oo {
@@ -229,7 +230,11 @@ func (s *Schema) UsedUserTypes() ([]string, error) {
 	if err := s.load(); err != nil {
 		return nil, err
 	}
-	return s.usedUserTypes, nil
+	return s.usedUserTypes.Data(), nil
+}
+
+func (s *Schema) AddUserTypeName(name string) {
+	s.usedUserTypes.Add(name)
 }
 
 func (s *Schema) load() error {
@@ -261,7 +266,9 @@ func (s *Schema) collectUserTypes() {
 		return
 	}
 
-	s.usedUserTypes = collectUserTypes(node)
+	for _, str := range collectUserTypes(node) {
+		s.usedUserTypes.Add(str)
+	}
 }
 
 func collectUserTypes(node internalSchema.Node) []string {
