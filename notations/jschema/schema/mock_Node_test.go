@@ -5,7 +5,7 @@ package schema
 import (
 	jschema "github.com/jsightapi/jsight-schema-go-library"
 	bytes "github.com/jsightapi/jsight-schema-go-library/bytes"
-	constraint "github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
+	constraint "github.com/jsightapi/jsight-schema-go-library/notations/jschema/schema/constraint"
 
 	json "github.com/jsightapi/jsight-schema-go-library/internal/json"
 
@@ -105,6 +105,22 @@ func (_m *MockNode) ConstraintMap() *Constraints {
 	return r0
 }
 
+// Copy provides a mock function with given fields:
+func (_m *MockNode) Copy() Node {
+	ret := _m.Called()
+
+	var r0 Node
+	if rf, ok := ret.Get(0).(func() Node); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(Node)
+		}
+	}
+
+	return r0
+}
+
 // DeleteConstraint provides a mock function with given fields: _a0
 func (_m *MockNode) DeleteConstraint(_a0 constraint.Type) {
 	_m.Called(_a0)
@@ -131,6 +147,20 @@ func (_m *MockNode) Grow(_a0 lexeme.LexEvent) (Node, bool) {
 	}
 
 	return r0, r1
+}
+
+// InheritedFrom provides a mock function with given fields:
+func (_m *MockNode) InheritedFrom() string {
+	ret := _m.Called()
+
+	var r0 string
+	if rf, ok := ret.Get(0).(func() string); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	return r0
 }
 
 // NumberOfConstraints provides a mock function with given fields:
@@ -179,6 +209,11 @@ func (_m *MockNode) RealType() string {
 
 // SetComment provides a mock function with given fields: _a0
 func (_m *MockNode) SetComment(_a0 string) {
+	_m.Called(_a0)
+}
+
+// SetInheritedFrom provides a mock function with given fields: _a0
+func (_m *MockNode) SetInheritedFrom(_a0 string) {
 	_m.Called(_a0)
 }
 

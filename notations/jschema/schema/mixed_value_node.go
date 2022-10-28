@@ -8,7 +8,7 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/errors"
 	"github.com/jsightapi/jsight-schema-go-library/internal/json"
 	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
-	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/schema/constraint"
 )
 
 type MixedValueNode struct {
@@ -111,4 +111,9 @@ func (n *MixedValueNode) ASTNode() (jschema.ASTNode, error) {
 
 func (n *MixedValueNode) GetTypes() []string {
 	return n.types
+}
+
+func (n *MixedValueNode) Copy() Node {
+	nn := *n
+	return &nn
 }

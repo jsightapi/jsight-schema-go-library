@@ -13,7 +13,7 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/formats/json"
 	"github.com/jsightapi/jsight-schema-go-library/internal/mocks"
 	schemaMocks "github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/mocks"
-	internalSchema "github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema"
+	internalSchema "github.com/jsightapi/jsight-schema-go-library/notations/jschema/schema"
 	"github.com/jsightapi/jsight-schema-go-library/notations/regex"
 	"github.com/jsightapi/jsight-schema-go-library/rules/enum"
 )

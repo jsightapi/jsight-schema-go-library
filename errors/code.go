@@ -17,6 +17,7 @@ const (
 	ErrUnknownType               ErrorCode = 102
 	ErrUnknownJSchemaType        ErrorCode = 103
 	ErrInfinityRecursionDetected ErrorCode = 104
+	ErrNodeTypeCantBeGuessed     ErrorCode = 105
 
 	// Validator.
 
@@ -166,6 +167,7 @@ var errorFormat = map[ErrorCode]string{
 	ErrUnknownType:               "Unknown type %q",
 	ErrUnknownJSchemaType:        "Unknown JSchema type %q",
 	ErrInfinityRecursionDetected: "Infinity recursion detected %s",
+	ErrNodeTypeCantBeGuessed:     "Node type can't be guessed by value (%s)",
 
 	// validator
 	ErrValidator:                       "Validator error",

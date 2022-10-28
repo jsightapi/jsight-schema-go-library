@@ -7,8 +7,8 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/bytes"
 	"github.com/jsightapi/jsight-schema-go-library/errors"
 	"github.com/jsightapi/jsight-schema-go-library/internal/sync"
-	internalSchema "github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema"
-	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
+	internalSchema "github.com/jsightapi/jsight-schema-go-library/notations/jschema/schema"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/schema/constraint"
 )
 
 type exampleBuilder struct {

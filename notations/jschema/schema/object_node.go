@@ -25,7 +25,7 @@ type ObjectNode struct {
 
 var _ Node = &ObjectNode{}
 
-func newObjectNode(lex lexeme.LexEvent) *ObjectNode {
+func NewObjectNode(lex lexeme.LexEvent) *ObjectNode {
 	n := ObjectNode{
 		baseNode: newBaseNode(lex),
 		children: make([]Node, 0, 10),
@@ -52,11 +52,11 @@ func (n *ObjectNode) Grow(lex lexeme.LexEvent) (Node, bool) {
 
 	case lexeme.KeyShortcutEnd:
 		key := lex.Value().Unquote().String()
-		n.addKey(key, lex.Value().IsUserTypeName(), lex) // can panic
+		n.AddKey(key, lex.Value().IsUserTypeName(), lex) // can panic
 
 	case lexeme.ObjectKeyEnd:
 		key := lex.Value().Unquote().String()
-		n.addKey(key, lex.Value().IsUserTypeName(), lex) // can panic
+		n.AddKey(key, lex.Value().IsUserTypeName(), lex) // can panic
 
 	case lexeme.ObjectValueBegin:
 		n.waitingForChild = true
@@ -99,7 +99,7 @@ func (n ObjectNode) Child(key string, isShortcut bool) (Node, bool) {
 	return nil, false
 }
 
-func (n *ObjectNode) addKey(key string, isShortcut bool, lex lexeme.LexEvent) {
+func (n *ObjectNode) AddKey(key string, isShortcut bool, lex lexeme.LexEvent) {
 	// Save child node index into map for faster search.
 	n.keys.Set(ObjectNodeKey{
 		Key:        key,
@@ -115,7 +115,7 @@ func (n *ObjectNode) addChild(child Node) {
 }
 
 func (n *ObjectNode) AddChild(key ObjectNodeKey, child Node) {
-	n.addKey(key.Key, key.IsShortcut, key.Lex) // can panic
+	n.AddKey(key.Key, key.IsShortcut, key.Lex) // can panic
 	n.addChild(child)
 }
 
@@ -163,4 +163,9 @@ func (n *ObjectNode) collectASTProperties() ([]jschema.ASTNode, error) {
 	}
 
 	return pp, nil
+}
+
+func (n *ObjectNode) Copy() Node {
+	nn := *n
+	return &nn
 }

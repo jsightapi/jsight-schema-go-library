@@ -1,6 +1,6 @@
 package schema
 
-//go:generate mockery --name Node --output ../mocks
+//go:generate mockery --name Node --output ../internal/mocks
 
 import (
 	"sync"
@@ -9,7 +9,7 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/bytes"
 	"github.com/jsightapi/jsight-schema-go-library/internal/json"
 	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
-	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/schema/constraint"
 )
 
 // The Node of the internal representation of the scheme.
@@ -65,6 +65,10 @@ type Node interface {
 
 	// Comment returns this node comment.
 	Comment() string
+
+	SetInheritedFrom(string)
+	InheritedFrom() string
+	Copy() Node
 }
 
 // Constraints an ordered map of node constraints.
@@ -86,7 +90,7 @@ func NewNode(lex lexeme.LexEvent) Node {
 	case lexeme.LiteralBegin:
 		return newLiteralNode(lex)
 	case lexeme.ObjectBegin:
-		return newObjectNode(lex)
+		return NewObjectNode(lex)
 	case lexeme.ArrayBegin:
 		return newArrayNode(lex)
 	case lexeme.MixedValueBegin:

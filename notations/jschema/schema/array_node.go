@@ -94,3 +94,8 @@ func (n *ArrayNode) ASTNode() (jschema.ASTNode, error) {
 
 	return an, nil
 }
+
+func (n *ArrayNode) Copy() Node {
+	nn := *n
+	return &nn
+}

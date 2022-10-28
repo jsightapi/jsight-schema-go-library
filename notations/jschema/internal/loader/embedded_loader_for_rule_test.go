@@ -8,7 +8,7 @@ import (
 	jschema "github.com/jsightapi/jsight-schema-go-library"
 	"github.com/jsightapi/jsight-schema-go-library/internal/mocks"
 	jschemaMocks "github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/mocks"
-	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/schema"
 )
 
 func Test_newRuleLoader(t *testing.T) {

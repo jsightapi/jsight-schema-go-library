@@ -9,7 +9,7 @@ import (
 
 	"github.com/jsightapi/jsight-schema-go-library/errors"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/mocks"
-	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/schema"
 )
 
 func Test_newNodeChecker(t *testing.T) {

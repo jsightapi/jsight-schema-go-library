@@ -46,7 +46,16 @@ func ConvertError(f *fs.File, err error) Error {
 			message:  e.Message(),
 			errCode:  e.ErrCode(),
 		}
+
+	case errors.Errorf:
+		return sdkError{
+			filename: f.Name(),
+			position: 0,
+			message:  e.Error(),
+			errCode:  int(e.Code()),
+		}
 	}
+
 	return errors.NewDocumentError(f, errors.Format(errors.ErrGeneric, fmt.Sprintf("%s", err)))
 }
 

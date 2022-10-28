@@ -3,8 +3,8 @@ package loader
 import (
 	"github.com/jsightapi/jsight-schema-go-library/errors"
 	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
-	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema"
-	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/schema"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/schema/constraint"
 )
 
 type allOfConstraintCompiler struct {
@@ -116,7 +116,9 @@ func (c *allOfConstraintCompiler) extendWith(node schema.Node, name string) {
 
 	for i, childNode := range fromObject.Children() {
 		key := fromObject.Key(i)
-		toObject.AddChild(key, childNode) // can panic ErrDuplicateKeysInSchema
+		cn := childNode.Copy()
+		cn.SetInheritedFrom(name)
+		toObject.AddChild(key, cn) // can panic ErrDuplicateKeysInSchema
 	}
 
 	if requiredKeys := fromObject.Constraint(constraint.RequiredKeysConstraintType); requiredKeys != nil {

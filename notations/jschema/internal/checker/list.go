@@ -1,8 +1,8 @@
 package checker
 
 import (
-	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema"
-	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/schema"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/schema/constraint"
 )
 
 type nodeCheckerListConstructor struct {

@@ -2,6 +2,7 @@ package json
 
 import (
 	"github.com/jsightapi/jsight-schema-go-library/bytes"
+	"github.com/jsightapi/jsight-schema-go-library/errors"
 )
 
 type GuessData struct {
@@ -139,5 +140,5 @@ func (g GuessData) LiteralJsonType() Type {
 	case g.IsShortcut():
 		return TypeMixed
 	}
-	panic("Node type can't be guessed by value (" + string(g.bytes) + ")")
+	panic(errors.Format(errors.ErrNodeTypeCantBeGuessed, string(g.bytes)))
 }

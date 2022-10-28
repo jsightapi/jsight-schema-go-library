@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	jschema "github.com/jsightapi/jsight-schema-go-library"
-	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/schema/constraint"
 )
 
 func newASTNode() jschema.ASTNode {
@@ -20,6 +20,7 @@ func astNodeFromNode(n Node) jschema.ASTNode {
 	an.SchemaType = getASTNodeSchemaType(n)
 	an.Rules = collectASTRules(n.ConstraintMap())
 	an.Comment = n.Comment()
+	an.InheritedFrom = n.InheritedFrom()
 
 	return an
 }

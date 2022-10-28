@@ -10,7 +10,7 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/fs"
 	"github.com/jsightapi/jsight-schema-go-library/internal/json"
 	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
-	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/schema/constraint"
 )
 
 func TestNewMixedValueNode(t *testing.T) {
@@ -145,7 +145,7 @@ func Test_addOrConstraint(t *testing.T) {
 func TestMixedValueNode_Grow(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
 		n := createFakeMixedValueNode()
-		n.parent = newObjectNode(lexeme.NewLexEvent(lexeme.ObjectBegin, 0, 0, nil))
+		n.parent = NewObjectNode(lexeme.NewLexEvent(lexeme.ObjectBegin, 0, 0, nil))
 
 		cc := map[lexeme.LexEventType]Node{
 			lexeme.MixedValueBegin: n,

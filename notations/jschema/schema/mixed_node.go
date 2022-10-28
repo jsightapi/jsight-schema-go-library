@@ -45,3 +45,8 @@ func (n MixedNode) ASTNode() (jschema.ASTNode, error) {
 
 	return an, nil
 }
+
+func (n *MixedNode) Copy() Node {
+	nn := *n
+	return &nn
+}

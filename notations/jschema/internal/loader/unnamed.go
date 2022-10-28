@@ -1,6 +1,6 @@
 package loader
 
-import "github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema"
+import "github.com/jsightapi/jsight-schema-go-library/notations/jschema/schema"
 
 func AddUnnamedTypes(rootSchema *schema.Schema) {
 	for _, typ := range rootSchema.TypesList() {

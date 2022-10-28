@@ -16,9 +16,9 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/checker"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/loader"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/scanner"
-	internalSchema "github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema"
-	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/validator"
+	internalSchema "github.com/jsightapi/jsight-schema-go-library/notations/jschema/schema"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/schema/constraint"
 	"github.com/jsightapi/jsight-schema-go-library/notations/regex"
 )
 

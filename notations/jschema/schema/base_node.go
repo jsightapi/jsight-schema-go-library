@@ -6,7 +6,7 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/errors"
 	"github.com/jsightapi/jsight-schema-go-library/internal/json"
 	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
-	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/schema/constraint"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/schema/constraint"
 )
 
 type baseNode struct {
@@ -27,6 +27,9 @@ type baseNode struct {
 
 	// jsonType a JSON type for this node.
 	jsonType json.Type
+
+	// inheritedFrom used only for building Path variables in the JSight API library
+	inheritedFrom string
 }
 
 func newBaseNode(lex lexeme.LexEvent) baseNode {
@@ -198,4 +201,12 @@ func (n *baseNode) SetComment(s string) {
 
 func (n *baseNode) Comment() string {
 	return n.comment
+}
+
+func (n *baseNode) SetInheritedFrom(s string) {
+	n.inheritedFrom = s
+}
+
+func (n *baseNode) InheritedFrom() string {
+	return n.inheritedFrom
 }

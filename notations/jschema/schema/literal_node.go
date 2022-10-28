@@ -41,3 +41,8 @@ func (n *LiteralNode) ASTNode() (jschema.ASTNode, error) {
 	an.Value = n.Value().Unquote().String()
 	return an, nil
 }
+
+func (n *LiteralNode) Copy() Node {
+	nn := *n
+	return &nn
+}
