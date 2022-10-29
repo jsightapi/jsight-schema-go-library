@@ -9,7 +9,7 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/schema/constraint"
 )
 
-type baseNode struct {
+type baseNode struct { //nolint:govet // It's ok.
 	// parent a parent node.
 	parent Node
 

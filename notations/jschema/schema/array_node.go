@@ -7,7 +7,7 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
 )
 
-type ArrayNode struct {
+type ArrayNode struct { //nolint:govet // It's ok.
 	// children a children node list.
 	children []Node
 

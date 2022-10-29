@@ -11,7 +11,7 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/schema/constraint"
 )
 
-type MixedValueNode struct {
+type MixedValueNode struct { //nolint:govet // It's ok.
 	schemaType string
 	value      string
 

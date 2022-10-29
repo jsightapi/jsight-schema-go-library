@@ -195,7 +195,7 @@ func (b ObjectBuilder) Build() *Schema {
 	s.ASTNode = s.buildASTNode()
 	s.collectUserTypes()
 
-	_ = s.compileOnce.Do(func() (err error) {
+	_ = s.compileOnce.Do(func() (err error) { //nolint:errcheck // It's ok.
 		return nil
 	})
 
