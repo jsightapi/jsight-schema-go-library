@@ -46,8 +46,8 @@ func (c *checkSchema) checkType(name string, typ schema.Type, ss map[string]sche
 
 		// Return an error with the full set of bytes of the root schema.
 		if documentError, ok := r.(errors.DocumentError); ok {
-			documentError.SetFile(typ.RootFile())
-			documentError.SetIndex(documentError.Index() + typ.Begin())
+			documentError.SetFile(typ.RootFile)
+			documentError.SetIndex(documentError.Index() + typ.Begin)
 			documentError.SetIncorrectUserType(name)
 			panic(documentError)
 		}
@@ -55,7 +55,7 @@ func (c *checkSchema) checkType(name string, typ schema.Type, ss map[string]sche
 		panic(r)
 	}()
 
-	c.checkNode(typ.Schema().RootNode(), ss)
+	c.checkNode(typ.Schema.RootNode(), ss)
 }
 
 func (c *checkSchema) checkerList(node schema.Node, ss map[string]schema.Type) []nodeChecker {
@@ -302,7 +302,7 @@ func getType(n string, rootSchema *schema.Schema, ss map[string]schema.Type) (re
 		if !ok {
 			panic(errors.Format(errors.ErrTypeNotFound, n))
 		}
-		return s.Schema()
+		return s.Schema
 	}
 
 	main := getFromRoot

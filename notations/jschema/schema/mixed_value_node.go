@@ -115,5 +115,6 @@ func (n *MixedValueNode) GetTypes() []string {
 
 func (n *MixedValueNode) Copy() Node {
 	nn := *n
+	nn.baseNode = n.baseNode.Copy()
 	return &nn
 }

@@ -48,5 +48,6 @@ func (n MixedNode) ASTNode() (jschema.ASTNode, error) {
 
 func (n *MixedNode) Copy() Node {
 	nn := *n
+	nn.baseNode = n.baseNode.Copy()
 	return &nn
 }

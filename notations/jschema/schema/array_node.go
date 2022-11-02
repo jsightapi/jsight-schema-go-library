@@ -97,5 +97,12 @@ func (n *ArrayNode) ASTNode() (jschema.ASTNode, error) {
 
 func (n *ArrayNode) Copy() Node {
 	nn := *n
+	nn.baseNode = n.baseNode.Copy()
+
+	nn.children = make([]Node, 0, len(n.children))
+	for _, v := range n.children {
+		nn.children = append(nn.children, v.Copy())
+	}
+
 	return &nn
 }

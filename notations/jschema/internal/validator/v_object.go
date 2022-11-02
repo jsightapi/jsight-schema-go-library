@@ -148,7 +148,7 @@ func (v objectValidator) validateTypeRules(value jbytes.Bytes) (string, bool) {
 		if !ok {
 			continue
 		}
-		node := typ.Schema().RootNode()
+		node := typ.Schema.RootNode()
 		if node.Type().String() != "string" {
 			panic(errors.Format(errors.ErrInvalidKeyType, v.requiredKeysString()))
 		}

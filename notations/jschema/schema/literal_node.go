@@ -44,5 +44,6 @@ func (n *LiteralNode) ASTNode() (jschema.ASTNode, error) {
 
 func (n *LiteralNode) Copy() Node {
 	nn := *n
+	nn.baseNode = n.baseNode.Copy()
 	return &nn
 }

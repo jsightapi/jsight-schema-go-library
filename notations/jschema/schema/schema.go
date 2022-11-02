@@ -25,11 +25,10 @@ func (s Schema) TypesList() map[string]Type {
 }
 
 // MustType returns *Schema or panic if not found.
-// Deprecated: use Schema.MustType instead
 func (s Schema) MustType(name string) *Schema {
 	t, ok := s.types[name]
 	if ok {
-		return t.schema
+		return t.Schema
 	}
 	panic(errors.Format(errors.ErrTypeNotFound, name))
 }
@@ -38,7 +37,7 @@ func (s Schema) MustType(name string) *Schema {
 func (s Schema) Type(name string) (*Schema, errors.Err) {
 	t, ok := s.types[name]
 	if ok {
-		return t.schema, nil
+		return t.Schema, nil
 	}
 	return nil, errors.Format(errors.ErrTypeNotFound, name)
 }

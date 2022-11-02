@@ -210,3 +210,13 @@ func (n *baseNode) SetInheritedFrom(s string) {
 func (n *baseNode) InheritedFrom() string {
 	return n.inheritedFrom
 }
+
+func (n *baseNode) Copy() baseNode {
+	nn := *n
+	nn.constraints = &Constraints{}
+	_ = n.constraints.Each(func(k constraint.Type, v constraint.Constraint) error { //nolint:errcheck // It's ok.
+		nn.constraints.Set(k, v)
+		return nil
+	})
+	return nn
+}

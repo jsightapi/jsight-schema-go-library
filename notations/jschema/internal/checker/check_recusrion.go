@@ -164,13 +164,13 @@ func (c *recursionChecker) checkType(typeName string, types map[string]schema.Ty
 	defer c.leave(typeName)
 
 	t := types[typeName]
-	if t.Schema() == nil {
+	if t.Schema == nil {
 		// This might happen if we didn't know anything about this type.
 		// Normally we shouldn't get this situation.
 		return nil
 	}
 
-	return c.check(t.Schema().RootNode(), t.Schema().TypesList())
+	return c.check(t.Schema.RootNode(), t.Schema.TypesList())
 }
 
 func (c *recursionChecker) visit(typeName string) bool {

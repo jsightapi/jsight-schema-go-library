@@ -6,10 +6,8 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/bytes"
 	jerr "github.com/jsightapi/jsight-schema-go-library/errors"
 	"github.com/jsightapi/jsight-schema-go-library/internal/json"
-	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
 	"github.com/jsightapi/jsight-schema-go-library/internal/panics"
 	"github.com/jsightapi/jsight-schema-go-library/kit"
-	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/checker"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/loader"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/scanner"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/validator"
@@ -17,7 +15,7 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/schema/constraint"
 )
 
-func NewPathVariablesSchema(content bytes.Bytes, userTypes map[string]*Schema) (*Schema, error) {
+func NewRawPathVariablesSchema(content bytes.Bytes, userTypes map[string]*Schema) (*Schema, error) {
 	s := New("", content)
 
 	err := s.loadPathVariables()
@@ -51,7 +49,7 @@ func (s *Schema) loadPathVariables() error {
 		)
 		s.inner = &sc
 		s.ASTNode = s.buildASTNode()
-		s.collectUserTypes()
+		// s.collectUserTypes()
 		// loader.CompileBasic(s.inner, s.areKeysOptionalByDefault)
 		return nil
 	})
@@ -63,9 +61,10 @@ func (s *Schema) compilePathVariables() error {
 			err = panics.Handle(recover(), err)
 		}()
 		loader.CompileAllOf(s.inner)
-		loader.AddUnnamedTypes(s.inner)
-		checker.CheckRootSchema(s.inner)
-		return checker.CheckRecursion(s.file.Name(), s.inner)
+		// loader.AddUnnamedTypes(s.inner)
+		// checker.CheckRootSchema(s.inner)
+		// return checker.CheckRecursion(s.file.Name(), s.inner)
+		return nil
 	})
 }
 
@@ -152,52 +151,12 @@ func (s *Schema) ValidateObjectProperty(key, value string) (err kit.Error) {
 		}
 	}()
 
+	// loader.CompileBasic(s.inner, s.areKeysOptionalByDefault) // TODO ???
+
 	node, ok := s.ObjectProperty(key)
 	if !ok {
 		return kit.ConvertError(s.file, jerr.Format(jerr.ErrPropertyNotFound, key))
 	}
 
-	validator.ValidateLiteralValue(node, bytes.Bytes(value)) // can panic
-
-	return nil
-}
-
-type ObjectBuilder struct {
-	root *schema.ObjectNode
-}
-
-// NewObjectBuilder used only for building Path variables in the JSight API library
-func NewObjectBuilder() ObjectBuilder {
-	return ObjectBuilder{
-		root: schema.NewObjectNode(lexeme.LexEvent{}),
-	}
-}
-
-func (b ObjectBuilder) AddProperty(key string, value schema.Node) {
-	k := schema.ObjectNodeKey{
-		Key:        key,
-		IsShortcut: false,
-		Lex:        lexeme.LexEvent{},
-	}
-	b.root.AddChild(k, value)
-}
-
-func (b ObjectBuilder) Len() int {
-	return b.root.Len()
-}
-
-func (b ObjectBuilder) Build() *Schema {
-	inner := schema.New()
-	inner.SetRootNode(b.root)
-
-	s := New("", "")
-	s.inner = &inner
-	s.ASTNode = s.buildASTNode()
-	s.collectUserTypes()
-
-	_ = s.compileOnce.Do(func() (err error) { //nolint:errcheck // It's ok.
-		return nil
-	})
-
-	return s
+	return validator.ValidateLiteralValue2(node, *s.inner, bytes.Bytes(value))
 }

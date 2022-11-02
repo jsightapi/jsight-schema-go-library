@@ -96,7 +96,7 @@ func (b *exampleBuilder) buildObjectKey(k internalSchema.ObjectNodeKey) ([]byte,
 		return nil, errors.Format(errors.ErrUnknownType, k.Key)
 	}
 
-	ex, err := b.Build(typ.Schema().RootNode())
+	ex, err := b.Build(typ.Schema.RootNode())
 	if err != nil {
 		return nil, err
 	}
@@ -159,7 +159,7 @@ func (b *exampleBuilder) buildExampleForMixedValueNode(node *internalSchema.Mixe
 	if !ok {
 		return nil, errors.Format(errors.ErrTypeNotFound, typeName)
 	}
-	return b.Build(t.Schema().RootNode())
+	return b.Build(t.Schema.RootNode())
 }
 
 func buildExample(node internalSchema.Node, types map[string]internalSchema.Type) ([]byte, error) {
@@ -263,5 +263,5 @@ func buildExampleForMixedValueNode(
 	if !ok {
 		return nil, errors.Format(errors.ErrTypeNotFound, typeName)
 	}
-	return buildExample(t.Schema().RootNode(), types)
+	return buildExample(t.Schema.RootNode(), types)
 }

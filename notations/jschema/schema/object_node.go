@@ -167,5 +167,16 @@ func (n *ObjectNode) collectASTProperties() ([]jschema.ASTNode, error) {
 
 func (n *ObjectNode) Copy() Node {
 	nn := *n
+	nn.baseNode = n.baseNode.Copy()
+
+	nn.children = make([]Node, 0, len(n.children))
+	for _, v := range n.children {
+		nn.children = append(nn.children, v.Copy())
+	}
+
+	nn.keys = newObjectNodeKeys()
+	for _, v := range n.keys.Data {
+		nn.keys.Set(v)
+	}
 	return &nn
 }

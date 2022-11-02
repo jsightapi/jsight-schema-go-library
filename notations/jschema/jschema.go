@@ -433,3 +433,7 @@ func (s *Schema) compile() error {
 		return checker.CheckRecursion(s.file.Name(), s.inner)
 	})
 }
+
+func (s *Schema) InnerTypesList() map[string]internalSchema.Type {
+	return s.inner.TypesList()
+}
