@@ -151,8 +151,6 @@ func (s *Schema) ValidateObjectProperty(key, value string) (err kit.Error) {
 		}
 	}()
 
-	// loader.CompileBasic(s.inner, s.areKeysOptionalByDefault) // TODO ???
-
 	node, ok := s.ObjectProperty(key)
 	if !ok {
 		return kit.ConvertError(s.file, jerr.Format(jerr.ErrPropertyNotFound, key))

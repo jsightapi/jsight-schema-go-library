@@ -50,14 +50,13 @@ func (b ObjectBuilder) UserTypeNames() []string {
 	return b.jschema.usedUserTypes.Data()
 }
 
-func (b ObjectBuilder) AddType(name string, sc jschema.Schema) error {
+func (b ObjectBuilder) AddType(name string, sc jschema.Schema) {
 	if s, ok := sc.(*Schema); ok {
 		b.jschema.inner.AddType(name, schema.Type{
 			Schema:   s.inner,
 			RootFile: s.file,
 		})
 	}
-	return nil
 }
 
 func (b ObjectBuilder) Build() *Schema {
