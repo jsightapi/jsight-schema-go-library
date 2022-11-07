@@ -1,7 +1,6 @@
 package regex
 
 import (
-	stdErrors "errors"
 	"regexp"
 
 	"github.com/lucasjones/reggen"
@@ -17,6 +16,7 @@ type Schema struct {
 	file *fs.File
 
 	pattern       string
+	re            *regexp.Regexp
 	compileOnce   sync.ErrOnce
 	generatorOnce sync.ErrOnceWithValue[*reggen.Generator]
 	generatorSeed int64
@@ -105,8 +105,14 @@ func (s *Schema) Check() error {
 	return s.compile()
 }
 
-func (*Schema) Validate(jschema.Document) error {
-	return stdErrors.New("unimplemented")
+func (s *Schema) Validate(d jschema.Document) error {
+	if err := s.compile(); err != nil {
+		return err
+	}
+	if !s.re.Match(d.Content()) {
+		return errors.NewDocumentError(s.file, errors.ErrDoesNotMatchRegularExpression)
+	}
+	return nil
 }
 
 func (s *Schema) GetAST() (jschema.ASTNode, error) {
@@ -165,7 +171,9 @@ loop:
 		return s.newDocumentError(errors.ErrRegexUnexpectedEnd, idx, content[idx])
 	}
 
-	if _, err := regexp.Compile(s.pattern); err != nil {
+	var err error
+
+	if s.re, err = regexp.Compile(s.pattern); err != nil {
 		e := errors.Format(errors.ErrRegexInvalid, content)
 		err := errors.NewDocumentError(s.file, e)
 		err.SetIndex(bytes.Index(0))

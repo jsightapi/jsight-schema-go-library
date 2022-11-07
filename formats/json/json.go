@@ -5,6 +5,7 @@ import (
 	"io"
 
 	jschema "github.com/jsightapi/jsight-schema-go-library"
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
 	"github.com/jsightapi/jsight-schema-go-library/errors"
 	"github.com/jsightapi/jsight-schema-go-library/fs"
 	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
@@ -59,6 +60,10 @@ func (d *Document) Len() (uint, error) {
 	return d.lenOnce.Do(func() (uint, error) {
 		return d.computeLen()
 	})
+}
+
+func (d *Document) Content() bytes.Bytes {
+	return d.file.Content()
 }
 
 func (d *Document) computeLen() (length uint, err error) {
@@ -138,7 +143,7 @@ func (d *Document) nextLexeme() (lex lexeme.LexEvent, err error) {
 	return lex, nil
 }
 
-// rewind rewinds document to the beginning.
+// rewind document to the beginning.
 func (d *Document) rewind() {
 	d.scanner = newScanner(d.file)
 	d.scanner.allowTrailingNonSpaceCharacters = d.allowTrailingNonSpaceCharacters

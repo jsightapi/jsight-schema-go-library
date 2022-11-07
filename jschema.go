@@ -3,6 +3,7 @@ package jschema
 import (
 	"sync"
 
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
 	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
 )
 
@@ -28,6 +29,9 @@ type Document interface {
 	// Check checks that this document is valid.
 	// Can return ParsingError if document isn't valid.
 	Check() error
+
+	// Content returns the entire contents of the document
+	Content() bytes.Bytes
 }
 
 // Schema represents a schema.

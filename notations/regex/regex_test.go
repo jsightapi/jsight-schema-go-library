@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	jschema "github.com/jsightapi/jsight-schema-go-library"
+	"github.com/jsightapi/jsight-schema-go-library/formats/plaintext"
 	"github.com/jsightapi/jsight-schema-go-library/fs"
 )
 
@@ -121,8 +122,9 @@ func TestSchema_Check(t *testing.T) {
 }
 
 func TestSchema_Validate(t *testing.T) {
-	err := (&Schema{}).Validate(nil)
-	assert.EqualError(t, err, "unimplemented")
+	s := New("", "/^\\d+$/")
+	assert.NoError(t, s.Validate(plaintext.New("", "123")))
+	assert.Error(t, s.Validate(plaintext.New("", "abc")))
 }
 
 func TestSchema_GetAST(t *testing.T) {

@@ -3,7 +3,10 @@
 package mocks
 
 import (
+	bytes "github.com/jsightapi/jsight-schema-go-library/bytes"
+
 	lexeme "github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
+
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -21,6 +24,22 @@ func (_m *Document) Check() error {
 		r0 = rf()
 	} else {
 		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Content provides a mock function with given fields:
+func (_m *Document) Content() bytes.Bytes {
+	ret := _m.Called()
+
+	var r0 bytes.Bytes
+	if rf, ok := ret.Get(0).(func() bytes.Bytes); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(bytes.Bytes)
+		}
 	}
 
 	return r0
