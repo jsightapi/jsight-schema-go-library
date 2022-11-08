@@ -3,6 +3,7 @@ package validator
 import (
 	"bytes"
 	"reflect"
+	"sort"
 	"strings"
 
 	jbytes "github.com/jsightapi/jsight-schema-go-library/bytes"
@@ -138,6 +139,7 @@ func (v objectValidator) requiredKeysString() string {
 	for k := range v.requiredKeys {
 		keys = append(keys, k)
 	}
+	sort.Strings(keys)
 	return strings.Join(keys, ", ")
 }
 

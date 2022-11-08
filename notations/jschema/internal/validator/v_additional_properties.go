@@ -63,9 +63,7 @@ func newAdditionalPropertiesValidator(
 		panic(errors.ErrValidator)
 	}
 
-	list := make([]validator, 1)
-	list[0] = &v
-	return list
+	return []validator{&v}
 }
 
 func (v additionalPropertiesValidator) node() schema.Node {
@@ -134,7 +132,10 @@ func (v *additionalPropertiesValidator) feedLiteral(jsonLexeme lexeme.LexEvent) 
 	panic(errors.ErrUnexpectedLexInLiteralValidator)
 }
 
-func (*additionalPropertiesValidator) feedNotAllowed(lex lexeme.LexEvent) ([]validator, bool) {
+func (v *additionalPropertiesValidator) feedNotAllowed(lex lexeme.LexEvent) ([]validator, bool) {
+	if vv, ok := v.parentValidator.(*objectValidator); ok {
+		lex = vv.lastFoundKeyLex
+	}
 	panic(lexeme.NewLexEventError(
 		lex,
 		errors.Format(errors.ErrSchemaDoesNotSupportKey, lex.Value().Unquote().String())),
