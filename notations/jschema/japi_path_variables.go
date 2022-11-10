@@ -1,8 +1,6 @@
 package jschema
 
 import (
-	"fmt"
-
 	"github.com/jsightapi/jsight-schema-go-library/bytes"
 	jerr "github.com/jsightapi/jsight-schema-go-library/errors"
 	"github.com/jsightapi/jsight-schema-go-library/internal/json"
@@ -15,6 +13,7 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/schema/constraint"
 )
 
+// NewRawPathVariablesSchema used in jsight api go library
 func NewRawPathVariablesSchema(content bytes.Bytes, userTypes map[string]*Schema) (*Schema, error) {
 	s := New("", content)
 
@@ -139,15 +138,7 @@ func (s *Schema) ObjectProperty(key string) (schema.Node, bool) {
 func (s *Schema) ValidateObjectProperty(key, value string) (err kit.Error) {
 	defer func() {
 		if r := recover(); r != nil {
-			rr, ok := r.(error)
-			if !ok {
-				err = jerr.NewDocumentError(
-					s.file,
-					jerr.Format(jerr.ErrGeneric, fmt.Sprintf("%s", r)),
-				)
-			} else {
-				err = kit.ConvertError(s.file, rr)
-			}
+			err = kit.ConvertError(s.file, r)
 		}
 	}()
 

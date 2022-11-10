@@ -22,6 +22,9 @@ type DocumentError struct {
 	// index of the byte in which the error was found.
 	index bytes.Index
 
+	line   bytes.Index
+	column bytes.Index
+
 	// A length of file content.
 	length bytes.Index
 
@@ -116,7 +119,7 @@ func (e *DocumentError) detectNewLineSymbol() {
 	e.nl = '\n' // default new line
 	var found bool
 	for _, c := range content {
-		if bytes.IsNewLine(c) {
+		if c == '\n' || c == '\r' {
 			e.nl = c
 			found = true
 		} else if found { // first symbol after new line
@@ -130,6 +133,9 @@ func (e *DocumentError) detectNewLineSymbol() {
 func (e DocumentError) lineBeginning() bytes.Index {
 	content := e.file.Content()
 	i := e.index
+	if bytes.Index(len(content)) <= i {
+		return 0
+	}
 	for {
 		c := content[i]
 		if c == e.nl {
@@ -151,6 +157,9 @@ func (e DocumentError) lineBeginning() bytes.Index {
 func (e DocumentError) lineEnd() bytes.Index {
 	content := e.file.Content()
 	i := e.index
+	if bytes.Index(len(content)) <= i {
+		return 0
+	}
 	for i < e.length {
 		c := content[i]
 		if c == e.nl {
@@ -167,32 +176,50 @@ func (e DocumentError) lineEnd() bytes.Index {
 	return i
 }
 
-// Line returns 0, if cannot determine the line number, or 1+ if it can.
-func (e *DocumentError) Line() uint {
+// Line returns 0 if the line number cannot be determined, or 1+ if it can.
+func (e DocumentError) Line() uint {
+	if e.line == 0 {
+		e.countLineAndColumn()
+	}
+	return uint(e.line)
+}
+
+func (e DocumentError) Column() uint {
+	if e.column == 0 {
+		e.countLineAndColumn()
+	}
+	return uint(e.column)
+}
+
+// countLineAndColumn calculate the line and column numbers by byte index in the content
+// return 0 if not found
+func (e *DocumentError) countLineAndColumn() {
+	e.line = 0
+	e.column = 0
+
 	if e.file == nil || len(e.file.Content()) == 0 {
-		return 0
+		return
 	}
 
 	e.preparation()
 
-	content := e.file.Content()
-	i := e.index
-	var n uint
-
-	for {
-		c := content[i]
-		if c == e.nl {
-			if i != e.index {
-				n++
-			}
-		}
-		if i == 0 { // It is important because an unsigned value (i := 0; i--; i == [large positive number])
-			break
-		}
-		i--
+	if e.length == 0 || e.length <= e.index {
+		return
 	}
 
-	return n + 1
+	content := e.file.Content()
+
+	for _, c := range content[:e.index] {
+		if c == e.nl {
+			e.line++
+			e.column = 0
+		} else {
+			e.column++
+		}
+	}
+
+	e.line++
+	e.column++
 }
 
 // SourceSubString returns empty string, if cannot determine the source sub-string.

@@ -12,7 +12,6 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/fs"
 	"github.com/jsightapi/jsight-schema-go-library/internal/panics"
 	"github.com/jsightapi/jsight-schema-go-library/internal/sync"
-	"github.com/jsightapi/jsight-schema-go-library/notations/internal"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/checker"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/loader"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/scanner"
@@ -202,7 +201,7 @@ func (s *Schema) validate(document jschema.Document) error {
 	}
 
 	if empty {
-		return internal.NewValidatorError(errors.ErrEmptyJson, "")
+		return errors.ErrEmptyJson
 	}
 
 	// check for error: Invalid non-space byte after top-level value

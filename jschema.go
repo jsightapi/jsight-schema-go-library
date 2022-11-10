@@ -194,28 +194,3 @@ type Rule interface {
 	// GetAST returns a root AST node for this schema.
 	GetAST() (ASTNode, error)
 }
-
-// ParsingError indicates something bad was happened during parsing.
-type ParsingError interface {
-	error
-
-	// Position returns position of buggy character.
-	Position() uint
-
-	// Message returns an error message.
-	Message() string
-
-	// ErrCode returns an error code.
-	ErrCode() int
-}
-
-// ValidationError indicates that validation was failed.
-type ValidationError interface {
-	error
-
-	// Message returns an error message.
-	Message() string
-
-	// ErrCode returns an error code.
-	ErrCode() int
-}

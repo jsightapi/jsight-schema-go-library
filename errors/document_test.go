@@ -20,14 +20,6 @@ func TestDocumentError_preparation(t *testing.T) {
 			assert.EqualValues(t, 6, e.length)
 			assert.EqualValues(t, '\n', e.nl)
 		})
-
-		t.Run("already prepared", func(t *testing.T) {
-			e := DocumentError{prepared: true}
-			e.preparation()
-
-			assert.EqualValues(t, 0, e.length)
-			assert.EqualValues(t, 0, e.nl)
-		})
 	})
 
 	t.Run("negative", func(t *testing.T) {
@@ -59,11 +51,12 @@ func TestDocumentError_detectNewLineSymbol(t *testing.T) {
 }
 
 type testValidResult struct {
-	index      bytes.Index
-	begin      bytes.Index
-	end        bytes.Index
-	str        string
-	lineNumber uint
+	index  bytes.Index
+	begin  bytes.Index
+	end    bytes.Index
+	str    string
+	line   uint
+	column uint
 }
 type testData struct {
 	source string
@@ -74,81 +67,89 @@ var data = []testData{
 	{
 		"ABC",
 		[]testValidResult{
-			{0, 0, 3, "ABC", 1}, // index of the character A
-			{1, 0, 3, "ABC", 1}, // index of the character B
-			{2, 0, 3, "ABC", 1}, // index of the character C
+			{0, 0, 3, "ABC", 1, 1}, // A
+			{1, 0, 3, "ABC", 1, 2}, // B
+			{2, 0, 3, "ABC", 1, 3}, // C
 		},
 	},
 	{
 		"AB\n\nCD\n",
 		[]testValidResult{
-			{0, 0, 2, "AB", 1}, // index of the character A
-			{1, 0, 2, "AB", 1}, // index of the character B
-			{2, 0, 2, "AB", 1}, // index of first character "\n"
-			{3, 3, 3, "", 2},   // index of second character "\n"
-			{4, 4, 6, "CD", 3}, // index of the character C
-			{5, 4, 6, "CD", 3}, // index of the character D
-			{6, 4, 6, "CD", 3}, // index of third character "\n"
+			{0, 0, 2, "AB", 1, 1}, // A
+			{1, 0, 2, "AB", 1, 2}, // B
+			{2, 0, 2, "AB", 1, 3}, // \n
+			{3, 3, 3, "", 2, 1},   // \n
+			{4, 4, 6, "CD", 3, 1}, // C
+			{5, 4, 6, "CD", 3, 2}, // D
+			{6, 4, 6, "CD", 3, 3}, // \n
 		},
 	},
 	{
 		"AB\r\rCD\r",
 		[]testValidResult{
-			{0, 0, 2, "AB", 1}, // index of the character A
-			{1, 0, 2, "AB", 1}, // index of the character B
-			{2, 0, 2, "AB", 1}, // index of first character "\r"
-			{3, 3, 3, "", 2},   // index of second character "\r"
-			{4, 4, 6, "CD", 3}, // index of the character C
-			{5, 4, 6, "CD", 3}, // index of the character D
-			{6, 4, 6, "CD", 3}, // index of third character "\r"
+			{0, 0, 2, "AB", 1, 1}, // A
+			{1, 0, 2, "AB", 1, 2}, // B
+			{2, 0, 2, "AB", 1, 3}, // \r
+			{3, 3, 3, "", 2, 1},   // \r
+			{4, 4, 6, "CD", 3, 1}, // C
+			{5, 4, 6, "CD", 3, 2}, // D
+			{6, 4, 6, "CD", 3, 3}, // \r
 		},
 	},
 	{
 		"AB\r\n\r\nCD\r\n",
 		[]testValidResult{
-			{0, 0, 2, "AB", 1}, // index of the character A
-			{1, 0, 2, "AB", 1}, // index of the character B
-			{2, 0, 2, "AB", 1}, // index of first character "\r"
-			{3, 0, 2, "AB", 1}, // index of first character "\n"
-			{4, 4, 4, "", 2},   // index of second character "\r"
-			{5, 4, 4, "", 2},   // index of second character "\n"
-			{6, 6, 8, "CD", 3}, // index of the character C
-			{7, 6, 8, "CD", 3}, // index of the character D
-			{8, 6, 8, "CD", 3}, // index of third character "\r"
-			{9, 6, 8, "CD", 3}, // index of third character "\n"
+			{0, 0, 2, "AB", 1, 1}, // A
+			{1, 0, 2, "AB", 1, 2}, // B
+			{2, 0, 2, "AB", 1, 3}, // \r
+			{3, 0, 2, "AB", 1, 4}, // \n
+			{4, 4, 4, "", 2, 1},   // \r
+			{5, 4, 4, "", 2, 2},   // \n
+			{6, 6, 8, "CD", 3, 1}, // C
+			{7, 6, 8, "CD", 3, 2}, // D
+			{8, 6, 8, "CD", 3, 3}, // \r
+			{9, 6, 8, "CD", 3, 4}, // \n
 		},
 	},
 	{
 		"AB\n\r\n\rCD\n\r",
 		[]testValidResult{
-			{0, 0, 2, "AB", 1}, // index of the character A
-			{1, 0, 2, "AB", 1}, // index of the character B
-			{2, 0, 2, "AB", 1}, // index of first character "\r"
-			{3, 0, 2, "AB", 1}, // index of first character "\n"
-			{4, 4, 4, "", 2},   // index of second character "\r"
-			{5, 4, 4, "", 2},   // index of second character "\n"
-			{6, 6, 8, "CD", 3}, // index of the character C
-			{7, 6, 8, "CD", 3}, // index of the character D
-			{8, 6, 8, "CD", 3}, // index of third character "\r"
-			{9, 6, 8, "CD", 3}, // index of third character "\n"
+			{0, 0, 2, "AB", 1, 1}, // A
+			{1, 0, 2, "AB", 1, 2}, // B
+			{2, 0, 2, "AB", 1, 3}, // \r
+			{3, 0, 2, "AB", 1, 4}, // \n
+			{4, 4, 4, "", 2, 1},   // \r
+			{5, 4, 4, "", 2, 2},   // \n
+			{6, 6, 8, "CD", 3, 1}, // C
+			{7, 6, 8, "CD", 3, 2}, // D
+			{8, 6, 8, "CD", 3, 3}, // \r
+			{9, 6, 8, "CD", 3, 4}, // \n
 		},
 	},
 	{
 		"\n\n\n",
 		[]testValidResult{
-			{0, 0, 0, "", 1},
-			{1, 1, 1, "", 2},
-			{2, 2, 2, "", 3},
+			{0, 0, 0, "", 1, 1},
+			{1, 1, 1, "", 2, 1},
+			{2, 2, 2, "", 3, 1},
 		},
 	},
 	{
 		"\nA\nB\n",
 		[]testValidResult{
-			{0, 0, 0, "", 1},
-			{1, 1, 2, "A", 2},
-			{2, 1, 2, "A", 2},
-			{3, 3, 4, "B", 3},
-			{4, 3, 4, "B", 3},
+			{0, 0, 0, "", 1, 1},
+			{1, 1, 2, "A", 2, 1},
+			{2, 1, 2, "A", 2, 2},
+			{3, 3, 4, "B", 3, 1},
+			{4, 3, 4, "B", 3, 2},
+		},
+	},
+	{
+		"",
+		[]testValidResult{
+			{0, 0, 0, "", 0, 0},
+			{1, 0, 0, "", 0, 0},
+			{2, 0, 0, "", 0, 0},
 		},
 	},
 }
@@ -192,7 +193,22 @@ func TestNewDocumentError_Line(t *testing.T) {
 				e := newFakeDocumentError(file, v.index)
 
 				n := e.Line()
-				assert.Equal(t, v.lineNumber, n)
+				assert.Equal(t, v.line, n)
+			})
+		}
+	}
+}
+
+func TestNewDocumentError_Column(t *testing.T) {
+	for _, d := range data {
+		for _, v := range d.valid {
+			t.Run(fmt.Sprintf("%s %d", d.source, v.index), func(t *testing.T) {
+				file := fs.NewFile("", d.source)
+
+				e := newFakeDocumentError(file, v.index)
+
+				n := e.Column()
+				assert.Equal(t, v.column, n)
 			})
 		}
 	}
