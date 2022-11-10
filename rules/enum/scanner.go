@@ -371,7 +371,7 @@ func (s *scanner) stateEndValue(c byte) (state, error) {
 func (s *scanner) validateValue() error {
 	begin := s.stack.Peek().Begin()
 
-	v := s.file.Content().Slice(begin, s.index-2)
+	v := s.file.Content().Sub(begin, s.index-1)
 	key := newEnumItem(v)
 	if _, ok := s.uniqueValues[key]; ok {
 		e := errors.Format(errors.ErrDuplicationInEnumRule, v.String())

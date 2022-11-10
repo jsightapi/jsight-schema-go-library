@@ -36,7 +36,7 @@ func NewLexEvent(t LexEventType, begin, end bytes.Index, file *fs.File) LexEvent
 }
 
 func (lex LexEvent) Value() bytes.Bytes {
-	return lex.file.Content().Slice(lex.begin, lex.end)
+	return lex.file.Content().Sub(lex.begin, lex.end+1)
 }
 
 func (lex LexEvent) File() *fs.File {

@@ -28,8 +28,8 @@ func TestBytes_Equals(t *testing.T) {
 	}
 }
 
-func TestBytes_Slice(t *testing.T) {
-	actual := NewBytes("1234567890").Slice(2, 6)
+func TestBytes_Sub(t *testing.T) {
+	actual := NewBytes("1234567890").Sub(2, 7)
 	assert.Equal(t, "34567", actual.String())
 }
 
@@ -381,7 +381,7 @@ func TestBytes_Len(t *testing.T) {
 	}
 }
 
-func TestBytes_LineFrom(t *testing.T) {
+func TestBytes_SubToEndOfLine(t *testing.T) {
 	tests := []struct {
 		b       string
 		s       int
@@ -494,12 +494,12 @@ func TestBytes_LineFrom(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.b, func(t *testing.T) {
 			b := NewBytes(tt.b)
-			got, err := b.LineFrom(Index(tt.s))
+			got, err := b.SubToEndOfLine(Index(tt.s))
 			if tt.wantErr {
-				require.NotNilf(t, err, "b.LineFrom(%v)", tt.s)
+				require.NotNilf(t, err, "b.SubToEndOfLine(%v)", tt.s)
 			} else {
-				require.NoErrorf(t, err, "b.LineFrom(%v)", tt.s)
-				require.Equalf(t, NewBytes(tt.want), got, "b.LineFrom(%v)", tt.s)
+				require.NoErrorf(t, err, "b.SubToEndOfLine(%v)", tt.s)
+				require.Equalf(t, NewBytes(tt.want), got, "b.SubToEndOfLine(%v)", tt.s)
 			}
 		})
 	}

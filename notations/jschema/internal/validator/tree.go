@@ -1,6 +1,8 @@
 package validator
 
 import (
+	"fmt"
+
 	"github.com/jsightapi/jsight-schema-go-library/errors"
 	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
 )
@@ -79,6 +81,15 @@ func (t *Tree) setLeavesIndexes() {
 	}
 }
 
+func objectPropertyName(v validator) string {
+	if lv, ok := v.(*literalValidator); ok {
+		if ov, ok := lv.parent_.(*objectValidator); ok {
+			return ov.lastFoundKeyLex.Value().String()
+		}
+	}
+	return ""
+}
+
 // feedLeaf passes the LexEvent to the validator. Based on the results changes the
 // tree.
 // Removes or adds new validators to the tree.
@@ -86,10 +97,15 @@ func (t *Tree) setLeavesIndexes() {
 func (t *Tree) feedLeaf(leaf validator, jsonLex lexeme.LexEvent, indexOfLeaf int) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			var ok bool
-			err, ok = r.(errors.DocumentError)
-			if ok {
+			if docErr, ok := r.(errors.DocumentError); ok {
+				if name := objectPropertyName(t.leaves[indexOfLeaf]); name != "" {
+					docErr.SetMessage(fmt.Sprintf("Property %s: %s",
+						name,
+						docErr.Message(),
+					))
+				}
 				delete(t.leaves, indexOfLeaf)
+				err = docErr
 			} else {
 				panic(r)
 			}

@@ -69,28 +69,41 @@ func (b Bytes) DecodeRune() rune {
 	return r
 }
 
-func (b Bytes) Sub(low, high any) Bytes { // TODO rename to Slice
+func (b Bytes) Sub(low, high any) Bytes {
 	l := Int(low)
 	h := Int(high)
 	return NewBytes(b.data[l:h])
 }
 
-func (b Bytes) SubLow(low any) Bytes { // TODO rename to SliceLow
+func (b Bytes) SubLow(low any) Bytes {
 	i := Int(low)
 	return NewBytes(b.data[i:])
 }
 
-func (b Bytes) SubHigh(high any) Bytes { // TODO rename to SliceHigh
+func (b Bytes) SubHigh(high any) Bytes {
 	i := Int(high)
 	return NewBytes(b.data[:i])
 }
 
-func (b Bytes) Equals(bb Bytes) bool {
-	return bytes.Equal(b.data, bb.data)
+func (b Bytes) SubToEndOfLine(start Index) (Bytes, error) {
+	if start > b.LenIndex() {
+		return b, errors.New("can't get a line from a slice")
+	}
+
+	bb := b.data[start:]
+
+	for i, c := range bb {
+		if c == '\n' || c == '\r' {
+			bb = bb[:i]
+			break
+		}
+	}
+
+	return NewBytes(bb), nil
 }
 
-func (b Bytes) Slice(begin, end Index) Bytes { // TODO remove
-	return NewBytes(b.data[begin : end+1])
+func (b Bytes) Equals(bb Bytes) bool {
+	return bytes.Equal(b.data, bb.data)
 }
 
 // InQuotes the function is only needed in order not to modify the library function unquoteBytes()
@@ -239,23 +252,6 @@ func (b Bytes) Len() int {
 
 func (b Bytes) LenIndex() Index {
 	return Index(b.Len())
-}
-
-func (b Bytes) LineFrom(start Index) (Bytes, error) { // TODO rename ToEndOfLine(from)
-	if start > b.LenIndex() {
-		return b, errors.New("can't get a line from a slice")
-	}
-
-	bb := b.data[start:]
-
-	for i, c := range bb {
-		if c == '\n' || c == '\r' {
-			bb = bb[:i]
-			break
-		}
-	}
-
-	return NewBytes(bb), nil
 }
 
 // LineAndColumn calculate the line and column numbers by byte index in the content

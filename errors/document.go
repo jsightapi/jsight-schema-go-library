@@ -82,6 +82,7 @@ func (e DocumentError) Index() bytes.Index {
 func (e *DocumentError) SetIndex(index bytes.Index) {
 	e.index = index
 	e.hasIndex = true
+	e.countLineAndColumn()
 }
 
 func (e DocumentError) IncorrectUserType() string {
@@ -166,16 +167,10 @@ func (e DocumentError) lineEnd() bytes.Index {
 
 // Line returns 0 if the line number cannot be determined, or 1+ if it can.
 func (e DocumentError) Line() uint {
-	if e.line == 0 {
-		e.countLineAndColumn()
-	}
 	return uint(e.line)
 }
 
 func (e DocumentError) Column() uint {
-	if e.column == 0 {
-		e.countLineAndColumn()
-	}
 	return uint(e.column)
 }
 
