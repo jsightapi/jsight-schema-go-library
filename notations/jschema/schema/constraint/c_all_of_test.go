@@ -27,10 +27,10 @@ func TestAllOf_Type(t *testing.T) {
 
 func TestAllOf_String(t *testing.T) {
 	c := NewAllOf()
-	c.Append(bytes.Bytes(`"@foo"`))
-	c.Append(bytes.Bytes(`"@bar"`))
-	c.Append(bytes.Bytes(`"@fizz"`))
-	c.Append(bytes.Bytes(`"@buzz"`))
+	c.Append(bytes.NewBytes(`"@foo"`))
+	c.Append(bytes.NewBytes(`"@bar"`))
+	c.Append(bytes.NewBytes(`"@fizz"`))
+	c.Append(bytes.NewBytes(`"@buzz"`))
 
 	assert.Equal(t, fmt.Sprintf("%s: @foo, @bar, @fizz, @buzz", AllOfConstraintType), c.String())
 }
@@ -40,23 +40,23 @@ func TestAllOf_Append(t *testing.T) {
 		c := NewAllOf()
 		assert.Equal(t, []string{}, c.schemaName)
 
-		c.Append(bytes.Bytes(`"@foo"`))
+		c.Append(bytes.NewBytes(`"@foo"`))
 		assert.Equal(t, []string{"@foo"}, c.schemaName)
 
-		c.Append(bytes.Bytes(`"@bar"`))
+		c.Append(bytes.NewBytes(`"@bar"`))
 		assert.Equal(t, []string{"@foo", "@bar"}, c.schemaName)
 	})
 
 	t.Run("negative", func(t *testing.T) {
 		t.Run("not a string", func(t *testing.T) {
 			assert.PanicsWithValue(t, errors.ErrUnacceptableValueInAllOfRule, func() {
-				NewAllOf().Append(bytes.Bytes("@foo"))
+				NewAllOf().Append(bytes.NewBytes("@foo"))
 			})
 		})
 
 		t.Run("not a type", func(t *testing.T) {
 			assert.PanicsWithError(t, `Invalid schema name (foo) in "allOf" rule`, func() {
-				NewAllOf().Append(bytes.Bytes(`"foo"`))
+				NewAllOf().Append(bytes.NewBytes(`"foo"`))
 			})
 		})
 	})
@@ -64,10 +64,10 @@ func TestAllOf_Append(t *testing.T) {
 
 func TestAllOf_SchemaNames(t *testing.T) {
 	c := NewAllOf()
-	c.Append(bytes.Bytes(`"@foo"`))
-	c.Append(bytes.Bytes(`"@bar"`))
-	c.Append(bytes.Bytes(`"@fizz"`))
-	c.Append(bytes.Bytes(`"@buzz"`))
+	c.Append(bytes.NewBytes(`"@foo"`))
+	c.Append(bytes.NewBytes(`"@bar"`))
+	c.Append(bytes.NewBytes(`"@fizz"`))
+	c.Append(bytes.NewBytes(`"@buzz"`))
 
 	assert.Equal(t, []string{"@foo", "@bar", "@fizz", "@buzz"}, c.SchemaNames())
 }
@@ -93,7 +93,7 @@ func TestAllOf_ASTNode(t *testing.T) {
 		"single": {
 			setup: func() *AllOf {
 				c := NewAllOf()
-				c.Append(bytes.Bytes(`"@foo"`))
+				c.Append(bytes.NewBytes(`"@foo"`))
 				return c
 			},
 
@@ -108,10 +108,10 @@ func TestAllOf_ASTNode(t *testing.T) {
 		"multiple": {
 			setup: func() *AllOf {
 				c := NewAllOf()
-				c.Append(bytes.Bytes(`"@foo"`))
-				c.Append(bytes.Bytes(`"@bar"`))
-				c.Append(bytes.Bytes(`"@fizz"`))
-				c.Append(bytes.Bytes(`"@buzz"`))
+				c.Append(bytes.NewBytes(`"@foo"`))
+				c.Append(bytes.NewBytes(`"@bar"`))
+				c.Append(bytes.NewBytes(`"@fizz"`))
+				c.Append(bytes.NewBytes(`"@buzz"`))
 				return c
 			},
 

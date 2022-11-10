@@ -12,7 +12,7 @@ import (
 
 func TestNewMinLength(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
-		cnstr := NewMinLength([]byte("10"))
+		cnstr := NewMinLength(bytes.NewBytes("10"))
 
 		assert.EqualValues(t, 10, cnstr.value)
 	})
@@ -27,7 +27,7 @@ func TestNewMinLength(t *testing.T) {
 		for _, s := range ss {
 			t.Run(s, func(t *testing.T) {
 				assert.PanicsWithError(t, `Invalid value of "minLength" constraint`, func() {
-					NewMinLength([]byte(s))
+					NewMinLength(bytes.NewBytes(s))
 				})
 			})
 		}
@@ -39,11 +39,11 @@ func TestMinLength_IsJsonTypeCompatible(t *testing.T) {
 }
 
 func TestMinLength_Type(t *testing.T) {
-	assert.Equal(t, MinLengthConstraintType, NewMinLength(bytes.Bytes("1")).Type())
+	assert.Equal(t, MinLengthConstraintType, NewMinLength(bytes.NewBytes("1")).Type())
 }
 
 func TestMinLength_String(t *testing.T) {
-	assert.Equal(t, "minLength: 1", NewMinLength([]byte("1")).String())
+	assert.Equal(t, "minLength: 1", NewMinLength(bytes.NewBytes("1")).String())
 }
 
 func TestMinLength_Validate(t *testing.T) {
@@ -57,7 +57,7 @@ func TestMinLength_Validate(t *testing.T) {
 		for _, given := range cc {
 			t.Run(given, func(t *testing.T) {
 				assert.NotPanics(t, func() {
-					NewMinLength([]byte("10")).Validate([]byte(given))
+					NewMinLength(bytes.NewBytes("10")).Validate(bytes.NewBytes(given))
 				})
 			})
 		}
@@ -65,7 +65,7 @@ func TestMinLength_Validate(t *testing.T) {
 
 	t.Run("negative", func(t *testing.T) {
 		assert.PanicsWithError(t, `Invalid string length for "minLength" = "10" constraint`, func() {
-			NewMinLength([]byte("10")).Validate([]byte("012345678"))
+			NewMinLength(bytes.NewBytes("10")).Validate(bytes.NewBytes("012345678"))
 		})
 	})
 }
@@ -76,9 +76,9 @@ func TestMinLength_ASTNode(t *testing.T) {
 		Value:      "1",
 		Properties: &jschema.RuleASTNodes{},
 		Source:     jschema.RuleASTNodeSourceManual,
-	}, NewMinLength(bytes.Bytes("1")).ASTNode())
+	}, NewMinLength(bytes.NewBytes("1")).ASTNode())
 }
 
 func TestMinLength_Value(t *testing.T) {
-	assert.Equal(t, uint(1), NewMinLength([]byte("1")).Value())
+	assert.Equal(t, uint(1), NewMinLength(bytes.NewBytes("1")).Value())
 }

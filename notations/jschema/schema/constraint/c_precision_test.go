@@ -12,7 +12,7 @@ import (
 
 func TestNewPrecision(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
-		c := NewPrecision([]byte("10"))
+		c := NewPrecision(bytes.NewBytes("10"))
 		assert.Equal(t, uint(10), c.value)
 	})
 
@@ -26,7 +26,7 @@ func TestNewPrecision(t *testing.T) {
 		for given, expected := range cc {
 			t.Run(given, func(t *testing.T) {
 				assert.PanicsWithError(t, expected, func() {
-					NewPrecision([]byte(given))
+					NewPrecision(bytes.NewBytes(given))
 				})
 			})
 		}
@@ -38,11 +38,11 @@ func TestPrecision_IsJsonTypeCompatible(t *testing.T) {
 }
 
 func TestPrecision_Type(t *testing.T) {
-	assert.Equal(t, PrecisionConstraintType, NewPrecision(bytes.Bytes("1")).Type())
+	assert.Equal(t, PrecisionConstraintType, NewPrecision(bytes.NewBytes("1")).Type())
 }
 
 func TestPrecision_String(t *testing.T) {
-	assert.Equal(t, "precision: 1", NewPrecision([]byte("1")).String())
+	assert.Equal(t, "precision: 1", NewPrecision(bytes.NewBytes("1")).String())
 }
 
 func TestPrecision_Validate(t *testing.T) {
@@ -56,14 +56,14 @@ func TestPrecision_Validate(t *testing.T) {
 
 		for given, expectedError := range cc {
 			t.Run(given, func(t *testing.T) {
-				cnstr := NewPrecision([]byte("2"))
+				cnstr := NewPrecision(bytes.NewBytes("2"))
 				if expectedError != "" {
 					assert.PanicsWithError(t, expectedError, func() {
-						cnstr.Validate([]byte(given))
+						cnstr.Validate(bytes.NewBytes(given))
 					})
 				} else {
 					assert.NotPanics(t, func() {
-						cnstr.Validate([]byte(given))
+						cnstr.Validate(bytes.NewBytes(given))
 					})
 				}
 			})
@@ -72,7 +72,7 @@ func TestPrecision_Validate(t *testing.T) {
 
 	t.Run("negative", func(t *testing.T) {
 		assert.PanicsWithError(t, `Incorrect number value "not a number"`, func() {
-			NewPrecision([]byte("2")).Validate([]byte("not a number"))
+			NewPrecision(bytes.NewBytes("2")).Validate(bytes.NewBytes("not a number"))
 		})
 	})
 }
@@ -83,5 +83,5 @@ func TestPrecision_ASTNode(t *testing.T) {
 		Value:      "1",
 		Properties: &jschema.RuleASTNodes{},
 		Source:     jschema.RuleASTNodeSourceManual,
-	}, NewPrecision(bytes.Bytes("1")).ASTNode())
+	}, NewPrecision(bytes.NewBytes("1")).ASTNode())
 }

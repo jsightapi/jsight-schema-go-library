@@ -13,7 +13,7 @@ import (
 
 func TestNewRegex(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
-		c := NewRegex([]byte(`"."`))
+		c := NewRegex(bytes.NewBytes(`"."`))
 
 		assert.Equal(t, ".", c.expression)
 		assert.NotNil(t, c.re)
@@ -22,13 +22,13 @@ func TestNewRegex(t *testing.T) {
 	t.Run("negative", func(t *testing.T) {
 		t.Run("invalid JSON", func(t *testing.T) {
 			assert.PanicsWithError(t, "invalid character 'i' looking for beginning of value", func() {
-				NewRegex([]byte("invalid"))
+				NewRegex(bytes.NewBytes("invalid"))
 			})
 		})
 
 		t.Run("invalid expression", func(t *testing.T) {
 			assert.PanicsWithValue(t, "regexp: Compile(`\\l`): error parsing regexp: invalid escape sequence: `\\l`", func() {
-				NewRegex([]byte(`"\\l"`))
+				NewRegex(bytes.NewBytes(`"\\l"`))
 			})
 		})
 	})
@@ -39,25 +39,25 @@ func TestRegex_IsJsonTypeCompatible(t *testing.T) {
 }
 
 func TestRegexp_Type(t *testing.T) {
-	assert.Equal(t, RegexConstraintType, NewRegex(bytes.Bytes(`"."`)).Type())
+	assert.Equal(t, RegexConstraintType, NewRegex(bytes.NewBytes(`"."`)).Type())
 }
 
 func TestRegex_String(t *testing.T) {
-	assert.Equal(t, `regex: .`, NewRegex([]byte(`"."`)).String())
+	assert.Equal(t, `regex: .`, NewRegex(bytes.NewBytes(`"."`)).String())
 }
 
 func TestRegex_Validate(t *testing.T) {
-	cnstr := NewRegex([]byte(`"foo-\\d"`))
+	cnstr := NewRegex(bytes.NewBytes(`"foo-\\d"`))
 
 	t.Run("valid", func(t *testing.T) {
 		assert.NotPanics(t, func() {
-			cnstr.Validate([]byte("foo-9"))
+			cnstr.Validate(bytes.NewBytes("foo-9"))
 		})
 	})
 
 	t.Run("not valid", func(t *testing.T) {
 		assert.PanicsWithValue(t, errors.ErrDoesNotMatchRegularExpression, func() {
-			cnstr.Validate([]byte("foo-"))
+			cnstr.Validate(bytes.NewBytes("foo-"))
 		})
 	})
 }

@@ -46,7 +46,7 @@ func TestEmail_Validate(t *testing.T) {
 
 		for _, email := range tests {
 			t.Run(email, func(t *testing.T) {
-				NewEmail().Validate(bytes.Bytes(email))
+				NewEmail().Validate(bytes.NewBytes(email))
 			})
 		}
 	})
@@ -86,7 +86,7 @@ func TestEmail_Validate(t *testing.T) {
 		for email, expected := range tests {
 			t.Run(email, func(t *testing.T) {
 				assert.PanicsWithError(t, expected, func() {
-					NewEmail().Validate(bytes.Bytes(email))
+					NewEmail().Validate(bytes.NewBytes(email))
 				})
 			})
 		}

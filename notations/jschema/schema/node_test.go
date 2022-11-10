@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
 	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/schema/constraint"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewNode(t *testing.T) {
@@ -66,7 +67,7 @@ func TestIsOptionalNode(t *testing.T) {
 					n := NewMockNode(t)
 					n.
 						On("Constraint", constraint.OptionalConstraintType).
-						Return(constraint.NewOptional([]byte("false")))
+						Return(constraint.NewOptional(bytes.NewBytes("false")))
 					return n
 				},
 				false,
@@ -76,7 +77,7 @@ func TestIsOptionalNode(t *testing.T) {
 					n := NewMockNode(t)
 					n.
 						On("Constraint", constraint.OptionalConstraintType).
-						Return(constraint.NewOptional([]byte("true")))
+						Return(constraint.NewOptional(bytes.NewBytes("true")))
 					return n
 				},
 				true,

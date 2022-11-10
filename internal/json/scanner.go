@@ -25,7 +25,7 @@ func newScanner() *scanner {
 }
 
 func (s *scanner) Scan(value bytes.Bytes) (*Number, error) {
-	for i, c := range value {
+	for i, c := range value.Data() {
 		s.index = i
 		s.finished = true
 		if !s.stateFn(c) {
@@ -65,7 +65,7 @@ func (s *scanner) setExp(value bytes.Bytes) error {
 		return nil
 	}
 
-	exp, err := value[s.expBegin:].ParseInt()
+	exp, err := value.SubLow(s.expBegin).ParseInt()
 	if err != nil {
 		return err
 	}
@@ -81,18 +81,18 @@ func (s *scanner) getNatural(value bytes.Bytes) bytes.Bytes {
 
 	switch {
 	case s.intLen < 0: // example 1.2E-2 = .012
-		natural = make(bytes.Bytes, 0, s.fraLen)
+		natural = bytes.MakeBytes(s.fraLen)
 		natural = appendZeros(natural, -s.intLen)
 		natural = appendDigits(value, natural)
 
 	case s.fraLen < 0: // example 1.2E+2 = 120
-		natural = make(bytes.Bytes, 0, s.intLen)
+		natural = bytes.MakeBytes(s.intLen)
 		natural = appendDigits(value, natural)
 		natural = appendZeros(natural, -s.fraLen)
 		s.fraLen = 0
 
 	default: // example 12.3E-1 = 1.23
-		natural = make(bytes.Bytes, 0, s.intLen+s.fraLen)
+		natural = bytes.MakeBytes(s.intLen + s.fraLen)
 		natural = appendDigits(value, natural)
 	}
 
@@ -216,19 +216,19 @@ func (*scanner) stateExpNumberFound(c byte) bool {
 
 func appendZeros(to bytes.Bytes, n int) bytes.Bytes {
 	for ; n > 0; n-- {
-		to = append(to, '0')
+		to.Append('0')
 	}
 	return to
 }
 
 func appendDigits(from bytes.Bytes, to bytes.Bytes) bytes.Bytes {
 loop:
-	for _, c := range from {
+	for _, c := range from.Data() {
 		switch c {
 		case '-', '.':
 			continue
 		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-			to = append(to, c)
+			to.Append(c)
 		default:
 			break loop
 		}

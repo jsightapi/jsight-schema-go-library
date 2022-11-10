@@ -37,7 +37,7 @@ func TestDateTime_Validate(t *testing.T) {
 		for _, c := range cc {
 			t.Run(c, func(t *testing.T) {
 				assert.NotPanics(t, func() {
-					NewDateTime().Validate(bytes.Bytes(c))
+					NewDateTime().Validate(bytes.NewBytes(c))
 				})
 			})
 		}
@@ -73,7 +73,7 @@ func TestDateTime_Validate(t *testing.T) {
 		for _, value := range tests {
 			t.Run(value, func(t *testing.T) {
 				assert.PanicsWithValue(t, errors.ErrInvalidDateTime, func() {
-					NewDateTime().Validate(bytes.Bytes(value))
+					NewDateTime().Validate(bytes.NewBytes(value))
 				})
 			})
 		}

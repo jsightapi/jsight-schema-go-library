@@ -56,7 +56,7 @@ func addORShortcut(node schema.Node, rootSchema *schema.Schema, val string) {
 
 func addTypeShortcut(node schema.Node, val string) {
 	node.AddConstraint(constraint.NewType(
-		bytes.Bytes(strings.TrimSpace(val)),
+		bytes.NewBytes(val).TrimSpaces(),
 		jschema.RuleASTNodeSourceGenerated,
 	))
 }

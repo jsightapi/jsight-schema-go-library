@@ -21,7 +21,7 @@ func TestNewExclusiveMaximum(t *testing.T) {
 
 		for given, expected := range cc {
 			t.Run(given, func(t *testing.T) {
-				cnstr := NewExclusiveMaximum([]byte(given))
+				cnstr := NewExclusiveMaximum(bytes.NewBytes(given))
 				assert.Equal(t, expected, cnstr.exclusive)
 			})
 		}
@@ -29,7 +29,7 @@ func TestNewExclusiveMaximum(t *testing.T) {
 
 	t.Run("negative", func(t *testing.T) {
 		assert.PanicsWithError(t, `Invalid value of "exclusiveMaximum" constraint`, func() {
-			NewExclusiveMaximum([]byte("42"))
+			NewExclusiveMaximum(bytes.NewBytes("42"))
 		})
 	})
 }
@@ -39,7 +39,7 @@ func TestExclusiveMaximum_IsJsonTypeCompatible(t *testing.T) {
 }
 
 func TestExclusiveMaximum_Type(t *testing.T) {
-	assert.Equal(t, ExclusiveMaximumConstraintType, NewExclusiveMaximum(bytes.Bytes("true")).Type())
+	assert.Equal(t, ExclusiveMaximumConstraintType, NewExclusiveMaximum(bytes.NewBytes("true")).Type())
 }
 
 func TestExclusiveMaximum_String(t *testing.T) {

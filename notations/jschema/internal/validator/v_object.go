@@ -1,7 +1,6 @@
 package validator
 
 import (
-	"bytes"
 	"reflect"
 	"sort"
 	"strings"
@@ -117,7 +116,7 @@ func (v *objectValidator) feedObjectValueBegin() ([]validator, bool) {
 	if c := v.node_.Constraint(constraint.RequiredKeysConstraintType); c != nil {
 		key, ok := v.validateTypeRules(v.lastFoundKeyLex.Value())
 		if ok {
-			child, ok := objectNode.ChildByRawKey([]byte(key))
+			child, ok := objectNode.ChildByRawKey(jbytes.NewBytes(key))
 			if ok {
 				delete(v.requiredKeys, key)
 				return NodeValidatorList(child, v.rootSchema, v), false
@@ -169,7 +168,7 @@ func (v objectValidator) validateTypeRules(value jbytes.Bytes) (string, bool) {
 		})
 
 		if !inside {
-			if bytes.Equal(node.Value(), value) {
+			if node.Value().Equals(value) {
 				flag = true
 			}
 		}

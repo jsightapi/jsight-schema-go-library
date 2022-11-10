@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -21,15 +22,15 @@ func TestBytes_Equals(t *testing.T) {
 
 	for bb, expected := range cc {
 		t.Run(bb, func(t *testing.T) {
-			actual := Bytes(given).Equals(Bytes(bb))
+			actual := NewBytes(given).Equals(NewBytes(bb))
 			assert.Equal(t, expected, actual)
 		})
 	}
 }
 
 func TestBytes_Slice(t *testing.T) {
-	actual := Bytes("1234567890").Slice(2, 6)
-	assert.Equal(t, "34567", string(actual))
+	actual := NewBytes("1234567890").Slice(2, 6)
+	assert.Equal(t, "34567", actual.String())
 }
 
 func TestBytes_Unquote(t *testing.T) {
@@ -51,8 +52,8 @@ func TestBytes_Unquote(t *testing.T) {
 
 	for given, expected := range cc {
 		t.Run(given, func(t *testing.T) {
-			actual := Bytes(given).Unquote()
-			assert.Equal(t, expected, string(actual))
+			actual := NewBytes(given).Unquote().String()
+			assert.Equal(t, expected, actual)
 		})
 	}
 }
@@ -71,8 +72,8 @@ func TestBytes_TrimSquareBrackets(t *testing.T) {
 
 	for given, expected := range cc {
 		t.Run(given, func(t *testing.T) {
-			actual := Bytes(given).TrimSquareBrackets()
-			assert.Equal(t, expected, string(actual))
+			actual := NewBytes(given).TrimSquareBrackets().String()
+			assert.Equal(t, expected, actual)
 		})
 	}
 }
@@ -107,8 +108,8 @@ func TestBytes_TrimSpaces(t *testing.T) {
 
 	for given, expected := range cc {
 		t.Run(given, func(t *testing.T) {
-			actual := Bytes(given).TrimSpaces()
-			assert.Equal(t, expected, string(actual))
+			actual := NewBytes(given).TrimSpaces().String()
+			assert.Equal(t, expected, actual)
 		})
 	}
 }
@@ -134,8 +135,8 @@ func TestBytes_TrimSpacesFromLeft(t *testing.T) {
 
 	for given, expected := range cc {
 		t.Run(given, func(t *testing.T) {
-			actual := Bytes(given).TrimSpacesFromLeft()
-			assert.Equal(t, expected, string(actual))
+			actual := NewBytes(given).TrimSpacesFromLeft()
+			assert.Equal(t, NewBytes(expected), actual)
 		})
 	}
 }
@@ -149,14 +150,14 @@ func TestBytes_CountSpacesFromLeft(t *testing.T) {
 
 	for given, expected := range cc {
 		t.Run(given, func(t *testing.T) {
-			actual := Bytes(given).CountSpacesFromLeft()
+			actual := NewBytes(given).CountSpacesFromLeft()
 			assert.Equal(t, expected, actual)
 		})
 	}
 }
 
 func TestBytes_OneOf(t *testing.T) {
-	b := Bytes("foo")
+	b := NewBytes("foo")
 
 	cc := []struct {
 		given    []string
@@ -183,7 +184,7 @@ func TestBytes_OneOf(t *testing.T) {
 func BenchmarkBytes_OneOf(b *testing.B) {
 	pp := []string{"foo", "bar", "fizz", "buzz"}
 
-	bytes := Bytes("buzz")
+	bytes := NewBytes("buzz")
 
 	b.ResetTimer()
 
@@ -201,7 +202,7 @@ func TestBytes_ParseBool(t *testing.T) {
 
 		for given, expected := range cc {
 			t.Run(given, func(t *testing.T) {
-				actual, err := Bytes(given).ParseBool()
+				actual, err := NewBytes(given).ParseBool()
 				require.NoError(t, err)
 				assert.Equal(t, expected, actual)
 			})
@@ -218,14 +219,14 @@ func TestBytes_ParseBool(t *testing.T) {
 
 		for _, s := range ss {
 			t.Run(s, func(t *testing.T) {
-				_, err := Bytes(s).ParseBool()
+				_, err := NewBytes(s).ParseBool()
 				assert.EqualError(t, err, "invalid bool value")
 			})
 		}
 	})
 }
 
-var benchmarkParseIntBytes = Bytes("1234567890")
+var benchmarkParseIntBytes = NewBytes("1234567890")
 
 func TestBytes_ParseUint(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
@@ -237,7 +238,7 @@ func TestBytes_ParseUint(t *testing.T) {
 
 		for given, expected := range cc {
 			t.Run(given, func(t *testing.T) {
-				actual, err := Bytes(given).ParseUint()
+				actual, err := NewBytes(given).ParseUint()
 
 				require.NoError(t, err)
 				assert.Equal(t, expected, actual)
@@ -254,7 +255,7 @@ func TestBytes_ParseUint(t *testing.T) {
 
 		for given, expected := range cc {
 			t.Run(given, func(t *testing.T) {
-				_, err := Bytes(given).ParseUint()
+				_, err := NewBytes(given).ParseUint()
 
 				assert.EqualError(t, err, expected)
 			})
@@ -284,7 +285,7 @@ func TestBytes_ParseInt(t *testing.T) {
 		}
 		for given, expected := range cc {
 			t.Run(given, func(t *testing.T) {
-				actual, err := Bytes(given).ParseInt()
+				actual, err := NewBytes(given).ParseInt()
 				require.NoError(t, err)
 				assert.Equal(t, expected, actual)
 			})
@@ -298,7 +299,7 @@ func TestBytes_ParseInt(t *testing.T) {
 		}
 		for given, expected := range cc {
 			t.Run(given, func(t *testing.T) {
-				_, err := Bytes(given).ParseInt()
+				_, err := NewBytes(given).ParseInt()
 				assert.EqualError(t, err, expected)
 			})
 		}
@@ -328,7 +329,7 @@ func TestBytes_IsUserTypeName(t *testing.T) {
 
 		for _, str := range tests {
 			t.Run(str, func(t *testing.T) {
-				assert.True(t, Bytes(str).IsUserTypeName())
+				assert.True(t, NewBytes(str).IsUserTypeName())
 			})
 		}
 	})
@@ -347,7 +348,7 @@ func TestBytes_IsUserTypeName(t *testing.T) {
 
 		for _, str := range tests {
 			t.Run(str, func(t *testing.T) {
-				assert.False(t, Bytes(str).IsUserTypeName())
+				assert.False(t, NewBytes(str).IsUserTypeName())
 			})
 		}
 	})
@@ -355,8 +356,8 @@ func TestBytes_IsUserTypeName(t *testing.T) {
 
 func TestBytes_String(t *testing.T) {
 	cc := map[string]Bytes{
-		"foo":          []byte("foo"),
-		"\u0001\u0002": []byte{1, 2},
+		"foo":          NewBytes("foo"),
+		"\u0001\u0002": NewBytes([]byte{1, 2}),
 	}
 
 	for expected, given := range cc {
@@ -374,7 +375,7 @@ func TestBytes_Len(t *testing.T) {
 
 	for given, expected := range cc {
 		t.Run(given, func(t *testing.T) {
-			actual := Bytes(given).Len()
+			actual := NewBytes(given).Len()
 			assert.Equal(t, expected, actual)
 		})
 	}
@@ -492,14 +493,59 @@ func TestBytes_LineFrom(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.b, func(t *testing.T) {
-			b := Bytes(tt.b)
+			b := NewBytes(tt.b)
 			got, err := b.LineFrom(Index(tt.s))
 			if tt.wantErr {
 				require.NotNilf(t, err, "b.LineFrom(%v)", tt.s)
 			} else {
 				require.NoErrorf(t, err, "b.LineFrom(%v)", tt.s)
-				require.Equalf(t, Bytes(tt.want), got, "b.LineFrom(%v)", tt.s)
+				require.Equalf(t, NewBytes(tt.want), got, "b.LineFrom(%v)", tt.s)
 			}
 		})
 	}
+}
+
+func TestBytes_NewLineSymbol(t *testing.T) {
+	tests := map[string]byte{
+		"abc":     '\n',
+		"abc\n":   '\n',
+		"abc\r\n": '\n',
+		"abc\r":   '\r',
+		"abc\n\r": '\r',
+	}
+
+	nameReplacer := strings.NewReplacer("\n", "\\n", "\r", "\\r")
+
+	for str, expected := range tests {
+		t.Run(nameReplacer.Replace(str), func(t *testing.T) {
+			nl := NewBytes(str).NewLineSymbol()
+			assert.Equal(t, expected, nl)
+		})
+	}
+}
+
+func TestNewBytes(t *testing.T) {
+	var expected = NewBytes("content")
+
+	t.Run("string", func(t *testing.T) {
+		assert.Equal(t, expected, NewBytes("content"))
+	})
+
+	t.Run("[]byte", func(t *testing.T) {
+		assert.Equal(t, expected, NewBytes([]byte("content")))
+	})
+
+	t.Run("bytes.Bytes", func(t *testing.T) {
+		assert.Equal(t, expected, NewBytes(NewBytes("content")))
+	})
+
+	t.Run("nil []byte", func(t *testing.T) {
+		var b []byte
+		assert.Equal(t, Bytes{data: nil}, NewBytes(b))
+	})
+
+	t.Run("nil bytes.Bytes", func(t *testing.T) {
+		var b Bytes
+		assert.Equal(t, Bytes{data: nil}, NewBytes(b))
+	})
 }

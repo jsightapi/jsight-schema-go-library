@@ -21,7 +21,7 @@ func TestNewExclusiveMinimum(t *testing.T) {
 
 		for given, expected := range cc {
 			t.Run(given, func(t *testing.T) {
-				cnstr := NewExclusiveMinimum([]byte(given))
+				cnstr := NewExclusiveMinimum(bytes.NewBytes(given))
 				assert.Equal(t, expected, cnstr.exclusive)
 			})
 		}
@@ -29,7 +29,7 @@ func TestNewExclusiveMinimum(t *testing.T) {
 
 	t.Run("negative", func(t *testing.T) {
 		assert.PanicsWithError(t, `Invalid value of "exclusiveMinimum" constraint`, func() {
-			NewExclusiveMinimum([]byte("42"))
+			NewExclusiveMinimum(bytes.NewBytes("42"))
 		})
 	})
 }
@@ -39,7 +39,7 @@ func TestExclusiveMinimum_IsJsonTypeCompatible(t *testing.T) {
 }
 
 func TestExclusiveMinimum_Type(t *testing.T) {
-	assert.Equal(t, ExclusiveMinimumConstraintType, NewExclusiveMinimum(bytes.Bytes("true")).Type())
+	assert.Equal(t, ExclusiveMinimumConstraintType, NewExclusiveMinimum(bytes.NewBytes("true")).Type())
 }
 
 func TestExclusiveMinimum_String(t *testing.T) {

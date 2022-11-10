@@ -19,7 +19,7 @@ func TestNewOptional(t *testing.T) {
 
 		for given, expected := range cc {
 			t.Run(given, func(t *testing.T) {
-				c := NewOptional([]byte(given))
+				c := NewOptional(bytes.NewBytes(given))
 				assert.Equal(t, expected, c.value)
 			})
 		}
@@ -27,7 +27,7 @@ func TestNewOptional(t *testing.T) {
 
 	t.Run("negative", func(t *testing.T) {
 		assert.PanicsWithError(t, `Invalid value of "optional" constraint`, func() {
-			NewOptional([]byte("foo"))
+			NewOptional(bytes.NewBytes("foo"))
 		})
 	})
 }
@@ -37,7 +37,7 @@ func TestOptional_IsJsonTypeCompatible(t *testing.T) {
 }
 
 func TestOptional_Type(t *testing.T) {
-	assert.Equal(t, OptionalConstraintType, NewOptional(bytes.Bytes("true")).Type())
+	assert.Equal(t, OptionalConstraintType, NewOptional(bytes.NewBytes("true")).Type())
 }
 
 func TestOptional_String(t *testing.T) {
@@ -48,7 +48,7 @@ func TestOptional_String(t *testing.T) {
 
 	for given, expected := range cc {
 		t.Run(given, func(t *testing.T) {
-			assert.Equal(t, expected, NewOptional([]byte(given)).String())
+			assert.Equal(t, expected, NewOptional(bytes.NewBytes(given)).String())
 		})
 	}
 }
@@ -61,7 +61,7 @@ func TestOptional_Bool(t *testing.T) {
 
 	for given, expected := range cc {
 		t.Run(given, func(t *testing.T) {
-			assert.Equal(t, expected, NewOptional([]byte(given)).Bool())
+			assert.Equal(t, expected, NewOptional(bytes.NewBytes(given)).Bool())
 		})
 	}
 }

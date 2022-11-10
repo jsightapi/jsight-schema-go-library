@@ -35,7 +35,7 @@ func WithGeneratorSeed(seed int64) Option {
 }
 
 // New creates a Regex schema with specified name and content.
-func New[T fs.FileContent](name string, content T, oo ...Option) *Schema {
+func New[T bytes.Byter](name string, content T, oo ...Option) *Schema {
 	return FromFile(fs.NewFile(name, content), oo...)
 }
 
@@ -109,7 +109,7 @@ func (s *Schema) Validate(d jschema.Document) error {
 	if err := s.compile(); err != nil {
 		return err
 	}
-	if !s.re.Match(d.Content()) {
+	if !s.re.Match(d.Content().Data()) {
 		return errors.NewDocumentError(s.file, errors.ErrDoesNotMatchRegularExpression)
 	}
 	return nil
@@ -142,21 +142,21 @@ func (s *Schema) compile() error {
 func (s *Schema) doCompile() error {
 	content := s.file.Content()
 
-	if content[0] != '/' {
-		return s.newDocumentError(errors.ErrRegexUnexpectedStart, 0, content[0])
+	if content.Byte(0) != '/' {
+		return s.newDocumentError(errors.ErrRegexUnexpectedStart, 0, content.Byte(0))
 	}
 
 	var escaped bool
 
 loop:
-	for i, c := range content[1:] {
+	for i, c := range content.SubLow(1).Data() {
 		switch c {
 		case '\\':
 			escaped = !escaped
 
 		case '/':
 			if !escaped {
-				s.pattern = string(content[1 : i+1])
+				s.pattern = content.Sub(1, i+1).String()
 				break loop
 			}
 			escaped = false
@@ -167,8 +167,8 @@ loop:
 	}
 
 	if s.pattern == "" {
-		idx := uint(len(content) - 1)
-		return s.newDocumentError(errors.ErrRegexUnexpectedEnd, idx, content[idx])
+		idx := uint(content.Len() - 1)
+		return s.newDocumentError(errors.ErrRegexUnexpectedEnd, idx, content.Byte(idx))
 	}
 
 	var err error

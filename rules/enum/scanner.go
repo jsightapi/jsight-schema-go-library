@@ -39,7 +39,7 @@ const (
 // just got passed in.  (The indication must be delayed in order
 // to recognize the end of numbers: is 123 a whole value or
 // the beginning of 12345e+6?).
-type scanner struct {
+type scanner struct { //nolint:govet // It's ok.
 	// step is a func to be called to execute the next transition.
 	// Also tried using an integer constant and a single func
 	// with a switch, but using the func directly was 10% faster
@@ -94,7 +94,7 @@ func newScanner(file *fs.File, oo ...scannerOption) *scanner {
 	s := &scanner{
 		file:         file,
 		data:         content,
-		dataSize:     bytes.Index(len(content)),
+		dataSize:     content.LenIndex(),
 		returnToStep: &ds.Stack[stepFunc]{},
 		stack:        &ds.Stack[lexeme.LexEvent]{},
 		uniqueValues: map[enumItemValue]struct{}{},
@@ -145,7 +145,7 @@ func (s *scanner) Length() (uint, error) {
 		}
 	}
 	for ; length > 0; length-- {
-		c := s.data[length-1]
+		c := s.data.Byte(length - 1)
 		if !bytes.IsBlank(c) {
 			break
 		}
@@ -168,7 +168,7 @@ func (s *scanner) Next() (lexeme.LexEvent, error) {
 	}
 
 	for s.index < s.dataSize {
-		c := s.data[s.index]
+		c := s.data.Byte(s.index)
 		s.index++
 
 		_, err := s.step(c)
@@ -713,7 +713,7 @@ func (s *scanner) stateMultiLineAnnotation(c byte) (state, error) {
 }
 
 func (s *scanner) stateMultiLineAnnotationText(c byte) (state, error) {
-	if c == '*' && s.data[s.index] == '/' {
+	if c == '*' && s.data.Byte(s.index) == '/' {
 		s.found(lexeme.MultiLineAnnotationTextEnd)
 		s.step = s.stateMultiLineAnnotationEnd
 	}
@@ -762,8 +762,8 @@ func (s *scanner) shiftFound() (lexeme.LexEventType, error) {
 func (s *scanner) newDocumentErrorAtCharacter(context string) errors.DocumentError {
 	// Make runes (utf8 symbols) from current index to last of slice s.data.
 	// Get first rune. Then make string with format ' symbol '
-	runes := []rune(string(s.data[(s.index - 1):]))
-	e := errors.Format(errors.ErrInvalidCharacter, string(runes[0]), context)
+	r := s.data.SubLow(s.index - 1).DecodeRune()
+	e := errors.Format(errors.ErrInvalidCharacter, string(r), context)
 	err := errors.NewDocumentError(s.file, e)
 	err.SetIndex(s.index - 1)
 	return err
@@ -794,7 +794,7 @@ func (s *scanner) processingFoundLexemeClosingTag(lexType lexeme.LexEventType, i
 		return lexeme.NewLexEvent(lexType, pair.Begin(), i, s.file), nil
 
 	case isScalarPair(pairType, lexType):
-		if lexType == lexeme.MixedValueEnd && s.data[i-1] == ' ' {
+		if lexType == lexeme.MixedValueEnd && s.data.Byte(i-1) == ' ' {
 			i--
 		}
 		return lexeme.NewLexEvent(lexType, pair.Begin(), i-1, s.file), nil

@@ -17,9 +17,9 @@ type Enum struct {
 }
 
 type EnumItem struct {
-	src     jbytes.Bytes
 	comment string
 	enumItemValue
+	src jbytes.Bytes
 }
 
 type enumItemValue struct {

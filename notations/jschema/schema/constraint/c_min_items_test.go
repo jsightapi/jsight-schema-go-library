@@ -13,7 +13,7 @@ import (
 
 func TestNewMinItems(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
-		cnstr := NewMinItems([]byte("10"))
+		cnstr := NewMinItems(bytes.NewBytes("10"))
 
 		assert.EqualValues(t, 10, cnstr.value)
 	})
@@ -28,7 +28,7 @@ func TestNewMinItems(t *testing.T) {
 		for _, s := range ss {
 			t.Run(s, func(t *testing.T) {
 				assert.PanicsWithError(t, `Invalid value of "minItems" constraint`, func() {
-					NewMinItems([]byte(s))
+					NewMinItems(bytes.NewBytes(s))
 				})
 			})
 		}
@@ -40,11 +40,11 @@ func TestMinItems_IsJsonTypeCompatible(t *testing.T) {
 }
 
 func TestMinItems_Type(t *testing.T) {
-	assert.Equal(t, MinItemsConstraintType, NewMinItems(bytes.Bytes("1")).Type())
+	assert.Equal(t, MinItemsConstraintType, NewMinItems(bytes.NewBytes("1")).Type())
 }
 
 func TestMinItems_String(t *testing.T) {
-	assert.Equal(t, "minItems: 1", NewMinItems([]byte("1")).String())
+	assert.Equal(t, "minItems: 1", NewMinItems(bytes.NewBytes("1")).String())
 }
 
 func TestMinItems_ValidateTheArray(t *testing.T) {
@@ -57,7 +57,7 @@ func TestMinItems_ValidateTheArray(t *testing.T) {
 		for _, numberOfChildren := range cc {
 			t.Run(fmt.Sprintf("%d", numberOfChildren), func(t *testing.T) {
 				assert.NotPanics(t, func() {
-					NewMinItems([]byte("2")).ValidateTheArray(numberOfChildren)
+					NewMinItems(bytes.NewBytes("2")).ValidateTheArray(numberOfChildren)
 				})
 			})
 		}
@@ -65,13 +65,13 @@ func TestMinItems_ValidateTheArray(t *testing.T) {
 
 	t.Run("negative", func(t *testing.T) {
 		assert.PanicsWithError(t, `The number of array elements does not match the "minItems" rule`, func() {
-			NewMinItems([]byte("2")).ValidateTheArray(1)
+			NewMinItems(bytes.NewBytes("2")).ValidateTheArray(1)
 		})
 	})
 }
 
 func TestMinItems_Value(t *testing.T) {
-	assert.EqualValues(t, 2, NewMinItems([]byte("2")).Value())
+	assert.EqualValues(t, 2, NewMinItems(bytes.NewBytes("2")).Value())
 }
 
 func TestMinItems_ASTNode(t *testing.T) {
@@ -80,5 +80,5 @@ func TestMinItems_ASTNode(t *testing.T) {
 		Value:      "1",
 		Properties: &jschema.RuleASTNodes{},
 		Source:     jschema.RuleASTNodeSourceManual,
-	}, NewMinItems(bytes.Bytes("1")).ASTNode())
+	}, NewMinItems(bytes.NewBytes("1")).ASTNode())
 }

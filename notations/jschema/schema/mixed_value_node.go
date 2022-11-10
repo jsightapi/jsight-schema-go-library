@@ -74,7 +74,7 @@ func (n *MixedValueNode) addTypeConstraint(c *constraint.TypeConstraint) {
 func (n *MixedValueNode) addOrConstraint(c *constraint.Or) {
 	if tc, ok := n.constraints.Get(constraint.TypeConstraintType); ok {
 		n.addTypeConstraint(constraint.NewType(
-			bytes.Bytes(`"mixed"`),
+			bytes.NewBytes(`"mixed"`),
 			tc.(*constraint.TypeConstraint).Source(),
 		))
 	}

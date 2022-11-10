@@ -60,7 +60,7 @@ func stateAnyAnnotationStart(s *Scanner, c byte) state {
 	panic(s.newDocumentErrorAtCharacter("after first slash"))
 }
 
-/////////////////////////////
+// ///////////////////////////
 // Inline annotations states.
 
 func stateInlineAnnotationStart(s *Scanner, c byte) state {
@@ -174,7 +174,7 @@ func stateInlineAnnotationTextSkip(s *Scanner, c byte) state {
 	return scanContinue
 }
 
-/////////////////////////////////
+// ///////////////////////////////
 // Multi-line annotations states.
 
 func stateMultiLineAnnotation(s *Scanner, c byte) state {
@@ -237,14 +237,14 @@ func stateMultiLineAnnotationEnd(s *Scanner, c byte) state {
 }
 
 func stateMultiLineAnnotationText(s *Scanner, c byte) state {
-	if c == '*' && s.data[s.index] == '/' {
+	if c == '*' && s.data.Byte(s.index) == '/' {
 		s.found(lexeme.MultiLineAnnotationTextEnd)
 		s.step = stateMultiLineAnnotationEnd
 	}
 	return scanContinue
 }
 
-/////////////////////////////
+// ///////////////////////////
 // Common annotations states.
 
 func stateBeginAnnotationObjectKeyOrEmpty(s *Scanner, c byte) state {

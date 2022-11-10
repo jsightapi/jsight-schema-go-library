@@ -11,7 +11,7 @@ import (
 )
 
 func TestNewType(t *testing.T) {
-	ruleValue := bytes.Bytes("@foo")
+	ruleValue := bytes.NewBytes("@foo")
 	c := NewType(ruleValue, jschema.RuleASTNodeSourceGenerated)
 
 	assert.Equal(t, ruleValue, c.value)
@@ -27,7 +27,7 @@ func TestTypeConstraint_IsGenerated(t *testing.T) {
 
 	for source, expected := range cc {
 		t.Run(strconv.Itoa(int(source)), func(t *testing.T) {
-			assert.Equal(t, expected, NewType([]byte("@foo"), source).IsGenerated())
+			assert.Equal(t, expected, NewType(bytes.NewBytes("@foo"), source).IsGenerated())
 		})
 	}
 }
@@ -39,16 +39,16 @@ func TestTypeConstraint_IsJsonTypeCompatible(t *testing.T) {
 func TestTypeConstraint_Type(t *testing.T) {
 	assert.Equal(t,
 		TypeConstraintType,
-		NewType(bytes.Bytes("foo"), jschema.RuleASTNodeSourceGenerated).Type(),
+		NewType(bytes.NewBytes("foo"), jschema.RuleASTNodeSourceGenerated).Type(),
 	)
 }
 
 func TestTypeConstraint_String(t *testing.T) {
-	assert.Equal(t, "type: @foo", NewType([]byte("@foo"), jschema.RuleASTNodeSourceGenerated).String())
+	assert.Equal(t, "type: @foo", NewType(bytes.NewBytes("@foo"), jschema.RuleASTNodeSourceGenerated).String())
 }
 
 func TestTypeConstraint_Bytes(t *testing.T) {
-	ruleValue := bytes.Bytes("@foo")
+	ruleValue := bytes.NewBytes("@foo")
 	c := NewType(ruleValue, jschema.RuleASTNodeSourceManual)
 
 	assert.Equal(t, ruleValue, c.Bytes())
@@ -76,7 +76,7 @@ func TestTypeConstraint_ASTNode(t *testing.T) {
 			assert.Equal(
 				t,
 				expected,
-				NewType([]byte(given), jschema.RuleASTNodeSourceGenerated).ASTNode(),
+				NewType(bytes.NewBytes(given), jschema.RuleASTNodeSourceGenerated).ASTNode(),
 			)
 		})
 	}
@@ -86,6 +86,6 @@ func TestTypeConstraint_Source(t *testing.T) {
 	assert.Equal(
 		t,
 		jschema.RuleASTNodeSourceManual,
-		NewType([]byte("@foo"), jschema.RuleASTNodeSourceManual).Source(),
+		NewType(bytes.NewBytes("@foo"), jschema.RuleASTNodeSourceManual).Source(),
 	)
 }

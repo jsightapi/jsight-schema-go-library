@@ -24,7 +24,7 @@ var (
 
 func NewRegex(value bytes.Bytes) *Regex {
 	var str string // decoded json string. JSON "aaa\\bbb" to string "aaa\bbb".
-	err := json.Unmarshal(value, &str)
+	err := json.Unmarshal(value.Data(), &str)
 	if err != nil {
 		panic(err)
 	}
@@ -48,7 +48,7 @@ func (c Regex) String() string {
 }
 
 func (c Regex) Validate(value bytes.Bytes) {
-	if !c.re.Match(value.Unquote()) {
+	if !c.re.Match(value.Unquote().Data()) {
 		panic(errors.ErrDoesNotMatchRegularExpression)
 	}
 }

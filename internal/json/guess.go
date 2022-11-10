@@ -30,7 +30,7 @@ func (g *GuessData) Number() (*Number, error) {
 func (g *GuessData) IsInteger() bool {
 	dot := false
 	exp := false
-	for _, c := range g.bytes {
+	for _, c := range g.bytes.Data() {
 		switch c {
 		case '.':
 			dot = true
@@ -57,7 +57,7 @@ func (g *GuessData) IsInteger() bool {
 func (g *GuessData) IsFloat() bool {
 	dot := false
 	exp := false
-	for _, c := range g.bytes {
+	for _, c := range g.bytes.Data() {
 		switch c {
 		case '.':
 			dot = true
@@ -85,11 +85,11 @@ func (g GuessData) IsNull() bool {
 	// var null = Bytes{'n','u','l','l'}; if bytes.Equal(g.bytes, null) { // Benchmark: 9.75 ns/op   0 B/op   0 allocs/op
 	// if len(g.bytes) == 4 && g.bytes[0] == 'n' && g.bytes[1] == 'u' && g.bytes[2] == 'l' && g.bytes[3] == 'l' { // Benchmark: 0.82 ns/op  0 B/op  0 allocs/op
 	// Benchmark: 0.47 ns/op  0 B/op  0 allocs/op
-	return string(g.bytes) == "null"
+	return g.bytes.String() == "null"
 }
 
 func (g GuessData) IsBoolean() bool {
-	str := string(g.bytes)
+	str := g.bytes.String()
 	if str == "true" || str == "false" {
 		return true
 	}
@@ -97,8 +97,7 @@ func (g GuessData) IsBoolean() bool {
 }
 
 func (g GuessData) IsString() bool {
-	length := len(g.bytes)
-	if length >= 2 && g.bytes[0] == '"' && g.bytes[length-1] == '"' {
+	if g.bytes.Len() >= 2 && g.bytes.FirstByte() == '"' && g.bytes.LastByte() == '"' {
 		return true
 	}
 	return false
@@ -109,11 +108,11 @@ func (g GuessData) IsShortcut() bool {
 }
 
 func (g GuessData) IsObject() bool {
-	return string(g.bytes) == "{"
+	return g.bytes.String() == "{"
 }
 
 func (g GuessData) IsArray() bool {
-	return string(g.bytes) == "["
+	return g.bytes.String() == "["
 }
 
 func (g GuessData) JsonType() Type {
@@ -140,5 +139,5 @@ func (g GuessData) LiteralJsonType() Type {
 	case g.IsShortcut():
 		return TypeMixed
 	}
-	panic(errors.Format(errors.ErrNodeTypeCantBeGuessed, string(g.bytes)))
+	panic(errors.Format(errors.ErrNodeTypeCantBeGuessed, g.bytes.String()))
 }

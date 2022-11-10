@@ -27,12 +27,12 @@ func TestDate_String(t *testing.T) {
 
 func TestDate_Validate(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
-		NewDate().Validate(bytes.Bytes("2021-01-08"))
+		NewDate().Validate(bytes.NewBytes("2021-01-08"))
 	})
 
 	t.Run("negative", func(t *testing.T) {
 		assert.PanicsWithError(t, `Date parsing error (parsing time "2021-21-21": month out of range)`, func() {
-			NewDate().Validate(bytes.Bytes("2021-21-21"))
+			NewDate().Validate(bytes.NewBytes("2021-21-21"))
 		})
 	})
 }

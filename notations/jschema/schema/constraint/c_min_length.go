@@ -39,7 +39,7 @@ func (c MinLength) String() string {
 }
 
 func (c MinLength) Validate(value bytes.Bytes) {
-	length := uint(len(value.Unquote()))
+	length := uint(value.Unquote().Len())
 	if length < c.value {
 		panic(errors.Format(
 			errors.ErrConstraintStringLengthValidation,

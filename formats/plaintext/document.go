@@ -14,7 +14,7 @@ type Document struct {
 var _ jschema.Document = &Document{}
 
 // New creates a JSON document with specified name and content.
-func New[T fs.FileContent](name string, content T) *Document {
+func New[T bytes.Byter](name string, content T) *Document {
 	return &Document{
 		file: fs.NewFile(name, content),
 	}

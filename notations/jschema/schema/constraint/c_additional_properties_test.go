@@ -28,7 +28,7 @@ func TestNewAdditionalProperties(t *testing.T) {
 
 			"@type": {
 				mode:     AdditionalPropertiesMustBeUserType,
-				typeName: jbytes.Bytes("@type"),
+				typeName: jbytes.NewBytes("@type"),
 			},
 
 			"object": {
@@ -41,7 +41,7 @@ func TestNewAdditionalProperties(t *testing.T) {
 			t.Run(v, func(t *testing.T) {
 				t.Parallel()
 
-				actual := NewAdditionalProperties(jbytes.Bytes(v))
+				actual := NewAdditionalProperties(jbytes.NewBytes(v))
 				assert.True(t, actual.IsEqual(expected))
 			})
 		}
@@ -49,7 +49,7 @@ func TestNewAdditionalProperties(t *testing.T) {
 
 	t.Run("negative", func(t *testing.T) {
 		assert.PanicsWithError(t, `Unknown JSchema type "foo"`, func() {
-			NewAdditionalProperties(jbytes.Bytes("foo"))
+			NewAdditionalProperties(jbytes.NewBytes("foo"))
 		})
 	})
 }
@@ -77,7 +77,7 @@ func TestAdditionalProperties_String(t *testing.T) {
 			},
 			"additionalProperties: @foo": {
 				mode:     AdditionalPropertiesMustBeUserType,
-				typeName: jbytes.Bytes("@foo"),
+				typeName: jbytes.NewBytes("@foo"),
 			},
 			"additionalProperties: false": {
 				mode: AdditionalPropertiesNotAllowed,
@@ -124,7 +124,7 @@ func TestAdditionalProperties_JsonType(t *testing.T) {
 }
 
 func TestAdditionalProperties_TypeName(t *testing.T) {
-	var expected = jbytes.Bytes("@foo")
+	var expected = jbytes.NewBytes("@foo")
 
 	actual := AdditionalProperties{typeName: expected}.TypeName()
 	assert.Equal(t, expected, actual)
@@ -140,11 +140,11 @@ func TestAdditionalProperties_IsEqual(t *testing.T) {
 		"same": {
 			AdditionalProperties{
 				schemaType: jschema.SchemaTypeObject,
-				typeName:   jbytes.Bytes("foo"),
+				typeName:   jbytes.NewBytes("foo"),
 			},
 			AdditionalProperties{
 				schemaType: jschema.SchemaTypeObject,
-				typeName:   jbytes.Bytes("foo"),
+				typeName:   jbytes.NewBytes("foo"),
 			},
 			true,
 		},
@@ -153,19 +153,19 @@ func TestAdditionalProperties_IsEqual(t *testing.T) {
 			AdditionalProperties{
 				mode:       AdditionalPropertiesMustBeUserType,
 				schemaType: jschema.SchemaTypeObject,
-				typeName:   jbytes.Bytes("foo"),
+				typeName:   jbytes.NewBytes("foo"),
 			},
 			AdditionalProperties{
 				mode:       AdditionalPropertiesMustBeSchemaType,
 				schemaType: jschema.SchemaTypeObject,
-				typeName:   jbytes.Bytes("foo"),
+				typeName:   jbytes.NewBytes("foo"),
 			},
 			true,
 		},
 
 		"different": {
 			AdditionalProperties{
-				typeName: jbytes.Bytes("foo"),
+				typeName: jbytes.NewBytes("foo"),
 			},
 			AdditionalProperties{
 				schemaType: jschema.SchemaTypeObject,
@@ -231,7 +231,7 @@ func TestAdditionalProperties_ASTNode(t *testing.T) {
 
 	for given, expected := range cc {
 		t.Run(given, func(t *testing.T) {
-			assert.Equal(t, expected, NewAdditionalProperties([]byte(given)).ASTNode())
+			assert.Equal(t, expected, NewAdditionalProperties(jbytes.NewBytes(given)).ASTNode())
 		})
 	}
 }

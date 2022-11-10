@@ -3,14 +3,15 @@ package schema
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
 	jschema "github.com/jsightapi/jsight-schema-go-library"
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
 	"github.com/jsightapi/jsight-schema-go-library/fs"
 	"github.com/jsightapi/jsight-schema-go-library/internal/json"
 	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/schema/constraint"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewMixedValueNode(t *testing.T) {
@@ -177,5 +178,5 @@ func createFakeMixedValueNode() *MixedValueNode {
 }
 
 func createFakeTypeConstraint(name string) *constraint.TypeConstraint {
-	return constraint.NewType([]byte(name), jschema.RuleASTNodeSourceManual)
+	return constraint.NewType(bytes.NewBytes(name), jschema.RuleASTNodeSourceManual)
 }

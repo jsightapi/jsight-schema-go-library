@@ -3,7 +3,6 @@ package loader
 import (
 	stdErrors "errors"
 	"fmt"
-	"strings"
 
 	jschemaLib "github.com/jsightapi/jsight-schema-go-library"
 	"github.com/jsightapi/jsight-schema-go-library/errors"
@@ -140,7 +139,7 @@ func (l *enumValueLoader) ruleName(lex lexeme.LexEvent) {
 		panic(errors.ErrLoader)
 	}
 
-	v := strings.TrimSpace(string(lex.Value()))
+	v := lex.Value().TrimSpaces().String()
 
 	r, ok := l.rules[v]
 	if !ok {

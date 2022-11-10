@@ -3,10 +3,11 @@ package enum
 import (
 	"testing"
 
+	jschema "github.com/jsightapi/jsight-schema-go-library"
+	jbytes "github.com/jsightapi/jsight-schema-go-library/bytes"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	jschema "github.com/jsightapi/jsight-schema-go-library"
 )
 
 func TestEnum_Len(t *testing.T) {
@@ -327,12 +328,12 @@ func TestEnum_Values(t *testing.T) {
 	false,
 	null
 ]`: {
-				{Value: []byte(`"foo"`), Type: jschema.SchemaTypeString},
-				{Value: []byte("42"), Type: jschema.SchemaTypeInteger},
-				{Value: []byte("3.14"), Type: jschema.SchemaTypeFloat},
-				{Value: []byte("true"), Type: jschema.SchemaTypeBoolean},
-				{Value: []byte("false"), Type: jschema.SchemaTypeBoolean},
-				{Value: []byte("null"), Type: jschema.SchemaTypeNull},
+				{Value: jbytes.NewBytes(`"foo"`), Type: jschema.SchemaTypeString},
+				{Value: jbytes.NewBytes("42"), Type: jschema.SchemaTypeInteger},
+				{Value: jbytes.NewBytes("3.14"), Type: jschema.SchemaTypeFloat},
+				{Value: jbytes.NewBytes("true"), Type: jschema.SchemaTypeBoolean},
+				{Value: jbytes.NewBytes("false"), Type: jschema.SchemaTypeBoolean},
+				{Value: jbytes.NewBytes("null"), Type: jschema.SchemaTypeNull},
 			},
 
 			`[
@@ -347,11 +348,11 @@ func TestEnum_Values(t *testing.T) {
 	// Interline comment 3
 ]`: {
 				{Comment: "Interline comment 1", Type: jschema.SchemaTypeComment},
-				{Value: []byte(`"foo"`), Type: jschema.SchemaTypeString, Comment: "Foo comment"},
-				{Value: []byte(`"bar"`), Type: jschema.SchemaTypeString, Comment: "Bar comment"},
+				{Value: jbytes.NewBytes(`"foo"`), Type: jschema.SchemaTypeString, Comment: "Foo comment"},
+				{Value: jbytes.NewBytes(`"bar"`), Type: jschema.SchemaTypeString, Comment: "Bar comment"},
 				{Comment: "Interline comment 2", Type: jschema.SchemaTypeComment},
-				{Value: []byte(`"fizz"`), Type: jschema.SchemaTypeString, Comment: "Fizz comment"},
-				{Value: []byte(`"buzz"`), Type: jschema.SchemaTypeString, Comment: "Buzz comment"},
+				{Value: jbytes.NewBytes(`"fizz"`), Type: jschema.SchemaTypeString, Comment: "Fizz comment"},
+				{Value: jbytes.NewBytes(`"buzz"`), Type: jschema.SchemaTypeString, Comment: "Buzz comment"},
 				{Comment: "Interline comment 3", Type: jschema.SchemaTypeComment},
 			},
 
@@ -369,13 +370,13 @@ func TestEnum_Values(t *testing.T) {
 		"TIGER" // Tiger
 ]`: {
 				{Comment: "My\n\t\t   Pets", Type: jschema.SchemaTypeComment},
-				{Value: []byte(`"CAT"`), Type: jschema.SchemaTypeString, Comment: "My\n\t\t          Cat"},
-				{Value: []byte(`"DOG"`), Type: jschema.SchemaTypeString, Comment: "Dog"},
-				{Value: []byte(`"PIG"`), Type: jschema.SchemaTypeString, Comment: "Pig"},
+				{Value: jbytes.NewBytes(`"CAT"`), Type: jschema.SchemaTypeString, Comment: "My\n\t\t          Cat"},
+				{Value: jbytes.NewBytes(`"DOG"`), Type: jschema.SchemaTypeString, Comment: "Dog"},
+				{Value: jbytes.NewBytes(`"PIG"`), Type: jschema.SchemaTypeString, Comment: "Pig"},
 				{Comment: "Wild animals", Type: jschema.SchemaTypeComment},
-				{Value: []byte(`"WOLF"`), Type: jschema.SchemaTypeString, Comment: "Wolf"},
-				{Value: []byte(`"LION"`), Type: jschema.SchemaTypeString, Comment: "Lion"},
-				{Value: []byte(`"TIGER"`), Type: jschema.SchemaTypeString, Comment: "Tiger"},
+				{Value: jbytes.NewBytes(`"WOLF"`), Type: jschema.SchemaTypeString, Comment: "Wolf"},
+				{Value: jbytes.NewBytes(`"LION"`), Type: jschema.SchemaTypeString, Comment: "Lion"},
+				{Value: jbytes.NewBytes(`"TIGER"`), Type: jschema.SchemaTypeString, Comment: "Tiger"},
 			},
 		}
 

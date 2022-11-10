@@ -10,7 +10,7 @@ import (
 )
 
 func BenchmarkIsNull(b *testing.B) {
-	null := bytes.Bytes("null")
+	null := bytes.NewBytes("null")
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -115,13 +115,13 @@ func fail(key string) []string {
 func TestIsInteger(t *testing.T) {
 	for _, str := range success("integer") {
 		t.Run(str, func(t *testing.T) {
-			assert.True(t, Guess(bytes.Bytes(str)).IsInteger())
+			assert.True(t, Guess(bytes.NewBytes(str)).IsInteger())
 		})
 	}
 
 	for _, str := range fail("integer") {
 		t.Run(str, func(t *testing.T) {
-			assert.False(t, Guess(bytes.Bytes(str)).IsInteger())
+			assert.False(t, Guess(bytes.NewBytes(str)).IsInteger())
 		})
 	}
 }
@@ -129,13 +129,13 @@ func TestIsInteger(t *testing.T) {
 func TestIsFloat(t *testing.T) {
 	for _, str := range success("float") {
 		t.Run(str, func(t *testing.T) {
-			assert.True(t, Guess(bytes.Bytes(str)).IsFloat())
+			assert.True(t, Guess(bytes.NewBytes(str)).IsFloat())
 		})
 	}
 
 	for _, str := range fail("float") {
 		t.Run(str, func(t *testing.T) {
-			assert.False(t, Guess(bytes.Bytes(str)).IsFloat())
+			assert.False(t, Guess(bytes.NewBytes(str)).IsFloat())
 		})
 	}
 }
@@ -143,13 +143,13 @@ func TestIsFloat(t *testing.T) {
 func TestIsString(t *testing.T) {
 	for _, str := range success("string") {
 		t.Run(str, func(t *testing.T) {
-			assert.True(t, Guess(bytes.Bytes(str)).IsString())
+			assert.True(t, Guess(bytes.NewBytes(str)).IsString())
 		})
 	}
 
 	for _, str := range fail("string") {
 		t.Run(str, func(t *testing.T) {
-			assert.False(t, Guess(bytes.Bytes(str)).IsString())
+			assert.False(t, Guess(bytes.NewBytes(str)).IsString())
 		})
 	}
 }
@@ -165,7 +165,7 @@ func TestGuessData_IsObject(t *testing.T) {
 
 	for given, expected := range cc {
 		t.Run(given, func(t *testing.T) {
-			assert.Equal(t, expected, GuessData{bytes: bytes.Bytes(given)}.IsObject())
+			assert.Equal(t, expected, GuessData{bytes: bytes.NewBytes(given)}.IsObject())
 		})
 	}
 }
@@ -181,7 +181,7 @@ func TestGuessData_IsArray(t *testing.T) {
 
 	for given, expected := range cc {
 		t.Run(given, func(t *testing.T) {
-			assert.Equal(t, expected, GuessData{bytes: bytes.Bytes(given)}.IsArray())
+			assert.Equal(t, expected, GuessData{bytes: bytes.NewBytes(given)}.IsArray())
 		})
 	}
 }
@@ -189,13 +189,13 @@ func TestGuessData_IsArray(t *testing.T) {
 func TestIsBoolean(t *testing.T) {
 	for _, str := range success("boolean") {
 		t.Run(str, func(t *testing.T) {
-			assert.True(t, Guess(bytes.Bytes(str)).IsBoolean())
+			assert.True(t, Guess(bytes.NewBytes(str)).IsBoolean())
 		})
 	}
 
 	for _, str := range fail("boolean") {
 		t.Run(str, func(t *testing.T) {
-			assert.False(t, Guess(bytes.Bytes(str)).IsBoolean())
+			assert.False(t, Guess(bytes.NewBytes(str)).IsBoolean())
 		})
 	}
 }
@@ -203,13 +203,13 @@ func TestIsBoolean(t *testing.T) {
 func TestIsNull(t *testing.T) {
 	for _, str := range success("null") {
 		t.Run(str, func(t *testing.T) {
-			assert.True(t, Guess(bytes.Bytes(str)).IsNull())
+			assert.True(t, Guess(bytes.NewBytes(str)).IsNull())
 		})
 	}
 
 	for _, str := range fail("null") {
 		t.Run(str, func(t *testing.T) {
-			assert.False(t, Guess(bytes.Bytes(str)).IsNull())
+			assert.False(t, Guess(bytes.NewBytes(str)).IsNull())
 		})
 	}
 }
@@ -217,31 +217,31 @@ func TestIsNull(t *testing.T) {
 func TestGuessLiteralNodeType(t *testing.T) {
 	for _, str := range success("string") {
 		t.Run(str, func(t *testing.T) {
-			assert.Equal(t, TypeString, Guess(bytes.Bytes(str)).LiteralJsonType())
+			assert.Equal(t, TypeString, Guess(bytes.NewBytes(str)).LiteralJsonType())
 		})
 	}
 
 	for _, str := range success("integer") {
 		t.Run(str, func(t *testing.T) {
-			assert.Equal(t, TypeInteger, Guess(bytes.Bytes(str)).LiteralJsonType())
+			assert.Equal(t, TypeInteger, Guess(bytes.NewBytes(str)).LiteralJsonType())
 		})
 	}
 
 	for _, str := range success("float") {
 		t.Run(str, func(t *testing.T) {
-			assert.Equal(t, TypeFloat, Guess(bytes.Bytes(str)).LiteralJsonType())
+			assert.Equal(t, TypeFloat, Guess(bytes.NewBytes(str)).LiteralJsonType())
 		})
 	}
 
 	for _, str := range success("boolean") {
 		t.Run(str, func(t *testing.T) {
-			assert.Equal(t, TypeBoolean, Guess(bytes.Bytes(str)).LiteralJsonType())
+			assert.Equal(t, TypeBoolean, Guess(bytes.NewBytes(str)).LiteralJsonType())
 		})
 	}
 
 	for _, str := range success("null") {
 		t.Run(str, func(t *testing.T) {
-			assert.Equal(t, TypeNull, Guess(bytes.Bytes(str)).LiteralJsonType())
+			assert.Equal(t, TypeNull, Guess(bytes.NewBytes(str)).LiteralJsonType())
 		})
 	}
 }
@@ -249,13 +249,13 @@ func TestGuessLiteralNodeType(t *testing.T) {
 func TestGuessLiteralNodeTypePanic(t *testing.T) {
 	for _, str := range success("wrong") {
 		assert.Panics(t, func() {
-			Guess(bytes.Bytes(str)).LiteralJsonType()
+			Guess(bytes.NewBytes(str)).LiteralJsonType()
 		})
 	}
 }
 
 func TestNumberOptimization(t *testing.T) {
-	b := bytes.Bytes("123")
+	b := bytes.NewBytes("123")
 	g := Guess(b)
 
 	g.IsInteger()

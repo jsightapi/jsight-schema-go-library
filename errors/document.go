@@ -109,23 +109,11 @@ func (e *DocumentError) preparation() {
 	if e.file == nil {
 		panic("The file is not specified")
 	}
-	e.length = bytes.Index(len(e.file.Content()))
-	e.detectNewLineSymbol()
-	e.prepared = true
-}
 
-func (e *DocumentError) detectNewLineSymbol() {
-	content := e.file.Content()
-	e.nl = '\n' // default new line
-	var found bool
-	for _, c := range content {
-		if c == '\n' || c == '\r' {
-			e.nl = c
-			found = true
-		} else if found { // first symbol after new line
-			break
-		}
-	}
+	e.length = e.file.Content().LenIndex()
+	e.nl = e.file.Content().NewLineSymbol()
+
+	e.prepared = true
 }
 
 // lineBeginning
@@ -133,11 +121,11 @@ func (e *DocumentError) detectNewLineSymbol() {
 func (e DocumentError) lineBeginning() bytes.Index {
 	content := e.file.Content()
 	i := e.index
-	if bytes.Index(len(content)) <= i {
+	if content.LenIndex() <= i {
 		return 0
 	}
 	for {
-		c := content[i]
+		c := content.Byte(i)
 		if c == e.nl {
 			if i != e.index {
 				i++ // step forward from new line
@@ -157,18 +145,18 @@ func (e DocumentError) lineBeginning() bytes.Index {
 func (e DocumentError) lineEnd() bytes.Index {
 	content := e.file.Content()
 	i := e.index
-	if bytes.Index(len(content)) <= i {
+	if content.LenIndex() <= i {
 		return 0
 	}
 	for i < e.length {
-		c := content[i]
+		c := content.Byte(i)
 		if c == e.nl {
 			break
 		}
 		i++
 	}
 	if i > 0 {
-		c := content[i-1]
+		c := content.Byte(i - 1)
 		if (e.nl == '\n' && c == '\r') || (e.nl == '\r' && c == '\n') {
 			i--
 		}
@@ -191,42 +179,20 @@ func (e DocumentError) Column() uint {
 	return uint(e.column)
 }
 
-// countLineAndColumn calculate the line and column numbers by byte index in the content
-// return 0 if not found
 func (e *DocumentError) countLineAndColumn() {
-	e.line = 0
-	e.column = 0
-
-	if e.file == nil || len(e.file.Content()) == 0 {
-		return
+	if e.file == nil {
+		e.line = 0
+		e.column = 0
+	} else {
+		e.line, e.column = e.file.Content().LineAndColumn(e.index)
 	}
-
-	e.preparation()
-
-	if e.length == 0 || e.length <= e.index {
-		return
-	}
-
-	content := e.file.Content()
-
-	for _, c := range content[:e.index] {
-		if c == e.nl {
-			e.line++
-			e.column = 0
-		} else {
-			e.column++
-		}
-	}
-
-	e.line++
-	e.column++
 }
 
 // SourceSubString returns empty string, if cannot determine the source sub-string.
 func (e *DocumentError) SourceSubString() string {
 	const maxLength = 200
 
-	if e.file == nil || len(e.file.Content()) == 0 {
+	if e.file == nil || e.file.Content().Len() == 0 {
 		return ""
 	}
 
@@ -238,10 +204,10 @@ func (e *DocumentError) SourceSubString() string {
 
 	if end-begin > maxLength {
 		end = begin + maxLength - 3
-		return string(content[begin:end].TrimSpacesFromLeft()) + "..."
+		return content.Sub(begin, end).TrimSpacesFromLeft().String() + "..."
 	}
 
-	return string(content[begin:end].TrimSpacesFromLeft())
+	return content.Sub(begin, end).TrimSpacesFromLeft().String()
 }
 
 func (e *DocumentError) pointerToTheErrorCharacter() string {
@@ -249,7 +215,7 @@ func (e *DocumentError) pointerToTheErrorCharacter() string {
 
 	content := e.file.Content()
 	begin := e.lineBeginning()
-	spaces := content[begin:].CountSpacesFromLeft()
+	spaces := content.SubLow(begin).CountSpacesFromLeft()
 
 	i := int(e.index) - int(begin) - spaces
 	return strings.Repeat("-", i) + "^"

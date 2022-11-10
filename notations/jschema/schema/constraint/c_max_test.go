@@ -13,7 +13,7 @@ import (
 
 func TestNewMax(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
-		ruleValue := bytes.Bytes("3.14")
+		ruleValue := bytes.NewBytes("3.14")
 		cnstr := NewMax(ruleValue)
 
 		expectedNumber, err := json.NewNumber(ruleValue)
@@ -26,7 +26,7 @@ func TestNewMax(t *testing.T) {
 
 	t.Run("negative", func(t *testing.T) {
 		assert.PanicsWithError(t, `Incorrect number value "not a number"`, func() {
-			NewMax([]byte("not a number"))
+			NewMax(bytes.NewBytes("not a number"))
 		})
 	})
 }
@@ -36,7 +36,7 @@ func TestMax_IsJsonTypeCompatible(t *testing.T) {
 }
 
 func TestMax_Type(t *testing.T) {
-	assert.Equal(t, MaxConstraintType, NewMax(bytes.Bytes("1")).Type())
+	assert.Equal(t, MaxConstraintType, NewMax(bytes.NewBytes("1")).Type())
 }
 
 func TestMax_String(t *testing.T) {
@@ -47,7 +47,7 @@ func TestMax_String(t *testing.T) {
 
 	for exclusive, expected := range cc {
 		t.Run(expected, func(t *testing.T) {
-			cnstr := NewMax([]byte("3.14"))
+			cnstr := NewMax(bytes.NewBytes("3.14"))
 			cnstr.SetExclusive(exclusive)
 
 			actual := cnstr.String()
@@ -79,7 +79,7 @@ func TestMax_Exclusive(t *testing.T) {
 func TestMax_Validate(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
 		newMax := func(max string, exclusive bool) *Max {
-			cnstr := NewMax([]byte(max))
+			cnstr := NewMax(bytes.NewBytes(max))
 			cnstr.SetExclusive(exclusive)
 			return cnstr
 		}
@@ -122,11 +122,11 @@ func TestMax_Validate(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				if c.error != "" {
 					assert.PanicsWithError(t, c.error, func() {
-						c.cnstr.Validate([]byte(c.value))
+						c.cnstr.Validate(bytes.NewBytes(c.value))
 					})
 				} else {
 					assert.NotPanics(t, func() {
-						c.cnstr.Validate([]byte(c.value))
+						c.cnstr.Validate(bytes.NewBytes(c.value))
 					})
 				}
 			})
@@ -135,7 +135,7 @@ func TestMax_Validate(t *testing.T) {
 
 	t.Run("negative", func(t *testing.T) {
 		assert.PanicsWithError(t, `Incorrect number value "not a number"`, func() {
-			NewMax([]byte("3")).Validate([]byte("not a number"))
+			NewMax(bytes.NewBytes("3")).Validate(bytes.NewBytes("not a number"))
 		})
 	})
 }
@@ -146,11 +146,11 @@ func TestMax_ASTNode(t *testing.T) {
 		Value:      "1",
 		Properties: &jschema.RuleASTNodes{},
 		Source:     jschema.RuleASTNodeSourceManual,
-	}, NewMax(bytes.Bytes("1")).ASTNode())
+	}, NewMax(bytes.NewBytes("1")).ASTNode())
 }
 
 func TestMax_Value(t *testing.T) {
-	num, err := json.NewNumber([]byte("42"))
+	num, err := json.NewNumber(bytes.NewBytes("42"))
 	require.NoError(t, err)
 
 	cnstr := Max{

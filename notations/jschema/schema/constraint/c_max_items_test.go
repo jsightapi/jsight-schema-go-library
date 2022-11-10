@@ -13,7 +13,7 @@ import (
 
 func TestNewMaxItems(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
-		cnstr := NewMaxItems([]byte("10"))
+		cnstr := NewMaxItems(bytes.NewBytes("10"))
 
 		assert.EqualValues(t, 10, cnstr.value)
 	})
@@ -28,7 +28,7 @@ func TestNewMaxItems(t *testing.T) {
 		for _, s := range ss {
 			t.Run(s, func(t *testing.T) {
 				assert.PanicsWithError(t, `Invalid value of "maxItems" constraint`, func() {
-					NewMaxItems([]byte(s))
+					NewMaxItems(bytes.NewBytes(s))
 				})
 			})
 		}
@@ -40,11 +40,11 @@ func TestMaxItems_IsJsonTypeCompatible(t *testing.T) {
 }
 
 func TestMaxItems_Type(t *testing.T) {
-	assert.Equal(t, MaxItemsConstraintType, NewMaxItems(bytes.Bytes("1")).Type())
+	assert.Equal(t, MaxItemsConstraintType, NewMaxItems(bytes.NewBytes("1")).Type())
 }
 
 func TestMaxItems_String(t *testing.T) {
-	assert.Equal(t, "maxItems: 1", NewMaxItems([]byte("1")).String())
+	assert.Equal(t, "maxItems: 1", NewMaxItems(bytes.NewBytes("1")).String())
 }
 
 func TestMaxItems_ValidateTheArray(t *testing.T) {
@@ -57,7 +57,7 @@ func TestMaxItems_ValidateTheArray(t *testing.T) {
 		for _, numberOfChildren := range cc {
 			t.Run(fmt.Sprintf("%d", numberOfChildren), func(t *testing.T) {
 				assert.NotPanics(t, func() {
-					NewMaxItems([]byte("2")).ValidateTheArray(numberOfChildren)
+					NewMaxItems(bytes.NewBytes("2")).ValidateTheArray(numberOfChildren)
 				})
 			})
 		}
@@ -65,13 +65,13 @@ func TestMaxItems_ValidateTheArray(t *testing.T) {
 
 	t.Run("negative", func(t *testing.T) {
 		assert.PanicsWithError(t, `The number of array elements does not match the "maxItems" rule`, func() {
-			NewMaxItems([]byte("2")).ValidateTheArray(3)
+			NewMaxItems(bytes.NewBytes("2")).ValidateTheArray(3)
 		})
 	})
 }
 
 func TestMaxItems_Value(t *testing.T) {
-	assert.EqualValues(t, 2, NewMaxItems([]byte("2")).Value())
+	assert.EqualValues(t, 2, NewMaxItems(bytes.NewBytes("2")).Value())
 }
 
 func TestMaxItems_ASTNode(t *testing.T) {
@@ -80,5 +80,5 @@ func TestMaxItems_ASTNode(t *testing.T) {
 		Value:      "1",
 		Properties: &jschema.RuleASTNodes{},
 		Source:     jschema.RuleASTNodeSourceManual,
-	}, NewMaxItems(bytes.Bytes("1")).ASTNode())
+	}, NewMaxItems(bytes.NewBytes("1")).ASTNode())
 }

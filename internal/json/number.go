@@ -26,16 +26,16 @@ func NewNumber(b bytes.Bytes) (*Number, error) {
 // trimLeadingZerosInTheIntegerPart removes zeros from the beginning of the integer
 // part (if any).
 func (n *Number) trimLeadingZerosInTheIntegerPart() error {
-	length := len(n.nat)
+	length := n.nat.Len()
 	if n.exp < 0 || n.exp > length {
 		return errors.New("incorrect exponent value")
 	}
 	for intLen := length - n.exp; intLen != 0; intLen-- {
-		c := n.nat[0] // first character
+		c := n.nat.FirstByte()
 		if c != '0' {
 			break
 		}
-		n.nat = n.nat[1:] // trim left byte
+		n.nat = n.nat.SubLow(1) // trim left byte
 	}
 	return nil
 }
@@ -43,26 +43,26 @@ func (n *Number) trimLeadingZerosInTheIntegerPart() error {
 // trimTrailingZerosInTheFractionalPart removes zeros from the end of the fractional
 // part (if any).
 func (n *Number) trimTrailingZerosInTheFractionalPart() error {
-	if n.exp < 0 || n.exp > len(n.nat) {
+	if n.exp < 0 || n.exp > n.nat.Len() {
 		return errors.New("incorrect exponent value")
 	}
 	for ; n.exp != 0; n.exp-- {
-		i := len(n.nat) - 1
-		c := n.nat[i] // last character
+		i := n.nat.Len() - 1
+		c := n.nat.Byte(i) // last character
 		if c != '0' {
 			break
 		}
-		n.nat = n.nat[:i] // trim right byte
+		n.nat = n.nat.SubHigh(bytes.Index(i)) // trim right byte
 	}
 	return nil
 }
 
 func (n Number) int() bytes.Bytes {
-	return n.nat[:len(n.nat)-n.exp]
+	return n.nat.SubHigh(bytes.Index(n.nat.Len() - n.exp))
 }
 
 func (n Number) fra() bytes.Bytes {
-	return n.nat[len(n.nat)-n.exp:]
+	return n.nat.SubLow(bytes.Index(n.nat.Len() - n.exp))
 }
 
 func (n Number) LengthOfFractionalPart() uint {
@@ -112,8 +112,8 @@ func (n Number) cmpAbs(nn *Number) (r int) {
 func (n Number) cmpInt(nn *Number) (r int) {
 	x := n.int()
 	y := nn.int()
-	xLen := len(x)
-	yLen := len(y)
+	xLen := x.Len()
+	yLen := y.Len()
 	if xLen != yLen || xLen == 0 {
 		switch {
 		case xLen < yLen:
@@ -127,9 +127,9 @@ func (n Number) cmpInt(nn *Number) (r int) {
 	// xLen == yLen
 	for i := 0; i < xLen; i++ {
 		switch {
-		case x[i] < y[i]:
+		case x.Byte(i) < y.Byte(i):
 			return -1
-		case x[i] > y[i]:
+		case x.Byte(i) > y.Byte(i):
 			return 1
 		}
 	}
@@ -140,8 +140,8 @@ func (n Number) cmpInt(nn *Number) (r int) {
 func (n Number) cmpFra(nn *Number) (r int) {
 	x := n.fra()
 	y := nn.fra()
-	xLen := len(x)
-	yLen := len(y)
+	xLen := x.Len()
+	yLen := y.Len()
 
 	var length int
 	if xLen > yLen {
@@ -154,10 +154,10 @@ func (n Number) cmpFra(nn *Number) (r int) {
 		digit1 := 0
 		digit2 := 0
 		if i < xLen {
-			digit1 = int(x[i]) - 48
+			digit1 = int(x.Byte(i)) - 48
 		}
 		if i < yLen {
-			digit2 = int(y[i]) - 48
+			digit2 = int(y.Byte(i)) - 48
 		}
 		if digit1 < digit2 {
 			return -1
@@ -203,13 +203,13 @@ func (n Number) String() string {
 	if n.neg {
 		str += "-"
 	}
-	if len(i) == 0 {
+	if i.Len() == 0 {
 		str += "0"
 	} else {
-		str += string(i)
+		str += i.String()
 	}
-	if len(f) != 0 {
-		str += "." + string(f)
+	if f.Len() != 0 {
+		str += "." + f.String()
 	}
 	return str
 }

@@ -43,7 +43,7 @@ const (
 // completed, *before* the byte that just got passed in.  (The indication must be
 // delayed in order to recognize the end of numbers: is 123 a whole value or the
 // beginning of 12345e+6?).
-type scanner struct {
+type scanner struct { //nolint:govet // It's ok.
 	// step is a func to be called to execute the next transition.
 	// Also tried using an integer constant and a single func with a switch, but
 	// using the func directly was 10% faster on a 64-bit Mac Mini, and it's nicer
@@ -87,7 +87,7 @@ func newScanner(file *fs.File) *scanner {
 		step:         stateFoundRootValue,
 		file:         file,
 		data:         file.Content(),
-		dataSize:     bytes.Index(len(file.Content())),
+		dataSize:     file.Content().LenIndex(),
 		returnToStep: &ds.Stack[stepFunc]{},
 		stack:        &ds.Stack[lexeme.LexEvent]{},
 		finds:        make([]lexeme.LexEventType, 0, 3),
@@ -114,7 +114,7 @@ func (s *scanner) Length() uint {
 		if length == 0 {
 			break
 		}
-		c := s.data[length-1]
+		c := s.data.Byte(length - 1)
 		if bytes.IsBlank(c) {
 			length--
 		} else {
@@ -134,7 +134,7 @@ func (s *scanner) Next() (lexeme.LexEvent, bool) {
 	}
 
 	for s.index < s.dataSize {
-		c := s.data[s.index]
+		c := s.data.Byte(s.index)
 		s.index++
 
 		s.step(s, c)
@@ -741,8 +741,8 @@ func stateNul(s *scanner, c byte) state {
 func (s *scanner) newDocumentErrorAtCharacter(context string) errors.DocumentError {
 	// Make runes (utf8 symbols) from current index to last of slice s.data.
 	// Get first rune. Then make string with format ' symbol '
-	runes := []rune(string(s.data[(s.index - 1):]))
-	e := errors.Format(errors.ErrInvalidCharacter, string(runes[0]), context)
+	r := s.data.SubLow(s.index - 1).DecodeRune()
+	e := errors.Format(errors.ErrInvalidCharacter, string(r), context)
 	err := errors.NewDocumentError(s.file, e)
 	err.SetIndex(s.index - 1)
 	return err

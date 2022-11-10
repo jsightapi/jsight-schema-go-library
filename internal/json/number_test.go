@@ -11,7 +11,7 @@ import (
 )
 
 func BenchmarkNewNumber(b *testing.B) {
-	num := bytes.Bytes("-123.456E-5")
+	num := bytes.NewBytes("-123.456E-5")
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -23,9 +23,9 @@ func BenchmarkNewNumber(b *testing.B) {
 }
 
 func BenchmarkNumber_Equal(b *testing.B) {
-	number1, err := NewNumber(bytes.Bytes("-123456E-3"))
+	number1, err := NewNumber(bytes.NewBytes("-123456E-3"))
 	require.NoError(b, err)
-	number2, err := NewNumber(bytes.Bytes("-123.456E-3"))
+	number2, err := NewNumber(bytes.NewBytes("-123.456E-3"))
 	require.NoError(b, err)
 
 	b.ReportAllocs()
@@ -280,11 +280,11 @@ func TestNewNumber(t *testing.T) {
 
 		for _, c := range cc {
 			t.Run(c.jsonNumber, func(t *testing.T) {
-				number, err := NewNumber(bytes.Bytes(c.jsonNumber))
+				number, err := NewNumber(bytes.NewBytes(c.jsonNumber))
 				require.NoError(t, err)
 
-				assert.Equal(t, c.int, string(number.int()))
-				assert.Equal(t, c.fra, string(number.fra()))
+				assert.Equal(t, c.int, number.int().String())
+				assert.Equal(t, c.fra, number.fra().String())
 			})
 		}
 	})
@@ -309,7 +309,7 @@ func TestNewNumber(t *testing.T) {
 
 		for _, s := range ss {
 			t.Run(s, func(t *testing.T) {
-				_, err := NewNumber(bytes.Bytes(s))
+				_, err := NewNumber(bytes.NewBytes(s))
 				assert.Error(t, err)
 			})
 		}
@@ -321,20 +321,20 @@ func TestNumber_trimLeadingZerosInTheIntegerPart(t *testing.T) {
 		number   Number
 		expected string
 	}{
-		{Number{nat: bytes.Bytes("00123"), exp: 2}, "123"},
-		{Number{nat: bytes.Bytes("0123"), exp: 2}, "123"},
-		{Number{nat: bytes.Bytes("123"), exp: 2}, "123"},
-		{Number{nat: bytes.Bytes("023"), exp: 2}, "23"},
-		{Number{nat: bytes.Bytes("0023"), exp: 3}, "023"},
-		{Number{nat: bytes.Bytes("00023"), exp: 3}, "023"},
-		{Number{nat: bytes.Bytes("00023"), exp: 4}, "0023"},
+		{Number{nat: bytes.NewBytes("00123"), exp: 2}, "123"},
+		{Number{nat: bytes.NewBytes("0123"), exp: 2}, "123"},
+		{Number{nat: bytes.NewBytes("123"), exp: 2}, "123"},
+		{Number{nat: bytes.NewBytes("023"), exp: 2}, "23"},
+		{Number{nat: bytes.NewBytes("0023"), exp: 3}, "023"},
+		{Number{nat: bytes.NewBytes("00023"), exp: 3}, "023"},
+		{Number{nat: bytes.NewBytes("00023"), exp: 4}, "0023"},
 	}
 
 	for _, c := range cc {
 		t.Run(c.number.String(), func(t *testing.T) {
 			err := c.number.trimLeadingZerosInTheIntegerPart()
 			require.NoError(t, err)
-			assert.Equal(t, c.expected, string(c.number.nat))
+			assert.Equal(t, c.expected, c.number.nat.String())
 		})
 	}
 }
@@ -345,27 +345,27 @@ func TestNumber_trimTrailingZerosInTheFractionalPart(t *testing.T) {
 			number   Number
 			expected string
 		}{
-			{Number{nat: bytes.Bytes("123000"), exp: 0}, "123000"},
-			{Number{nat: bytes.Bytes("123000"), exp: 1}, "12300"},
-			{Number{nat: bytes.Bytes("123000"), exp: 2}, "1230"},
-			{Number{nat: bytes.Bytes("123000"), exp: 3}, "123"},
-			{Number{nat: bytes.Bytes("123000"), exp: 4}, "123"},
-			{Number{nat: bytes.Bytes("123000"), exp: 5}, "123"},
+			{Number{nat: bytes.NewBytes("123000"), exp: 0}, "123000"},
+			{Number{nat: bytes.NewBytes("123000"), exp: 1}, "12300"},
+			{Number{nat: bytes.NewBytes("123000"), exp: 2}, "1230"},
+			{Number{nat: bytes.NewBytes("123000"), exp: 3}, "123"},
+			{Number{nat: bytes.NewBytes("123000"), exp: 4}, "123"},
+			{Number{nat: bytes.NewBytes("123000"), exp: 5}, "123"},
 		}
 
 		for _, c := range cc {
 			t.Run(c.number.String(), func(t *testing.T) {
 				err := c.number.trimTrailingZerosInTheFractionalPart()
 				require.NoError(t, err)
-				assert.Equal(t, c.expected, string(c.number.nat))
+				assert.Equal(t, c.expected, c.number.nat.String())
 			})
 		}
 	})
 
 	t.Run("negative", func(t *testing.T) {
 		cc := map[string]Number{
-			"negative exponent":                   {nat: bytes.Bytes("000"), exp: -1},
-			"exponent greater than length of nat": {nat: bytes.Bytes("000"), exp: 4},
+			"negative exponent":                   {nat: bytes.NewBytes("000"), exp: -1},
+			"exponent greater than length of nat": {nat: bytes.NewBytes("000"), exp: 4},
 		}
 
 		for name, n := range cc {
@@ -392,7 +392,7 @@ func TestNumber_LengthOfFractionalPart(t *testing.T) {
 
 	for given, expected := range cc {
 		t.Run(given, func(t *testing.T) {
-			n, err := NewNumber(bytes.Bytes(given))
+			n, err := NewNumber(bytes.NewBytes(given))
 			require.NoError(t, err)
 			assert.Equal(t, expected, n.LengthOfFractionalPart())
 		})
@@ -544,9 +544,9 @@ func TestNumber_Cmp(t *testing.T) {
 
 	for _, c := range cc {
 		t.Run(fmt.Sprintf("%s %s", c.number1, c.number2), func(t *testing.T) {
-			number1, err := NewNumber(bytes.Bytes(c.number1))
+			number1, err := NewNumber(bytes.NewBytes(c.number1))
 			require.NoError(t, err)
-			number2, err := NewNumber(bytes.Bytes(c.number2))
+			number2, err := NewNumber(bytes.NewBytes(c.number2))
 			require.NoError(t, err)
 
 			assert.Equal(t, c.expected, number1.Cmp(number2))
@@ -590,10 +590,10 @@ func TestNumber_Equal(t *testing.T) {
 
 	for _, c := range cc {
 		t.Run(fmt.Sprintf("%s == %s", c.number1, c.number2), func(t *testing.T) {
-			number1, err := NewNumber(bytes.Bytes(c.number1))
+			number1, err := NewNumber(bytes.NewBytes(c.number1))
 			require.NoError(t, err)
 
-			number2, err := NewNumber(bytes.Bytes(c.number2))
+			number2, err := NewNumber(bytes.NewBytes(c.number2))
 			require.NoError(t, err)
 
 			assert.Equal(t, c.expected, number1.Equal(number2))
@@ -657,10 +657,10 @@ func TestNumber_GreaterThan(t *testing.T) {
 
 	for _, c := range cc {
 		t.Run(fmt.Sprintf("%s > %s", c.number1, c.number2), func(t *testing.T) {
-			number1, err := NewNumber(bytes.Bytes(c.number1))
+			number1, err := NewNumber(bytes.NewBytes(c.number1))
 			require.NoError(t, err)
 
-			number2, err := NewNumber(bytes.Bytes(c.number2))
+			number2, err := NewNumber(bytes.NewBytes(c.number2))
 			require.NoError(t, err)
 
 			assert.Equal(t, c.expected, number1.GreaterThan(number2))
@@ -724,10 +724,10 @@ func TestNumber_GreaterThanOrEqual(t *testing.T) {
 
 	for _, c := range cc {
 		t.Run(fmt.Sprintf("%s >= %s", c.number1, c.number2), func(t *testing.T) {
-			number1, err := NewNumber(bytes.Bytes(c.number1))
+			number1, err := NewNumber(bytes.NewBytes(c.number1))
 			require.NoError(t, err)
 
-			number2, err := NewNumber(bytes.Bytes(c.number2))
+			number2, err := NewNumber(bytes.NewBytes(c.number2))
 			require.NoError(t, err)
 
 			assert.Equal(t, c.expected, number1.GreaterThanOrEqual(number2))
@@ -791,10 +791,10 @@ func TestNumber_LessThan(t *testing.T) {
 
 	for _, c := range cc {
 		t.Run(fmt.Sprintf("%s < %s", c.number1, c.number2), func(t *testing.T) {
-			number1, err := NewNumber(bytes.Bytes(c.number1))
+			number1, err := NewNumber(bytes.NewBytes(c.number1))
 			require.NoError(t, err)
 
-			number2, err := NewNumber(bytes.Bytes(c.number2))
+			number2, err := NewNumber(bytes.NewBytes(c.number2))
 			require.NoError(t, err)
 
 			assert.Equal(t, c.expected, number1.LessThan(number2))
@@ -858,10 +858,10 @@ func TestNumber_LessThanOrEqual(t *testing.T) {
 
 	for _, c := range cc {
 		t.Run(fmt.Sprintf("%s <= %s", c.number1, c.number2), func(t *testing.T) {
-			number1, err := NewNumber(bytes.Bytes(c.number1))
+			number1, err := NewNumber(bytes.NewBytes(c.number1))
 			require.NoError(t, err)
 
-			number2, err := NewNumber(bytes.Bytes(c.number2))
+			number2, err := NewNumber(bytes.NewBytes(c.number2))
 			require.NoError(t, err)
 
 			assert.Equal(t, c.expected, number1.LessThanOrEqual(number2))
@@ -879,7 +879,7 @@ func TestNumber_ToFloat(t *testing.T) {
 
 	for number, expected := range cc {
 		t.Run(number, func(t *testing.T) {
-			n, err := NewNumber([]byte(number))
+			n, err := NewNumber(bytes.NewBytes(number))
 			require.NoError(t, err)
 			assert.Equal(t, expected, n.ToFloat())
 		})

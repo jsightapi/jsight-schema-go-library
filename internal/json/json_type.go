@@ -26,7 +26,7 @@ const (
 )
 
 func NewJsonType(bytes bytes.Bytes) Type {
-	switch string(bytes) {
+	switch bytes.String() {
 	case "object":
 		return TypeObject
 	case "array":
@@ -42,7 +42,7 @@ func NewJsonType(bytes bytes.Bytes) Type {
 	case "null":
 		return TypeNull
 	}
-	panic(errors.Format(errors.ErrUnknownType, string(bytes)))
+	panic(errors.Format(errors.ErrUnknownType, bytes.String()))
 }
 
 var AllTypes = []Type{

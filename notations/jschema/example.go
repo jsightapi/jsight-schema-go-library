@@ -38,7 +38,7 @@ func (b *exampleBuilder) Build(node internalSchema.Node) ([]byte, error) {
 		return b.buildExampleForArrayNode(typedNode)
 
 	case *internalSchema.LiteralNode:
-		return typedNode.BasisLexEventOfSchemaForNode().Value(), nil
+		return typedNode.BasisLexEventOfSchemaForNode().Value().Data(), nil
 
 	case *internalSchema.MixedValueNode:
 		return b.buildExampleForMixedValueNode(typedNode)
@@ -141,8 +141,8 @@ func (b *exampleBuilder) buildExampleForMixedValueNode(node *internalSchema.Mixe
 	}
 
 	typeName := tt[0]
-	if !bytes.Bytes(typeName).IsUserTypeName() {
-		return node.Value(), nil
+	if !bytes.NewBytes(typeName).IsUserTypeName() {
+		return node.Value().Data(), nil
 	}
 
 	if cnt := b.processedTypes[typeName]; cnt > 1 {
@@ -171,7 +171,7 @@ func buildExample(node internalSchema.Node, types map[string]internalSchema.Type
 		return buildExampleForArrayNode(typedNode, types)
 
 	case *internalSchema.LiteralNode:
-		return typedNode.BasisLexEventOfSchemaForNode().Value(), nil
+		return typedNode.BasisLexEventOfSchemaForNode().Value().Data(), nil
 
 	case *internalSchema.MixedValueNode:
 		return buildExampleForMixedValueNode(typedNode, types)
@@ -255,8 +255,8 @@ func buildExampleForMixedValueNode(
 	}
 
 	typeName := tt[0]
-	if !bytes.Bytes(typeName).IsUserTypeName() {
-		return node.Value(), nil
+	if !bytes.NewBytes(typeName).IsUserTypeName() {
+		return node.Value().Data(), nil
 	}
 
 	t, ok := types[typeName]

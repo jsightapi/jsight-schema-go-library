@@ -22,7 +22,7 @@ func TestNewConst(t *testing.T) {
 			t.Run(given, func(t *testing.T) {
 				c := fakeConst(given, "foo")
 				assert.Equal(t, expected, c.apply)
-				assert.Equal(t, "foo", string(c.nodeValue))
+				assert.Equal(t, "foo", c.nodeValue.String())
 			})
 		}
 	})
@@ -81,23 +81,23 @@ func TestConst_Bool(t *testing.T) {
 func TestConst_Validate(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
 		t.Run("apply - true", func(t *testing.T) {
-			fakeConst("true", "foo").Validate(bytes.Bytes("foo"))
+			fakeConst("true", "foo").Validate(bytes.NewBytes("foo"))
 		})
 
 		t.Run("apply - false", func(t *testing.T) {
 			t.Run("valid", func(t *testing.T) {
-				fakeConst("false", "foo").Validate(bytes.Bytes("foo"))
+				fakeConst("false", "foo").Validate(bytes.NewBytes("foo"))
 			})
 
 			t.Run("invalid", func(t *testing.T) {
-				fakeConst("false", "foo").Validate(bytes.Bytes("bar"))
+				fakeConst("false", "foo").Validate(bytes.NewBytes("bar"))
 			})
 		})
 	})
 
 	t.Run("negative", func(t *testing.T) {
 		assert.PanicsWithError(t, "Does not match expected value (foo)", func() {
-			fakeConst("true", "foo").Validate(bytes.Bytes("bar"))
+			fakeConst("true", "foo").Validate(bytes.NewBytes("bar"))
 		})
 	})
 }
@@ -118,5 +118,5 @@ func TestConst_ASTNode(t *testing.T) {
 }
 
 func fakeConst(v, nv string) *Const {
-	return NewConst(bytes.Bytes(v), bytes.Bytes(nv))
+	return NewConst(bytes.NewBytes(v), bytes.NewBytes(nv))
 }

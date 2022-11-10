@@ -47,7 +47,7 @@ func (s Schema) RootNode() Node {
 }
 
 func (s *Schema) AddNamedType(name string, typ *Schema, rootFile *fs.File, begin bytes.Index) {
-	if !bytes.Bytes(name).IsUserTypeName() {
+	if !bytes.NewBytes(name).IsUserTypeName() {
 		panic(errors.Format(errors.ErrInvalidSchemaName, name))
 	}
 	s.addType(name, typ, rootFile, begin)

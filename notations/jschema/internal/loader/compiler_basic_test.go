@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	jschema "github.com/jsightapi/jsight-schema-go-library"
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
 	"github.com/jsightapi/jsight-schema-go-library/errors"
 	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/mocks"
@@ -31,14 +32,14 @@ func TestSchemaCompiler_checkMinAndMax(t *testing.T) {
 			node: func(t *testing.T) schema.Node {
 				m := mocks.NewNode(t)
 				m.On("Constraint", constraint.MinConstraintType).Return(nil)
-				m.On("Constraint", constraint.MaxConstraintType).Return(constraint.NewMax([]byte("42")))
+				m.On("Constraint", constraint.MaxConstraintType).Return(constraint.NewMax(bytes.NewBytes("42")))
 				return m
 			},
 		},
 		"nil min, not nil max (exclusive)": {
 			node: func(t *testing.T) schema.Node {
 				m := mocks.NewNode(t)
-				max := constraint.NewMax([]byte("42"))
+				max := constraint.NewMax(bytes.NewBytes("42"))
 				max.SetExclusive(true)
 				m.On("Constraint", constraint.MinConstraintType).Return(nil)
 				m.On("Constraint", constraint.MaxConstraintType).Return(max)
@@ -48,7 +49,7 @@ func TestSchemaCompiler_checkMinAndMax(t *testing.T) {
 		"not nil min, nil max": {
 			node: func(t *testing.T) schema.Node {
 				m := mocks.NewNode(t)
-				m.On("Constraint", constraint.MinConstraintType).Return(constraint.NewMin([]byte("42")))
+				m.On("Constraint", constraint.MinConstraintType).Return(constraint.NewMin(bytes.NewBytes("42")))
 				m.On("Constraint", constraint.MaxConstraintType).Return(nil)
 				return m
 			},
@@ -56,7 +57,7 @@ func TestSchemaCompiler_checkMinAndMax(t *testing.T) {
 		"not nil min (exclusive), nil max": {
 			node: func(t *testing.T) schema.Node {
 				m := mocks.NewNode(t)
-				min := constraint.NewMin([]byte("42"))
+				min := constraint.NewMin(bytes.NewBytes("42"))
 				min.SetExclusive(true)
 				m.On("Constraint", constraint.MinConstraintType).Return(min)
 				m.On("Constraint", constraint.MaxConstraintType).Return(nil)
@@ -66,27 +67,27 @@ func TestSchemaCompiler_checkMinAndMax(t *testing.T) {
 		"min < max": {
 			node: func(t *testing.T) schema.Node {
 				m := mocks.NewNode(t)
-				m.On("Constraint", constraint.MinConstraintType).Return(constraint.NewMin([]byte("1")))
-				m.On("Constraint", constraint.MaxConstraintType).Return(constraint.NewMax([]byte("2")))
+				m.On("Constraint", constraint.MinConstraintType).Return(constraint.NewMin(bytes.NewBytes("1")))
+				m.On("Constraint", constraint.MaxConstraintType).Return(constraint.NewMax(bytes.NewBytes("2")))
 				return m
 			},
 		},
 		"min (exclusive) < max": {
 			node: func(t *testing.T) schema.Node {
 				m := mocks.NewNode(t)
-				min := constraint.NewMin([]byte("1"))
+				min := constraint.NewMin(bytes.NewBytes("1"))
 				min.SetExclusive(true)
 				m.On("Constraint", constraint.MinConstraintType).Return(min)
-				m.On("Constraint", constraint.MaxConstraintType).Return(constraint.NewMax([]byte("2")))
+				m.On("Constraint", constraint.MaxConstraintType).Return(constraint.NewMax(bytes.NewBytes("2")))
 				return m
 			},
 		},
 		"min < max (exclusive)": {
 			node: func(t *testing.T) schema.Node {
 				m := mocks.NewNode(t)
-				max := constraint.NewMax([]byte("2"))
+				max := constraint.NewMax(bytes.NewBytes("2"))
 				max.SetExclusive(true)
-				m.On("Constraint", constraint.MinConstraintType).Return(constraint.NewMin([]byte("1")))
+				m.On("Constraint", constraint.MinConstraintType).Return(constraint.NewMin(bytes.NewBytes("1")))
 				m.On("Constraint", constraint.MaxConstraintType).Return(max)
 				return m
 			},
@@ -94,9 +95,9 @@ func TestSchemaCompiler_checkMinAndMax(t *testing.T) {
 		"min (exclusive) < max (exclusive)": {
 			node: func(t *testing.T) schema.Node {
 				m := mocks.NewNode(t)
-				min := constraint.NewMin([]byte("1"))
+				min := constraint.NewMin(bytes.NewBytes("1"))
 				min.SetExclusive(true)
-				max := constraint.NewMax([]byte("2"))
+				max := constraint.NewMax(bytes.NewBytes("2"))
 				max.SetExclusive(true)
 				m.On("Constraint", constraint.MinConstraintType).Return(min)
 				m.On("Constraint", constraint.MaxConstraintType).Return(max)
@@ -106,18 +107,18 @@ func TestSchemaCompiler_checkMinAndMax(t *testing.T) {
 		"min = max": {
 			node: func(t *testing.T) schema.Node {
 				m := mocks.NewNode(t)
-				m.On("Constraint", constraint.MinConstraintType).Return(constraint.NewMin([]byte("1")))
-				m.On("Constraint", constraint.MaxConstraintType).Return(constraint.NewMax([]byte("1")))
+				m.On("Constraint", constraint.MinConstraintType).Return(constraint.NewMin(bytes.NewBytes("1")))
+				m.On("Constraint", constraint.MaxConstraintType).Return(constraint.NewMax(bytes.NewBytes("1")))
 				return m
 			},
 		},
 		"min (exclusive) = max": {
 			node: func(t *testing.T) schema.Node {
 				m := mocks.NewNode(t)
-				min := constraint.NewMin([]byte("1"))
+				min := constraint.NewMin(bytes.NewBytes("1"))
 				min.SetExclusive(true)
 				m.On("Constraint", constraint.MinConstraintType).Return(min)
-				m.On("Constraint", constraint.MaxConstraintType).Return(constraint.NewMax([]byte("1")))
+				m.On("Constraint", constraint.MaxConstraintType).Return(constraint.NewMax(bytes.NewBytes("1")))
 				return m
 			},
 			expectedErr: `Value of constraint "min" should be less than value of "max" constraint`,
@@ -125,9 +126,9 @@ func TestSchemaCompiler_checkMinAndMax(t *testing.T) {
 		"min = max (exclusive)": {
 			node: func(t *testing.T) schema.Node {
 				m := mocks.NewNode(t)
-				max := constraint.NewMax([]byte("1"))
+				max := constraint.NewMax(bytes.NewBytes("1"))
 				max.SetExclusive(true)
-				m.On("Constraint", constraint.MinConstraintType).Return(constraint.NewMin([]byte("1")))
+				m.On("Constraint", constraint.MinConstraintType).Return(constraint.NewMin(bytes.NewBytes("1")))
 				m.On("Constraint", constraint.MaxConstraintType).Return(max)
 				return m
 			},
@@ -136,9 +137,9 @@ func TestSchemaCompiler_checkMinAndMax(t *testing.T) {
 		"min (exclusive) = max (exclusive)": {
 			node: func(t *testing.T) schema.Node {
 				m := mocks.NewNode(t)
-				min := constraint.NewMin([]byte("1"))
+				min := constraint.NewMin(bytes.NewBytes("1"))
 				min.SetExclusive(true)
-				max := constraint.NewMax([]byte("1"))
+				max := constraint.NewMax(bytes.NewBytes("1"))
 				max.SetExclusive(true)
 				m.On("Constraint", constraint.MinConstraintType).Return(min)
 				m.On("Constraint", constraint.MaxConstraintType).Return(max)
@@ -149,8 +150,8 @@ func TestSchemaCompiler_checkMinAndMax(t *testing.T) {
 		"min > max": {
 			node: func(t *testing.T) schema.Node {
 				m := mocks.NewNode(t)
-				m.On("Constraint", constraint.MinConstraintType).Return(constraint.NewMin([]byte("2")))
-				m.On("Constraint", constraint.MaxConstraintType).Return(constraint.NewMax([]byte("1")))
+				m.On("Constraint", constraint.MinConstraintType).Return(constraint.NewMin(bytes.NewBytes("2")))
+				m.On("Constraint", constraint.MaxConstraintType).Return(constraint.NewMax(bytes.NewBytes("1")))
 				return m
 			},
 			expectedErr: `Value of constraint "min" should be less or equal to value of "max" constraint`,
@@ -158,10 +159,10 @@ func TestSchemaCompiler_checkMinAndMax(t *testing.T) {
 		"min (exclusive) > max": {
 			node: func(t *testing.T) schema.Node {
 				m := mocks.NewNode(t)
-				min := constraint.NewMin([]byte("2"))
+				min := constraint.NewMin(bytes.NewBytes("2"))
 				min.SetExclusive(true)
 				m.On("Constraint", constraint.MinConstraintType).Return(min)
-				m.On("Constraint", constraint.MaxConstraintType).Return(constraint.NewMax([]byte("1")))
+				m.On("Constraint", constraint.MaxConstraintType).Return(constraint.NewMax(bytes.NewBytes("1")))
 				return m
 			},
 			expectedErr: `Value of constraint "min" should be less than value of "max" constraint`,
@@ -169,9 +170,9 @@ func TestSchemaCompiler_checkMinAndMax(t *testing.T) {
 		"min > max (exclusive)": {
 			node: func(t *testing.T) schema.Node {
 				m := mocks.NewNode(t)
-				max := constraint.NewMax([]byte("1"))
+				max := constraint.NewMax(bytes.NewBytes("1"))
 				max.SetExclusive(true)
-				m.On("Constraint", constraint.MinConstraintType).Return(constraint.NewMin([]byte("2")))
+				m.On("Constraint", constraint.MinConstraintType).Return(constraint.NewMin(bytes.NewBytes("2")))
 				m.On("Constraint", constraint.MaxConstraintType).Return(max)
 				return m
 			},
@@ -180,9 +181,9 @@ func TestSchemaCompiler_checkMinAndMax(t *testing.T) {
 		"min (exclusive) > max (exclusive)": {
 			node: func(t *testing.T) schema.Node {
 				m := mocks.NewNode(t)
-				min := constraint.NewMin([]byte("2"))
+				min := constraint.NewMin(bytes.NewBytes("2"))
 				min.SetExclusive(true)
-				max := constraint.NewMax([]byte("1"))
+				max := constraint.NewMax(bytes.NewBytes("1"))
 				max.SetExclusive(true)
 				m.On("Constraint", constraint.MinConstraintType).Return(min)
 				m.On("Constraint", constraint.MaxConstraintType).Return(max)
@@ -221,14 +222,14 @@ func TestSchemaCompiler_checkMinLengthAndMaxLength(t *testing.T) {
 			node: func(t *testing.T) schema.Node {
 				m := mocks.NewNode(t)
 				m.On("Constraint", constraint.MinLengthConstraintType).Return(nil)
-				m.On("Constraint", constraint.MaxLengthConstraintType).Return(constraint.NewMaxLength([]byte("42")))
+				m.On("Constraint", constraint.MaxLengthConstraintType).Return(constraint.NewMaxLength(bytes.NewBytes("42")))
 				return m
 			},
 		},
 		"not nil minLength, nil maxLength": {
 			node: func(t *testing.T) schema.Node {
 				m := mocks.NewNode(t)
-				m.On("Constraint", constraint.MinLengthConstraintType).Return(constraint.NewMinLength([]byte("42")))
+				m.On("Constraint", constraint.MinLengthConstraintType).Return(constraint.NewMinLength(bytes.NewBytes("42")))
 				m.On("Constraint", constraint.MaxLengthConstraintType).Return(nil)
 				return m
 			},
@@ -236,24 +237,24 @@ func TestSchemaCompiler_checkMinLengthAndMaxLength(t *testing.T) {
 		"minLength < maxLength": {
 			node: func(t *testing.T) schema.Node {
 				m := mocks.NewNode(t)
-				m.On("Constraint", constraint.MinLengthConstraintType).Return(constraint.NewMinLength([]byte("1")))
-				m.On("Constraint", constraint.MaxLengthConstraintType).Return(constraint.NewMaxLength([]byte("2")))
+				m.On("Constraint", constraint.MinLengthConstraintType).Return(constraint.NewMinLength(bytes.NewBytes("1")))
+				m.On("Constraint", constraint.MaxLengthConstraintType).Return(constraint.NewMaxLength(bytes.NewBytes("2")))
 				return m
 			},
 		},
 		"minLength = maxLength": {
 			node: func(t *testing.T) schema.Node {
 				m := mocks.NewNode(t)
-				m.On("Constraint", constraint.MinLengthConstraintType).Return(constraint.NewMinLength([]byte("2")))
-				m.On("Constraint", constraint.MaxLengthConstraintType).Return(constraint.NewMaxLength([]byte("2")))
+				m.On("Constraint", constraint.MinLengthConstraintType).Return(constraint.NewMinLength(bytes.NewBytes("2")))
+				m.On("Constraint", constraint.MaxLengthConstraintType).Return(constraint.NewMaxLength(bytes.NewBytes("2")))
 				return m
 			},
 		},
 		"minLength > maxLength": {
 			node: func(t *testing.T) schema.Node {
 				m := mocks.NewNode(t)
-				m.On("Constraint", constraint.MinLengthConstraintType).Return(constraint.NewMinLength([]byte("2")))
-				m.On("Constraint", constraint.MaxLengthConstraintType).Return(constraint.NewMaxLength([]byte("1")))
+				m.On("Constraint", constraint.MinLengthConstraintType).Return(constraint.NewMinLength(bytes.NewBytes("2")))
+				m.On("Constraint", constraint.MaxLengthConstraintType).Return(constraint.NewMaxLength(bytes.NewBytes("1")))
 				return m
 			},
 			expectedErr: `Value of constraint "minLength" should be less or equal to value of "maxLength" constraint`,
@@ -289,14 +290,14 @@ func TestSchemaCompiler_checkMinItemsAndMaxItems(t *testing.T) {
 			node: func(t *testing.T) schema.Node {
 				m := mocks.NewNode(t)
 				m.On("Constraint", constraint.MinItemsConstraintType).Return(nil)
-				m.On("Constraint", constraint.MaxItemsConstraintType).Return(constraint.NewMaxItems([]byte("42")))
+				m.On("Constraint", constraint.MaxItemsConstraintType).Return(constraint.NewMaxItems(bytes.NewBytes("42")))
 				return m
 			},
 		},
 		"not nil minItems, nil maxItems": {
 			node: func(t *testing.T) schema.Node {
 				m := mocks.NewNode(t)
-				m.On("Constraint", constraint.MinItemsConstraintType).Return(constraint.NewMinItems([]byte("42")))
+				m.On("Constraint", constraint.MinItemsConstraintType).Return(constraint.NewMinItems(bytes.NewBytes("42")))
 				m.On("Constraint", constraint.MaxItemsConstraintType).Return(nil)
 				return m
 			},
@@ -304,24 +305,24 @@ func TestSchemaCompiler_checkMinItemsAndMaxItems(t *testing.T) {
 		"minItems < maxItems": {
 			node: func(t *testing.T) schema.Node {
 				m := mocks.NewNode(t)
-				m.On("Constraint", constraint.MinItemsConstraintType).Return(constraint.NewMinItems([]byte("1")))
-				m.On("Constraint", constraint.MaxItemsConstraintType).Return(constraint.NewMaxItems([]byte("2")))
+				m.On("Constraint", constraint.MinItemsConstraintType).Return(constraint.NewMinItems(bytes.NewBytes("1")))
+				m.On("Constraint", constraint.MaxItemsConstraintType).Return(constraint.NewMaxItems(bytes.NewBytes("2")))
 				return m
 			},
 		},
 		"minItems = maxItems": {
 			node: func(t *testing.T) schema.Node {
 				m := mocks.NewNode(t)
-				m.On("Constraint", constraint.MinItemsConstraintType).Return(constraint.NewMinItems([]byte("2")))
-				m.On("Constraint", constraint.MaxItemsConstraintType).Return(constraint.NewMaxItems([]byte("2")))
+				m.On("Constraint", constraint.MinItemsConstraintType).Return(constraint.NewMinItems(bytes.NewBytes("2")))
+				m.On("Constraint", constraint.MaxItemsConstraintType).Return(constraint.NewMaxItems(bytes.NewBytes("2")))
 				return m
 			},
 		},
 		"minItems > maxItems": {
 			node: func(t *testing.T) schema.Node {
 				m := mocks.NewNode(t)
-				m.On("Constraint", constraint.MinItemsConstraintType).Return(constraint.NewMinItems([]byte("2")))
-				m.On("Constraint", constraint.MaxItemsConstraintType).Return(constraint.NewMaxItems([]byte("1")))
+				m.On("Constraint", constraint.MinItemsConstraintType).Return(constraint.NewMinItems(bytes.NewBytes("2")))
+				m.On("Constraint", constraint.MaxItemsConstraintType).Return(constraint.NewMaxItems(bytes.NewBytes("1")))
 				return m
 			},
 			expectedErr: `Value of constraint "minItems" should be less or equal to value of "maxItems" constraint`,
@@ -353,7 +354,7 @@ func TestSchemaCompiler_precisionConstraint(t *testing.T) {
 			"type is decimal": func(n *mocks.Node) {
 				n.On("Constraint", constraint.PrecisionConstraintType).Return(constraint.Precision{})
 				n.On("Constraint", constraint.TypeConstraintType).Return(constraint.NewType(
-					[]byte("decimal"),
+					bytes.NewBytes("decimal"),
 					jschema.RuleASTNodeSourceManual,
 				))
 			},
@@ -373,7 +374,7 @@ func TestSchemaCompiler_precisionConstraint(t *testing.T) {
 			n := mocks.NewNode(t)
 			n.On("Constraint", constraint.PrecisionConstraintType).Return(constraint.Precision{})
 			n.On("Constraint", constraint.TypeConstraintType).Return(constraint.NewType(
-				[]byte("foo"),
+				bytes.NewBytes("foo"),
 				jschema.RuleASTNodeSourceManual,
 			))
 			schemaCompiler{}.precisionConstraint(n)
@@ -395,8 +396,8 @@ func TestSchemaCompiler_emptyArray(t *testing.T) {
 			&schema.ArrayNode{},
 			func() schema.Node {
 				n := schema.NewNode(newFakeLexEvent(lexeme.ArrayBegin))
-				n.AddConstraint(constraint.NewMinItems([]byte("0")))
-				n.AddConstraint(constraint.NewMaxItems([]byte("0")))
+				n.AddConstraint(constraint.NewMinItems(bytes.NewBytes("0")))
+				n.AddConstraint(constraint.NewMaxItems(bytes.NewBytes("0")))
 				return n
 			}(),
 		}
@@ -414,12 +415,12 @@ func TestSchemaCompiler_emptyArray(t *testing.T) {
 		cc := map[string]schema.Node{
 			"min": func() schema.Node {
 				n := schema.NewNode(newFakeLexEvent(lexeme.ArrayBegin))
-				n.AddConstraint(constraint.NewMinItems([]byte("1")))
+				n.AddConstraint(constraint.NewMinItems(bytes.NewBytes("1")))
 				return n
 			}(),
 			"max": func() schema.Node {
 				n := schema.NewNode(newFakeLexEvent(lexeme.ArrayBegin))
-				n.AddConstraint(constraint.NewMaxItems([]byte("1")))
+				n.AddConstraint(constraint.NewMaxItems(bytes.NewBytes("1")))
 				return n
 			}(),
 		}
@@ -436,8 +437,8 @@ func TestSchemaCompiler_emptyArray(t *testing.T) {
 
 func BenchmarkSchemaCompiler_emptyArray(b *testing.B) {
 	n := schema.NewNode(newFakeLexEvent(lexeme.ArrayBegin))
-	n.AddConstraint(constraint.NewMinItems([]byte("0")))
-	n.AddConstraint(constraint.NewMaxItems([]byte("0")))
+	n.AddConstraint(constraint.NewMinItems(bytes.NewBytes("0")))
+	n.AddConstraint(constraint.NewMaxItems(bytes.NewBytes("0")))
 
 	b.ReportAllocs()
 

@@ -14,7 +14,7 @@ import (
 func TestRead(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
 		filename := filepath.Join(test.GetProjectRoot(), "testdata", "examples", "boolean", "boolean.jschema")
-		expected := bytes.Bytes(`true // Schema containing a literal example`)
+		expected := bytes.NewBytes(`true // Schema containing a literal example`)
 
 		file := fs.NewFile(filename, expected)
 

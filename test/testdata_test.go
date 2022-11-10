@@ -53,7 +53,7 @@ func validate(t test) kit.Error {
 	sc := jschema.FromFile(schemaFile)
 
 	for name, f := range enums {
-		if len(f.Content()) == 0 {
+		if f.Content().Len() == 0 {
 			return errors.NewDocumentError(schemaFile, errors.Format(errors.ErrEmptyType, name))
 		}
 		if err := sc.AddRule(name, enum.FromFile(f)); err != nil {
@@ -62,7 +62,7 @@ func validate(t test) kit.Error {
 	}
 
 	for name, f := range types {
-		if len(f.Content()) == 0 {
+		if f.Content().Len() == 0 {
 			return errors.NewDocumentError(schemaFile, errors.Format(errors.ErrEmptyType, name))
 		}
 		if err := sc.AddType(name, jschema.FromFile(f)); err != nil {

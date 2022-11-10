@@ -29,27 +29,6 @@ func TestDocumentError_preparation(t *testing.T) {
 	})
 }
 
-func TestDocumentError_detectNewLineSymbol(t *testing.T) {
-	cc := map[string]byte{
-		"abc":     '\n',
-		"abc\n":   '\n',
-		"abc\r\n": '\n',
-		"abc\r":   '\r',
-		"abc\n\r": '\r',
-	}
-
-	nameReplacer := strings.NewReplacer("\n", "\\n", "\r", "\\r")
-
-	for given, expected := range cc {
-		t.Run(nameReplacer.Replace(given), func(t *testing.T) {
-			e := DocumentError{file: fs.NewFile("", given)}
-			e.detectNewLineSymbol()
-
-			assert.Equal(t, string(expected), string(e.nl))
-		})
-	}
-}
-
 type testValidResult struct {
 	index  bytes.Index
 	begin  bytes.Index

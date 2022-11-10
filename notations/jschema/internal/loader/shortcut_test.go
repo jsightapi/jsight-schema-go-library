@@ -52,7 +52,7 @@ func Test_addShortcutConstraint(t *testing.T) {
 			require.NotNil(t, c)
 			require.IsType(t, &constraint.TypeConstraint{}, c)
 
-			assert.Equal(t, bytes.Bytes("@foo"), c.(*constraint.TypeConstraint).Bytes())
+			assert.Equal(t, bytes.NewBytes("@foo"), c.(*constraint.TypeConstraint).Bytes())
 		})
 	})
 
@@ -135,7 +135,7 @@ func Test_addTypeShortcut(t *testing.T) {
 			require.NotNil(t, c)
 			require.IsType(t, &constraint.TypeConstraint{}, c)
 
-			assert.Equal(t, bytes.Bytes(expected), c.(*constraint.TypeConstraint).Bytes())
+			assert.Equal(t, bytes.NewBytes(expected), c.(*constraint.TypeConstraint).Bytes())
 		})
 	}
 }

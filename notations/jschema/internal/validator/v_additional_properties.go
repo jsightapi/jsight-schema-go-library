@@ -120,7 +120,7 @@ func (v *additionalPropertiesValidator) feedLiteral(jsonLexeme lexeme.LexEvent) 
 	case lexeme.LiteralBegin:
 		return nil, false
 	case lexeme.LiteralEnd:
-		actualType, err := jschema.GuessSchemaType(jsonLexeme.Value())
+		actualType, err := jschema.GuessSchemaType(jsonLexeme.Value().Data())
 		if err != nil {
 			panic(err)
 		}

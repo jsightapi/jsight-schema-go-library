@@ -36,7 +36,7 @@ func TestUUID_Validate(t *testing.T) {
 
 		for _, value := range tests {
 			t.Run(value, func(t *testing.T) {
-				NewUuid().Validate(bytes.Bytes(value))
+				NewUuid().Validate(bytes.NewBytes(value))
 			})
 		}
 	})
@@ -74,7 +74,7 @@ func TestUUID_Validate(t *testing.T) {
 		for given, expected := range tests {
 			t.Run(given, func(t *testing.T) {
 				assert.PanicsWithError(t, fmt.Sprintf("UUID parsing error: %s", expected), func() {
-					NewUuid().Validate([]byte(given))
+					NewUuid().Validate(bytes.NewBytes(given))
 				})
 			})
 		}

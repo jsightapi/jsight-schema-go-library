@@ -13,7 +13,7 @@ import (
 
 func TestNewMin(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
-		ruleValue := bytes.Bytes("3.14")
+		ruleValue := bytes.NewBytes("3.14")
 		cnstr := NewMin(ruleValue)
 
 		expectedNumber, err := json.NewNumber(ruleValue)
@@ -26,7 +26,7 @@ func TestNewMin(t *testing.T) {
 
 	t.Run("negative", func(t *testing.T) {
 		assert.PanicsWithError(t, `Incorrect number value "not a number"`, func() {
-			NewMin([]byte("not a number"))
+			NewMin(bytes.NewBytes("not a number"))
 		})
 	})
 }
@@ -36,7 +36,7 @@ func TestMin_IsJsonTypeCompatible(t *testing.T) {
 }
 
 func TestMin_Type(t *testing.T) {
-	assert.Equal(t, MinConstraintType, NewMin(bytes.Bytes("1")).Type())
+	assert.Equal(t, MinConstraintType, NewMin(bytes.NewBytes("1")).Type())
 }
 
 func TestMin_String(t *testing.T) {
@@ -47,7 +47,7 @@ func TestMin_String(t *testing.T) {
 
 	for exclusive, expected := range cc {
 		t.Run(expected, func(t *testing.T) {
-			cnstr := NewMin([]byte("3.14"))
+			cnstr := NewMin(bytes.NewBytes("3.14"))
 			cnstr.SetExclusive(exclusive)
 
 			actual := cnstr.String()
@@ -79,7 +79,7 @@ func TestMin_Exclusive(t *testing.T) {
 func TestMin_Validate(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
 		newMin := func(max string, exclusive bool) *Min {
-			cnstr := NewMin([]byte(max))
+			cnstr := NewMin(bytes.NewBytes(max))
 			cnstr.SetExclusive(exclusive)
 			return cnstr
 		}
@@ -122,11 +122,11 @@ func TestMin_Validate(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				if c.error != "" {
 					assert.PanicsWithError(t, c.error, func() {
-						c.cnstr.Validate([]byte(c.value))
+						c.cnstr.Validate(bytes.NewBytes(c.value))
 					})
 				} else {
 					assert.NotPanics(t, func() {
-						c.cnstr.Validate([]byte(c.value))
+						c.cnstr.Validate(bytes.NewBytes(c.value))
 					})
 				}
 			})
@@ -135,7 +135,7 @@ func TestMin_Validate(t *testing.T) {
 
 	t.Run("negative", func(t *testing.T) {
 		assert.PanicsWithError(t, `Incorrect number value "not a number"`, func() {
-			NewMin([]byte("3")).Validate([]byte("not a number"))
+			NewMin(bytes.NewBytes("3")).Validate(bytes.NewBytes("not a number"))
 		})
 	})
 }
@@ -146,11 +146,11 @@ func TestMin_ASTNode(t *testing.T) {
 		Value:      "1",
 		Properties: &jschema.RuleASTNodes{},
 		Source:     jschema.RuleASTNodeSourceManual,
-	}, NewMin(bytes.Bytes("1")).ASTNode())
+	}, NewMin(bytes.NewBytes("1")).ASTNode())
 }
 
 func TestMin_Value(t *testing.T) {
-	num, err := json.NewNumber([]byte("42"))
+	num, err := json.NewNumber(bytes.NewBytes("42"))
 	require.NoError(t, err)
 
 	cnstr := Min{

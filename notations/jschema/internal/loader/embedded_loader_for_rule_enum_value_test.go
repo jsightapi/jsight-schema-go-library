@@ -304,7 +304,7 @@ func TestEnumValueLoader_commentEnd(t *testing.T) {
 	for typ, shouldPanic := range cc {
 		t.Run(typ.String(), func(t *testing.T) {
 			c := constraint.NewEnum()
-			c.Append(constraint.NewEnumItem([]byte("42"), ""))
+			c.Append(constraint.NewEnumItem(bytes.NewBytes("42"), ""))
 
 			l := newEnumValueLoader(c, nil)
 

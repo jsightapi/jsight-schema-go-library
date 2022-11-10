@@ -42,8 +42,8 @@ func TestNewConstraintFromRule(t *testing.T) {
 						bytes.Index(len(given))-1,
 						fs.NewFile("", given),
 					),
-					bytes.Bytes(c.val),
-					nil,
+					bytes.NewBytes(c.val),
+					bytes.Bytes{},
 				)
 
 				assert.IsType(t, c.expectedType, constraint)
@@ -65,8 +65,8 @@ func TestNewConstraintFromRule(t *testing.T) {
 					bytes.Index(len(given))-1,
 					fs.NewFile("", given),
 				),
-				nil,
-				nil,
+				bytes.Bytes{},
+				bytes.Bytes{},
 			)
 		})
 	})

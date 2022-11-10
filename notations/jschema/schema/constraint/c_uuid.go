@@ -37,7 +37,7 @@ func (UUID) String() string {
 }
 
 func (UUID) Validate(value jbytes.Bytes) {
-	err := parseBytes(value.Unquote())
+	err := parseBytes(value.Unquote().Data())
 	if err != nil {
 		panic(errors.Format(errors.ErrInvalidUuid, err))
 	}

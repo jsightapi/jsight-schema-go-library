@@ -147,5 +147,5 @@ func (s *Schema) ValidateObjectProperty(key, value string) (err kit.Error) {
 		return kit.ConvertError(s.file, jerr.Format(jerr.ErrPropertyNotFound, key))
 	}
 
-	return validator.ValidateLiteralValue2(node, *s.inner, bytes.Bytes(value))
+	return validator.ValidateLiteralValue2(node, *s.inner, bytes.NewBytes(value))
 }

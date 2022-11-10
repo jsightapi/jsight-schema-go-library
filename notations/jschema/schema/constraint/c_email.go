@@ -37,16 +37,16 @@ func (Email) String() string {
 func (Email) Validate(email bytes.Bytes) {
 	email = email.Unquote()
 
-	if len(email) == 0 {
+	if email.Len() == 0 {
 		panic(errors.ErrEmptyEmail)
 	}
 
-	char := email[0] // first char
+	char := email.FirstByte()
 	if char == ' ' || char == '<' {
 		panic(errors.Format(errors.ErrInvalidEmail, email.String()))
 	}
 
-	char = email[len(email)-1] // last char
+	char = email.LastByte()
 	if char == ' ' || char == '>' {
 		panic(errors.Format(errors.ErrInvalidEmail, email.String()))
 	}

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	jschema "github.com/jsightapi/jsight-schema-go-library"
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
 	"github.com/jsightapi/jsight-schema-go-library/errors"
 	"github.com/jsightapi/jsight-schema-go-library/formats/json"
 	"github.com/jsightapi/jsight-schema-go-library/fs"
@@ -40,7 +41,7 @@ type Schema struct { //nolint:govet // This is okay.
 var _ jschema.Schema = (*Schema)(nil)
 
 // New creates a Jsight schema with specified name and content.
-func New[T fs.FileContent](name string, content T, oo ...Option) *Schema {
+func New[T bytes.Byter](name string, content T, oo ...Option) *Schema {
 	return FromFile(fs.NewFile(name, content), oo...)
 }
 

@@ -19,7 +19,7 @@ func TestNewNullable(t *testing.T) {
 
 		for given, expected := range cc {
 			t.Run(given, func(t *testing.T) {
-				c := NewNullable([]byte(given))
+				c := NewNullable(bytes.NewBytes(given))
 				assert.Equal(t, expected, c.value)
 			})
 		}
@@ -27,7 +27,7 @@ func TestNewNullable(t *testing.T) {
 
 	t.Run("negative", func(t *testing.T) {
 		assert.PanicsWithError(t, `Invalid value of "nullable" constraint`, func() {
-			NewNullable([]byte("foo"))
+			NewNullable(bytes.NewBytes("foo"))
 		})
 	})
 }
@@ -37,7 +37,7 @@ func TestNullable_IsJsonTypeCompatible(t *testing.T) {
 }
 
 func TestNullable_Type(t *testing.T) {
-	assert.Equal(t, NullableConstraintType, NewNullable(bytes.Bytes("true")).Type())
+	assert.Equal(t, NullableConstraintType, NewNullable(bytes.NewBytes("true")).Type())
 }
 
 func TestNullable_String(t *testing.T) {
@@ -48,7 +48,7 @@ func TestNullable_String(t *testing.T) {
 
 	for given, expected := range cc {
 		t.Run(given, func(t *testing.T) {
-			assert.Equal(t, expected, NewNullable([]byte(given)).String())
+			assert.Equal(t, expected, NewNullable(bytes.NewBytes(given)).String())
 		})
 	}
 }
@@ -61,7 +61,7 @@ func TestNullable_Bool(t *testing.T) {
 
 	for given, expected := range cc {
 		t.Run(given, func(t *testing.T) {
-			assert.Equal(t, expected, NewNullable([]byte(given)).Bool())
+			assert.Equal(t, expected, NewNullable(bytes.NewBytes(given)).Bool())
 		})
 	}
 }

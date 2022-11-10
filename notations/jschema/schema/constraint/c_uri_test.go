@@ -40,7 +40,7 @@ func TestUri_Validate(t *testing.T) {
 
 		for _, uri := range tests {
 			t.Run(uri, func(t *testing.T) {
-				NewUri().Validate(bytes.Bytes(uri))
+				NewUri().Validate(bytes.NewBytes(uri))
 			})
 		}
 	})
@@ -71,7 +71,7 @@ func TestUri_Validate(t *testing.T) {
 		for uri, expected := range cc {
 			t.Run(uri, func(t *testing.T) {
 				assert.PanicsWithError(t, expected, func() {
-					NewUri().Validate(bytes.Bytes(uri))
+					NewUri().Validate(bytes.NewBytes(uri))
 				})
 			})
 		}

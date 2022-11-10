@@ -19,7 +19,7 @@ func Test_newScanner(t *testing.T) {
 
 	assert.NotNil(t, s.step)
 	assert.Equal(t, f, s.file)
-	assert.Equal(t, content, string(s.data))
+	assert.Equal(t, content, s.data.String())
 	assert.Equal(t, contentLen, int(s.dataSize))
 	assert.NotNil(t, s.returnToStep)
 	assert.NotNil(t, s.stack)

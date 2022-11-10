@@ -3,6 +3,7 @@ package jschema
 import (
 	"errors"
 
+	"github.com/jsightapi/jsight-schema-go-library/bytes"
 	"github.com/jsightapi/jsight-schema-go-library/internal/json"
 )
 
@@ -413,7 +414,7 @@ func (g *typeGuesser) isNull() bool {
 
 func (g *typeGuesser) parseNumber() (*json.Number, error) {
 	if g.number == nil {
-		n, err := json.NewNumber(g.data)
+		n, err := json.NewNumber(bytes.NewBytes(g.data))
 		if err != nil {
 			return nil, err
 		}

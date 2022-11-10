@@ -35,7 +35,7 @@ type Value struct {
 var _ jschema.Rule = (*Enum)(nil)
 
 // New creates new Enum rule with specified name and content.
-func New[T fs.FileContent](name string, content T) *Enum {
+func New[T bytes.Byter](name string, content T) *Enum {
 	return FromFile(fs.NewFile(name, content))
 }
 
@@ -82,7 +82,7 @@ func (e *Enum) buildASTNode() (jschema.ASTNode, error) {
 				Comment: v.Comment,
 			}
 
-			if v.Value == nil {
+			if v.Value.IsNil() {
 				n.TokenType = jschema.TokenTypeNull
 				n.SchemaType = string(jschema.SchemaTypeComment)
 			} else {
@@ -151,7 +151,7 @@ func (e *Enum) doCompile() (err error) {
 
 func (e *Enum) handleLiteralEnd(lex lexeme.LexEvent) error {
 	v := lex.Value()
-	t, err := jschema.GuessSchemaType(v)
+	t, err := jschema.GuessSchemaType(v.Data())
 	if err != nil {
 		return err
 	}
