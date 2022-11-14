@@ -6,16 +6,22 @@ parameters:
   go-version:
     type: string
     default: '1.19'
+  golangci-lint-version:
+    type: string
+    default: '1.50.1'
+  run-mod-vendor:
+    type: boolean
+    default: true
+
 
 workflows:
   qa:
     jobs:
-      - common/go-lint:
+      - common/go-test: &common-params
           context: online-editor-development
           go-version: << pipeline.parameters.go-version >>
-          run-mod-vendor: true
-          golangci-lint-version: 1.50.1
 
-      - common/go-test:
-          context: online-editor-development
-          go-version: << pipeline.parameters.go-version >>
+      - common/go-lint:
+          <<: *common-params
+          golangci-lint-version: << pipeline.parameters.golangci-lint-version >>
+          run-mod-vendor: true
