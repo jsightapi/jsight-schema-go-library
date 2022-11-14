@@ -3,54 +3,49 @@ package jschema
 import (
 	stdErrors "errors"
 	"fmt"
-	"io"
-	"strings"
 
-	jschema "github.com/jsightapi/jsight-schema-go-library"
+	schema "github.com/jsightapi/jsight-schema-go-library"
 	"github.com/jsightapi/jsight-schema-go-library/bytes"
 	"github.com/jsightapi/jsight-schema-go-library/errors"
-	"github.com/jsightapi/jsight-schema-go-library/formats/json"
 	"github.com/jsightapi/jsight-schema-go-library/fs"
-	"github.com/jsightapi/jsight-schema-go-library/internal/panics"
 	"github.com/jsightapi/jsight-schema-go-library/internal/sync"
-	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/checker"
-	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/loader"
-	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/scanner"
-	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/validator"
-	internalSchema "github.com/jsightapi/jsight-schema-go-library/notations/jschema/schema"
-	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/schema/constraint"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/checker"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/ischema"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/loader"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/scanner"
 	"github.com/jsightapi/jsight-schema-go-library/notations/regex"
+	"github.com/jsightapi/jsight-schema-go-library/panics"
 )
 
-type Schema struct {
-	file  *fs.File
-	inner *internalSchema.Schema
+type JSchema struct {
+	File  *fs.File
+	Inner *ischema.ISchema
 
-	rules map[string]jschema.Rule
+	Rules map[string]schema.Rule
 
-	usedUserTypes *StringSet
+	UsedUserTypes_ *StringSet // TODO private
 
-	lenOnce     sync.ErrOnceWithValue[uint]
-	loadOnce    sync.ErrOnce
-	compileOnce sync.ErrOnce
+	LenOnce     sync.ErrOnceWithValue[uint]
+	LoadOnce    sync.ErrOnce
+	CompileOnce sync.ErrOnce
 
-	ASTNode                  jschema.ASTNode
-	areKeysOptionalByDefault bool
+	ASTNode                  schema.ASTNode
+	AreKeysOptionalByDefault bool
 }
 
-var _ jschema.Schema = (*Schema)(nil)
+var _ schema.Schema = (*JSchema)(nil)
 
 // New creates a Jsight schema with specified name and content.
-func New[T bytes.Byter](name string, content T, oo ...Option) *Schema {
+func New[T bytes.Byter](name string, content T, oo ...Option) *JSchema {
 	return FromFile(fs.NewFile(name, content), oo...)
 }
 
 // FromFile creates a Jsight schema from file.
-func FromFile(f *fs.File, oo ...Option) *Schema {
-	s := &Schema{
-		file:          f,
-		rules:         map[string]jschema.Rule{},
-		usedUserTypes: &StringSet{},
+func FromFile(f *fs.File, oo ...Option) *JSchema {
+	s := &JSchema{
+		File:           f,
+		Rules:          map[string]schema.Rule{},
+		UsedUserTypes_: &StringSet{},
 	}
 
 	for _, o := range oo {
@@ -60,47 +55,41 @@ func FromFile(f *fs.File, oo ...Option) *Schema {
 	return s
 }
 
-type Option func(s *Schema)
+type Option func(s *JSchema)
 
-func KeysAreOptionalByDefault() Option {
-	return func(s *Schema) {
-		s.areKeysOptionalByDefault = true
-	}
-}
-
-func (s *Schema) Len() (uint, error) {
-	return s.lenOnce.Do(func() (uint, error) {
+func (s *JSchema) Len() (uint, error) {
+	return s.LenOnce.Do(func() (uint, error) {
 		return s.computeLen()
 	})
 }
 
-func (s *Schema) computeLen() (length uint, err error) {
+func (s *JSchema) computeLen() (length uint, err error) {
 	// Iterate through all lexemes until we reach the end
 	// We should rewind here in case we call NextLexeme method.
 	defer func() {
 		err = panics.Handle(recover(), err)
 	}()
 
-	return scanner.New(s.file, scanner.ComputeLength).Length(), err
+	return scanner.New(s.File, scanner.ComputeLength).Length(), err
 }
 
-func (s *Schema) Example() (b []byte, err error) {
+func (s *JSchema) Example() (b []byte, err error) {
 	defer func() {
 		err = panics.Handle(recover(), err)
 	}()
 
-	if err := s.compile(); err != nil {
+	if err := s.Compile(); err != nil {
 		return nil, err
 	}
 
-	if s.inner.RootNode() == nil {
-		return nil, errors.NewDocumentError(s.file, errors.ErrEmptySchema)
+	if s.Inner.RootNode() == nil {
+		return nil, errors.NewDocumentError(s.File, errors.ErrEmptySchema)
 	}
 
-	return newExampleBuilder(s.inner.TypesList()).Build(s.inner.RootNode())
+	return newExampleBuilder(s.Inner.TypesList()).Build(s.Inner.RootNode())
 }
 
-func (s *Schema) AddType(name string, sc jschema.Schema) (err error) {
+func (s *JSchema) AddType(name string, sc schema.Schema) (err error) {
 	defer func() {
 		err = panics.Handle(recover(), err)
 	}()
@@ -110,13 +99,13 @@ func (s *Schema) AddType(name string, sc jschema.Schema) (err error) {
 	}
 
 	switch typ := sc.(type) {
-	case *Schema:
+	case *JSchema:
 		if err := typ.load(); err != nil {
 			return fmt.Errorf("load added type: %w", err)
 		}
 
-		s.inner.AddNamedType(name, typ.inner, s.file, 0)
-	case *regex.Schema:
+		s.Inner.AddNamedType(name, typ.Inner, s.File, 0)
+	case *regex.RSchema:
 		pattern, err := typ.Pattern()
 		if err != nil {
 			return err
@@ -132,7 +121,7 @@ func (s *Schema) AddType(name string, sc jschema.Schema) (err error) {
 			return fmt.Errorf("load added type: %w", err)
 		}
 
-		s.inner.AddNamedType(name, typSc.inner, s.file, 0)
+		s.Inner.AddNamedType(name, typSc.Inner, s.File, 0)
 
 	default:
 		return fmt.Errorf("schema should be JSight or Regex schema, but %T given", sc)
@@ -141,8 +130,8 @@ func (s *Schema) AddType(name string, sc jschema.Schema) (err error) {
 	return nil
 }
 
-func (s *Schema) AddRule(n string, r jschema.Rule) error {
-	if s.inner != nil {
+func (s *JSchema) AddRule(n string, r schema.Rule) error {
+	if s.Inner != nil {
 		return stdErrors.New("schema is already compiled")
 	}
 
@@ -153,262 +142,72 @@ func (s *Schema) AddRule(n string, r jschema.Rule) error {
 	if err := r.Check(); err != nil {
 		return err
 	}
-	s.rules[n] = r
+	s.Rules[n] = r
 	return nil
 }
 
-func (s *Schema) Check() (err error) {
+func (s *JSchema) Check() (err error) {
 	defer func() {
 		err = panics.Handle(recover(), err)
 	}()
-	return s.compile()
+	return s.Compile()
 }
 
-func (s *Schema) Validate(document jschema.Document) (err error) {
-	defer func() {
-		err = panics.Handle(recover(), err)
-	}()
-	if err := s.compile(); err != nil {
-		return err
-	}
-
-	if _, ok := document.(*json.Document); !ok {
-		return fmt.Errorf("support only JSON documents, but got %T", document)
-	}
-
-	return s.validate(document)
-}
-
-func (s *Schema) validate(document jschema.Document) error {
-	tree := validator.NewTree(
-		validator.NodeValidatorList(s.inner.RootNode(), *s.inner, nil),
-	)
-
-	empty := true
-
-	for {
-		jsonLex, err := document.NextLexeme()
-		if err != nil {
-			if stdErrors.Is(err, io.EOF) {
-				break
-			}
-			return err
-		}
-
-		empty = false
-		if tree.FeedLeaves(jsonLex) { // can panic: error of validation
-			break
-		}
-	}
-
-	if empty {
-		return errors.ErrEmptyJson
-	}
-
-	// check for error: Invalid non-space byte after top-level value
-	for {
-		_, err := document.NextLexeme()
-		if err != nil {
-			if stdErrors.Is(err, io.EOF) {
-				break
-			}
-			return err
-		}
-	}
-	return nil
-}
-
-func (s *Schema) GetAST() (an jschema.ASTNode, err error) {
-	if err := s.compile(); err != nil {
-		return jschema.ASTNode{}, err
+func (s *JSchema) GetAST() (an schema.ASTNode, err error) {
+	if err := s.Compile(); err != nil {
+		return schema.ASTNode{}, err
 	}
 
 	return s.ASTNode, nil
 }
 
-func (s *Schema) UsedUserTypes() ([]string, error) {
+func (s *JSchema) UsedUserTypes() ([]string, error) {
 	if err := s.load(); err != nil {
 		return nil, err
 	}
-	return s.usedUserTypes.Data(), nil
+	return s.UsedUserTypes_.Data(), nil
 }
 
-func (s *Schema) AddUserTypeName(name string) {
-	s.usedUserTypes.Add(name)
+func (s *JSchema) AddUserTypeName(name string) {
+	s.UsedUserTypes_.Add(name)
 }
 
-func (s *Schema) load() error {
-	return s.loadOnce.Do(func() (err error) {
+func (s *JSchema) load() error {
+	return s.LoadOnce.Do(func() (err error) {
 		defer func() {
 			err = panics.Handle(recover(), err)
 		}()
 		sc := loader.LoadSchemaWithoutCompile(
-			scanner.New(s.file),
+			scanner.New(s.File),
 			nil,
-			s.rules,
+			s.Rules,
 		)
-		s.inner = &sc
-		s.ASTNode = s.buildASTNode()
-		s.collectUserTypes()
-		loader.CompileBasic(s.inner, s.areKeysOptionalByDefault)
+		s.Inner = &sc
+		s.ASTNode = s.BuildASTNode()
+		s.CollectUserTypes()
+		loader.CompileBasic(s.Inner, s.AreKeysOptionalByDefault)
 		return nil
 	})
 }
 
-func (s *Schema) Build() error {
-	return s.compile()
-}
-
-func (s *Schema) collectUserTypes() {
-	node := s.inner.RootNode()
+func (s *JSchema) CollectUserTypes() {
+	node := s.Inner.RootNode()
 	// This is possible when schema isn't valid.
 	if node == nil {
 		return
 	}
 
 	for _, str := range collectUserTypes(node) {
-		s.usedUserTypes.Add(str)
+		s.UsedUserTypes_.Add(str)
 	}
 }
 
-func collectUserTypes(node internalSchema.Node) []string {
-	c := &userTypesCollector{
-		alreadyProcessed: map[string]struct{}{},
-	}
-	c.collect(node)
-	return c.userTypes
-}
-
-type userTypesCollector struct {
-	alreadyProcessed map[string]struct{}
-	userTypes        []string
-}
-
-func (c *userTypesCollector) collect(node internalSchema.Node) {
-	c.collectUserTypesFromTypesListConstraint(node)
-	c.collectUserTypesFromTypeConstraint(node)
-	c.collectUserTypesFromAllOfConstraint(node)
-
-	switch n := node.(type) {
-	case *internalSchema.ObjectNode:
-		c.collectUserTypesFromAdditionalPropertiesOfConstraint(node)
-		c.collectUserTypesObjectNode(n)
-
-	case *internalSchema.ArrayNode:
-		for _, child := range n.Children() {
-			c.collect(child)
-		}
-
-	case *internalSchema.MixedValueNode:
-		for _, ut := range strings.Split(n.Value().String(), "|") {
-			s := strings.TrimSpace(ut)
-			if s[0] == '@' {
-				c.addType(s)
-			}
-		}
-	}
-}
-
-func (c *userTypesCollector) collectUserTypesFromTypesListConstraint(node internalSchema.Node) {
-	cnstr := node.Constraint(constraint.TypesListConstraintType)
-	if cnstr == nil {
-		return
-	}
-
-	list, ok := cnstr.(*constraint.TypesList)
-	if !ok {
-		return
-	}
-
-	for _, name := range list.Names() {
-		if name[0] == '@' {
-			c.addType(name)
-		}
-	}
-}
-
-func (c *userTypesCollector) collectUserTypesFromTypeConstraint(node internalSchema.Node) {
-	cnstr := node.Constraint(constraint.TypeConstraintType)
-	if cnstr == nil {
-		return
-	}
-
-	typ, ok := cnstr.(*constraint.TypeConstraint)
-	if !ok {
-		return
-	}
-
-	name := typ.Bytes().Unquote().String()
-	if name[0] == '@' {
-		c.addType(name)
-	}
-}
-
-func (c *userTypesCollector) collectUserTypesFromAllOfConstraint(node internalSchema.Node) {
-	cnstr := node.Constraint(constraint.AllOfConstraintType)
-	if c == nil {
-		return
-	}
-
-	allOf, ok := cnstr.(*constraint.AllOf)
-	if !ok {
-		return
-	}
-
-	for _, name := range allOf.SchemaNames() {
-		if name[0] == '@' {
-			c.addType(name)
-		}
-	}
-}
-
-func (c *userTypesCollector) collectUserTypesFromAdditionalPropertiesOfConstraint(node internalSchema.Node) {
-	cnstr := node.Constraint(constraint.AdditionalPropertiesConstraintType)
-	if c == nil {
-		return
-	}
-
-	ap, ok := cnstr.(*constraint.AdditionalProperties)
-	if !ok {
-		return
-	}
-
-	if ap.Mode() == constraint.AdditionalPropertiesMustBeUserType {
-		c.addType(ap.TypeName().String())
-	}
-}
-
-func (c *userTypesCollector) collectUserTypesObjectNode(node *internalSchema.ObjectNode) {
-	for _, v := range node.Keys().Data {
-		k := v.Key
-
-		if v.IsShortcut {
-			if k[0] == '@' {
-				c.addType(k)
-			}
-		}
-
-		child, ok := node.Child(k, v.IsShortcut)
-		if ok {
-			c.collect(child)
-		}
-	}
-}
-
-func (c *userTypesCollector) addType(n string) {
-	if _, ok := c.alreadyProcessed[n]; ok {
-		return
-	}
-	c.alreadyProcessed[n] = struct{}{}
-	c.userTypes = append(c.userTypes, n)
-}
-
-func (s *Schema) buildASTNode() jschema.ASTNode {
-	root := s.inner.RootNode()
+func (s *JSchema) BuildASTNode() schema.ASTNode {
+	root := s.Inner.RootNode()
 	if root == nil {
 		// This case will be handled in loader.CompileBasic.
-		return jschema.ASTNode{
-			Rules: &jschema.RuleASTNodes{},
+		return schema.ASTNode{
+			Rules: &schema.RuleASTNodes{},
 		}
 	}
 
@@ -419,21 +218,21 @@ func (s *Schema) buildASTNode() jschema.ASTNode {
 	return an
 }
 
-func (s *Schema) compile() error {
-	return s.compileOnce.Do(func() (err error) {
+func (s *JSchema) Compile() error {
+	return s.CompileOnce.Do(func() (err error) {
 		defer func() {
 			err = panics.Handle(recover(), err)
 		}()
 		if err := s.load(); err != nil {
 			return err
 		}
-		loader.CompileAllOf(s.inner)
-		loader.AddUnnamedTypes(s.inner)
-		checker.CheckRootSchema(s.inner)
-		return checker.CheckRecursion(s.file.Name(), s.inner)
+		loader.CompileAllOf(s.Inner)
+		loader.AddUnnamedTypes(s.Inner)
+		checker.CheckRootSchema(s.Inner)
+		return checker.CheckRecursion(s.File.Name(), s.Inner)
 	})
 }
 
-func (s *Schema) InnerTypesList() map[string]internalSchema.Type {
-	return s.inner.TypesList()
+func (s *JSchema) InnerTypesList() map[string]ischema.Type {
+	return s.Inner.TypesList()
 }

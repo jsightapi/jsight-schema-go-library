@@ -4,12 +4,13 @@ import (
 	stdErrors "errors"
 	"io"
 
-	jschema "github.com/jsightapi/jsight-schema-go-library"
+	schema "github.com/jsightapi/jsight-schema-go-library"
+
 	"github.com/jsightapi/jsight-schema-go-library/bytes"
 	"github.com/jsightapi/jsight-schema-go-library/errors"
 	"github.com/jsightapi/jsight-schema-go-library/fs"
-	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
 	"github.com/jsightapi/jsight-schema-go-library/internal/sync"
+	"github.com/jsightapi/jsight-schema-go-library/lexeme"
 )
 
 type Document struct {
@@ -22,15 +23,15 @@ type Document struct {
 	allowTrailingNonSpaceCharacters bool
 }
 
-var _ jschema.Document = &Document{}
+var _ schema.Document = &Document{}
 
 // New creates a JSON document with specified name and content.
-func New[T bytes.Byter](name string, content T, oo ...Option) jschema.Document {
+func New[T bytes.Byter](name string, content T, oo ...Option) schema.Document {
 	return FromFile(fs.NewFile(name, content), oo...)
 }
 
 // FromFile creates a JSON document from file.
-func FromFile(f *fs.File, oo ...Option) jschema.Document {
+func FromFile(f *fs.File, oo ...Option) schema.Document {
 	d := &Document{
 		file: f,
 	}

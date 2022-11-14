@@ -3,11 +3,11 @@ package enum
 import (
 	stdErrors "errors"
 
-	jschema "github.com/jsightapi/jsight-schema-go-library"
+	schema "github.com/jsightapi/jsight-schema-go-library"
 	"github.com/jsightapi/jsight-schema-go-library/bytes"
 	"github.com/jsightapi/jsight-schema-go-library/fs"
-	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
 	"github.com/jsightapi/jsight-schema-go-library/internal/sync"
+	"github.com/jsightapi/jsight-schema-go-library/lexeme"
 )
 
 // The Enum rule.
@@ -17,7 +17,7 @@ type Enum struct {
 
 	compileOnce       sync.ErrOnce
 	computeLengthOnce sync.ErrOnceWithValue[uint]
-	buildASTNodeOnce  sync.ErrOnceWithValue[jschema.ASTNode]
+	buildASTNodeOnce  sync.ErrOnceWithValue[schema.ASTNode]
 }
 
 // Value represents single enum's value.
@@ -26,13 +26,13 @@ type Value struct {
 	Comment string
 
 	// Type value type.
-	Type jschema.SchemaType
+	Type schema.SchemaType
 
 	// Value enum value.
 	Value bytes.Bytes
 }
 
-var _ jschema.Rule = (*Enum)(nil)
+var _ schema.Rule = (*Enum)(nil)
 
 // New creates new Enum rule with specified name and content.
 func New[T bytes.Byter](name string, content T) *Enum {
@@ -55,36 +55,36 @@ func (e *Enum) Check() error {
 	return e.compile()
 }
 
-func (e *Enum) GetAST() (jschema.ASTNode, error) {
+func (e *Enum) GetAST() (schema.ASTNode, error) {
 	if err := e.compile(); err != nil {
-		return jschema.ASTNode{}, err
+		return schema.ASTNode{}, err
 	}
 
 	return e.buildASTNode()
 }
 
-func (e *Enum) buildASTNode() (jschema.ASTNode, error) {
-	return e.buildASTNodeOnce.Do(func() (jschema.ASTNode, error) {
-		an := jschema.ASTNode{
-			TokenType:  jschema.TokenTypeArray,
-			SchemaType: string(jschema.SchemaTypeEnum),
+func (e *Enum) buildASTNode() (schema.ASTNode, error) {
+	return e.buildASTNodeOnce.Do(func() (schema.ASTNode, error) {
+		an := schema.ASTNode{
+			TokenType:  schema.TokenTypeArray,
+			SchemaType: string(schema.SchemaTypeEnum),
 		}
 
 		if len(e.values) == 0 {
 			return an, nil
 		}
 
-		an.Children = make([]jschema.ASTNode, 0, len(e.values))
+		an.Children = make([]schema.ASTNode, 0, len(e.values))
 
 		for _, v := range e.values {
-			n := jschema.ASTNode{
+			n := schema.ASTNode{
 				Value:   v.Value.String(),
 				Comment: v.Comment,
 			}
 
 			if v.Value.IsNil() {
-				n.TokenType = jschema.TokenTypeNull
-				n.SchemaType = string(jschema.SchemaTypeComment)
+				n.TokenType = schema.TokenTypeNull
+				n.SchemaType = string(schema.SchemaTypeComment)
 			} else {
 				n.TokenType = v.Type.ToTokenType()
 				n.SchemaType = string(v.Type)
@@ -151,7 +151,7 @@ func (e *Enum) doCompile() (err error) {
 
 func (e *Enum) handleLiteralEnd(lex lexeme.LexEvent) error {
 	v := lex.Value()
-	t, err := jschema.GuessSchemaType(v.Data())
+	t, err := schema.GuessSchemaType(v.Data())
 	if err != nil {
 		return err
 	}
@@ -170,7 +170,7 @@ func (e *Enum) handleEndOfComment(lex lexeme.LexEvent, collectLiteral bool) {
 	} else {
 		e.values = append(e.values, Value{
 			Comment: comment,
-			Type:    jschema.SchemaTypeComment,
+			Type:    schema.SchemaTypeComment,
 		})
 	}
 }

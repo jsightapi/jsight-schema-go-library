@@ -1,5 +1,0 @@
-{
-  "id": 1,
-  "name": "John",
-  "age": 5.5 // {min: 4.3, exclusiveMinimum: true}
-}

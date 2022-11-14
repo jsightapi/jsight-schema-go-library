@@ -7,13 +7,13 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/bytes"
 	"github.com/jsightapi/jsight-schema-go-library/errors"
 	"github.com/jsightapi/jsight-schema-go-library/internal/sync"
-	internalSchema "github.com/jsightapi/jsight-schema-go-library/notations/jschema/schema"
-	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/schema/constraint"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/ischema"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/ischema/constraint"
 )
 
 type exampleBuilder struct {
 	// types all user types used in this schema.
-	types map[string]internalSchema.Type
+	types map[string]ischema.Type
 
 	// processedTypes an unordered set of processed types required for handling
 	// recursion.
@@ -22,25 +22,25 @@ type exampleBuilder struct {
 	processedTypes map[string]int
 }
 
-func newExampleBuilder(types map[string]internalSchema.Type) *exampleBuilder {
+func newExampleBuilder(types map[string]ischema.Type) *exampleBuilder {
 	return &exampleBuilder{
 		types:          types,
 		processedTypes: map[string]int{},
 	}
 }
 
-func (b *exampleBuilder) Build(node internalSchema.Node) ([]byte, error) {
+func (b *exampleBuilder) Build(node ischema.Node) ([]byte, error) {
 	switch typedNode := node.(type) {
-	case *internalSchema.ObjectNode:
+	case *ischema.ObjectNode:
 		return b.buildExampleForObjectNode(typedNode)
 
-	case *internalSchema.ArrayNode:
+	case *ischema.ArrayNode:
 		return b.buildExampleForArrayNode(typedNode)
 
-	case *internalSchema.LiteralNode:
+	case *ischema.LiteralNode:
 		return typedNode.BasisLexEventOfSchemaForNode().Value().Data(), nil
 
-	case *internalSchema.MixedValueNode:
+	case *ischema.MixedValueNode:
 		return b.buildExampleForMixedValueNode(typedNode)
 
 	default:
@@ -48,7 +48,7 @@ func (b *exampleBuilder) Build(node internalSchema.Node) ([]byte, error) {
 	}
 }
 
-func (b *exampleBuilder) buildExampleForObjectNode(node *internalSchema.ObjectNode) ([]byte, error) {
+func (b *exampleBuilder) buildExampleForObjectNode(node *ischema.ObjectNode) ([]byte, error) {
 	if node.Constraint(constraint.TypesListConstraintType) != nil {
 		return nil, errors.ErrUserTypeFound
 	}
@@ -86,7 +86,7 @@ func (b *exampleBuilder) buildExampleForObjectNode(node *internalSchema.ObjectNo
 	return buf.Bytes(), nil
 }
 
-func (b *exampleBuilder) buildObjectKey(k internalSchema.ObjectNodeKey) ([]byte, error) {
+func (b *exampleBuilder) buildObjectKey(k ischema.ObjectNodeKey) ([]byte, error) {
 	if !k.IsShortcut {
 		return []byte(k.Key), nil
 	}
@@ -103,7 +103,7 @@ func (b *exampleBuilder) buildObjectKey(k internalSchema.ObjectNodeKey) ([]byte,
 	return stdBytes.Trim(ex, `"`), nil
 }
 
-func (b *exampleBuilder) buildExampleForArrayNode(node *internalSchema.ArrayNode) ([]byte, error) {
+func (b *exampleBuilder) buildExampleForArrayNode(node *ischema.ArrayNode) ([]byte, error) {
 	if node.Constraint(constraint.TypesListConstraintType) != nil {
 		return nil, errors.ErrUserTypeFound
 	}
@@ -133,7 +133,7 @@ func (b *exampleBuilder) buildExampleForArrayNode(node *internalSchema.ArrayNode
 	return buf.Bytes(), nil
 }
 
-func (b *exampleBuilder) buildExampleForMixedValueNode(node *internalSchema.MixedValueNode) ([]byte, error) {
+func (b *exampleBuilder) buildExampleForMixedValueNode(node *ischema.MixedValueNode) ([]byte, error) {
 	tt := node.GetTypes()
 	if len(tt) == 0 {
 		// Normally this shouldn't happen, but we still have to handle this case.
@@ -162,18 +162,18 @@ func (b *exampleBuilder) buildExampleForMixedValueNode(node *internalSchema.Mixe
 	return b.Build(t.Schema.RootNode())
 }
 
-func buildExample(node internalSchema.Node, types map[string]internalSchema.Type) ([]byte, error) {
+func buildExample(node ischema.Node, types map[string]ischema.Type) ([]byte, error) {
 	switch typedNode := node.(type) {
-	case *internalSchema.ObjectNode:
+	case *ischema.ObjectNode:
 		return buildExampleForObjectNode(typedNode, types)
 
-	case *internalSchema.ArrayNode:
+	case *ischema.ArrayNode:
 		return buildExampleForArrayNode(typedNode, types)
 
-	case *internalSchema.LiteralNode:
+	case *ischema.LiteralNode:
 		return typedNode.BasisLexEventOfSchemaForNode().Value().Data(), nil
 
-	case *internalSchema.MixedValueNode:
+	case *ischema.MixedValueNode:
 		return buildExampleForMixedValueNode(typedNode, types)
 
 	default:
@@ -182,8 +182,8 @@ func buildExample(node internalSchema.Node, types map[string]internalSchema.Type
 }
 
 func buildExampleForObjectNode(
-	node *internalSchema.ObjectNode,
-	types map[string]internalSchema.Type,
+	node *ischema.ObjectNode,
+	types map[string]ischema.Type,
 ) ([]byte, error) {
 	if node.Constraint(constraint.TypesListConstraintType) != nil {
 		return nil, errors.ErrUserTypeFound
@@ -215,8 +215,8 @@ func buildExampleForObjectNode(
 }
 
 func buildExampleForArrayNode(
-	node *internalSchema.ArrayNode,
-	types map[string]internalSchema.Type,
+	node *ischema.ArrayNode,
+	types map[string]ischema.Type,
 ) ([]byte, error) {
 	if node.Constraint(constraint.TypesListConstraintType) != nil {
 		return nil, errors.ErrUserTypeFound
@@ -245,8 +245,8 @@ func buildExampleForArrayNode(
 var exampleBufferPool = sync.NewBufferPool(512)
 
 func buildExampleForMixedValueNode(
-	node *internalSchema.MixedValueNode,
-	types map[string]internalSchema.Type,
+	node *ischema.MixedValueNode,
+	types map[string]ischema.Type,
 ) ([]byte, error) {
 	tt := node.GetTypes()
 	if len(tt) == 0 {

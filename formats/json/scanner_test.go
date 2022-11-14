@@ -4,10 +4,10 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/jsightapi/jsight-schema-go-library/fs"
-	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
+	"github.com/jsightapi/jsight-schema-go-library/lexeme"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestScanner_Next(t *testing.T) {

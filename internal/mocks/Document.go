@@ -4,8 +4,7 @@ package mocks
 
 import (
 	bytes "github.com/jsightapi/jsight-schema-go-library/bytes"
-
-	lexeme "github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
+	"github.com/jsightapi/jsight-schema-go-library/lexeme"
 
 	mock "github.com/stretchr/testify/mock"
 )

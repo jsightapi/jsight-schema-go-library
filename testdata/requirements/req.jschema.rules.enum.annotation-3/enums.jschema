@@ -1,7 +1,0 @@
-{
-    "foo": "AAA" /* {
-        enum: @foo,
-        optional: true
-    } */
-}
-

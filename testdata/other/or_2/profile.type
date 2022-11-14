@@ -1,4 +1,0 @@
-{ // { additionalProperties: true }
-  "sex": "male",
-  "height": 175.4
-}

@@ -1,5 +1,0 @@
-// Schema containing an array of objects
-[
-  {"aaa": 111},
-  {"bbb": 222}
-]

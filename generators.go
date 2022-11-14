@@ -1,4 +1,4 @@
-package jschema
+package schema
 
 //go:generate go run ./internal/cmd/generator/
 //go:generate mockery --name Document --output ./internal/mocks

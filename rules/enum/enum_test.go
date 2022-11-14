@@ -3,7 +3,7 @@ package enum
 import (
 	"testing"
 
-	jschema "github.com/jsightapi/jsight-schema-go-library"
+	schema "github.com/jsightapi/jsight-schema-go-library"
 	jbytes "github.com/jsightapi/jsight-schema-go-library/bytes"
 
 	"github.com/stretchr/testify/assert"
@@ -260,56 +260,56 @@ func TestEnum_GetAST(t *testing.T) {
 			GetAST()
 
 		require.NoError(t, err)
-		assert.Equal(t, jschema.ASTNode{
-			TokenType:  jschema.TokenTypeArray,
-			SchemaType: string(jschema.SchemaTypeEnum),
-			Children: []jschema.ASTNode{
+		assert.Equal(t, schema.ASTNode{
+			TokenType:  schema.TokenTypeArray,
+			SchemaType: string(schema.SchemaTypeEnum),
+			Children: []schema.ASTNode{
 				{
-					TokenType:  jschema.TokenTypeNull,
-					SchemaType: string(jschema.SchemaTypeComment),
+					TokenType:  schema.TokenTypeNull,
+					SchemaType: string(schema.SchemaTypeComment),
 					Comment:    "first comment",
 				},
 				{
-					TokenType:  jschema.TokenTypeString,
-					SchemaType: string(jschema.SchemaTypeString),
+					TokenType:  schema.TokenTypeString,
+					SchemaType: string(schema.SchemaTypeString),
 					Value:      `"foo"`,
 				},
 				{
-					TokenType:  jschema.TokenTypeNumber,
-					SchemaType: string(jschema.SchemaTypeInteger),
+					TokenType:  schema.TokenTypeNumber,
+					SchemaType: string(schema.SchemaTypeInteger),
 					Value:      "42",
 					Comment:    "42 comment",
 				},
 				{
-					TokenType:  jschema.TokenTypeNumber,
-					SchemaType: string(jschema.SchemaTypeFloat),
+					TokenType:  schema.TokenTypeNumber,
+					SchemaType: string(schema.SchemaTypeFloat),
 					Value:      "3.14",
 				},
 				{
-					TokenType:  jschema.TokenTypeBoolean,
-					SchemaType: string(jschema.SchemaTypeBoolean),
+					TokenType:  schema.TokenTypeBoolean,
+					SchemaType: string(schema.SchemaTypeBoolean),
 					Value:      "true",
 				},
 				{
-					TokenType:  jschema.TokenTypeBoolean,
-					SchemaType: string(jschema.SchemaTypeBoolean),
+					TokenType:  schema.TokenTypeBoolean,
+					SchemaType: string(schema.SchemaTypeBoolean),
 					Value:      "false",
 					Comment:    "false comment",
 				},
 				{
-					TokenType:  jschema.TokenTypeNull,
-					SchemaType: string(jschema.SchemaTypeComment),
+					TokenType:  schema.TokenTypeNull,
+					SchemaType: string(schema.SchemaTypeComment),
 					Comment:    "before null comment",
 				},
 				{
-					TokenType:  jschema.TokenTypeNull,
-					SchemaType: string(jschema.SchemaTypeNull),
+					TokenType:  schema.TokenTypeNull,
+					SchemaType: string(schema.SchemaTypeNull),
 					Value:      "null",
 					Comment:    "null comment",
 				},
 				{
-					TokenType:  jschema.TokenTypeNull,
-					SchemaType: string(jschema.SchemaTypeComment),
+					TokenType:  schema.TokenTypeNull,
+					SchemaType: string(schema.SchemaTypeComment),
 					Comment:    "last comment",
 				},
 			},
@@ -328,12 +328,12 @@ func TestEnum_Values(t *testing.T) {
 	false,
 	null
 ]`: {
-				{Value: jbytes.NewBytes(`"foo"`), Type: jschema.SchemaTypeString},
-				{Value: jbytes.NewBytes("42"), Type: jschema.SchemaTypeInteger},
-				{Value: jbytes.NewBytes("3.14"), Type: jschema.SchemaTypeFloat},
-				{Value: jbytes.NewBytes("true"), Type: jschema.SchemaTypeBoolean},
-				{Value: jbytes.NewBytes("false"), Type: jschema.SchemaTypeBoolean},
-				{Value: jbytes.NewBytes("null"), Type: jschema.SchemaTypeNull},
+				{Value: jbytes.NewBytes(`"foo"`), Type: schema.SchemaTypeString},
+				{Value: jbytes.NewBytes("42"), Type: schema.SchemaTypeInteger},
+				{Value: jbytes.NewBytes("3.14"), Type: schema.SchemaTypeFloat},
+				{Value: jbytes.NewBytes("true"), Type: schema.SchemaTypeBoolean},
+				{Value: jbytes.NewBytes("false"), Type: schema.SchemaTypeBoolean},
+				{Value: jbytes.NewBytes("null"), Type: schema.SchemaTypeNull},
 			},
 
 			`[
@@ -347,13 +347,13 @@ func TestEnum_Values(t *testing.T) {
 
 	// Interline comment 3
 ]`: {
-				{Comment: "Interline comment 1", Type: jschema.SchemaTypeComment},
-				{Value: jbytes.NewBytes(`"foo"`), Type: jschema.SchemaTypeString, Comment: "Foo comment"},
-				{Value: jbytes.NewBytes(`"bar"`), Type: jschema.SchemaTypeString, Comment: "Bar comment"},
-				{Comment: "Interline comment 2", Type: jschema.SchemaTypeComment},
-				{Value: jbytes.NewBytes(`"fizz"`), Type: jschema.SchemaTypeString, Comment: "Fizz comment"},
-				{Value: jbytes.NewBytes(`"buzz"`), Type: jschema.SchemaTypeString, Comment: "Buzz comment"},
-				{Comment: "Interline comment 3", Type: jschema.SchemaTypeComment},
+				{Comment: "Interline comment 1", Type: schema.SchemaTypeComment},
+				{Value: jbytes.NewBytes(`"foo"`), Type: schema.SchemaTypeString, Comment: "Foo comment"},
+				{Value: jbytes.NewBytes(`"bar"`), Type: schema.SchemaTypeString, Comment: "Bar comment"},
+				{Comment: "Interline comment 2", Type: schema.SchemaTypeComment},
+				{Value: jbytes.NewBytes(`"fizz"`), Type: schema.SchemaTypeString, Comment: "Fizz comment"},
+				{Value: jbytes.NewBytes(`"buzz"`), Type: schema.SchemaTypeString, Comment: "Buzz comment"},
+				{Comment: "Interline comment 3", Type: schema.SchemaTypeComment},
 			},
 
 			`[
@@ -369,14 +369,14 @@ func TestEnum_Values(t *testing.T) {
 		"LION", // Lion
 		"TIGER" // Tiger
 ]`: {
-				{Comment: "My\n\t\t   Pets", Type: jschema.SchemaTypeComment},
-				{Value: jbytes.NewBytes(`"CAT"`), Type: jschema.SchemaTypeString, Comment: "My\n\t\t          Cat"},
-				{Value: jbytes.NewBytes(`"DOG"`), Type: jschema.SchemaTypeString, Comment: "Dog"},
-				{Value: jbytes.NewBytes(`"PIG"`), Type: jschema.SchemaTypeString, Comment: "Pig"},
-				{Comment: "Wild animals", Type: jschema.SchemaTypeComment},
-				{Value: jbytes.NewBytes(`"WOLF"`), Type: jschema.SchemaTypeString, Comment: "Wolf"},
-				{Value: jbytes.NewBytes(`"LION"`), Type: jschema.SchemaTypeString, Comment: "Lion"},
-				{Value: jbytes.NewBytes(`"TIGER"`), Type: jschema.SchemaTypeString, Comment: "Tiger"},
+				{Comment: "My\n\t\t   Pets", Type: schema.SchemaTypeComment},
+				{Value: jbytes.NewBytes(`"CAT"`), Type: schema.SchemaTypeString, Comment: "My\n\t\t          Cat"},
+				{Value: jbytes.NewBytes(`"DOG"`), Type: schema.SchemaTypeString, Comment: "Dog"},
+				{Value: jbytes.NewBytes(`"PIG"`), Type: schema.SchemaTypeString, Comment: "Pig"},
+				{Comment: "Wild animals", Type: schema.SchemaTypeComment},
+				{Value: jbytes.NewBytes(`"WOLF"`), Type: schema.SchemaTypeString, Comment: "Wolf"},
+				{Value: jbytes.NewBytes(`"LION"`), Type: schema.SchemaTypeString, Comment: "Lion"},
+				{Value: jbytes.NewBytes(`"TIGER"`), Type: schema.SchemaTypeString, Comment: "Tiger"},
 			},
 		}
 

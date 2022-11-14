@@ -1,17 +1,17 @@
 package plaintext
 
 import (
-	jschema "github.com/jsightapi/jsight-schema-go-library"
+	schema "github.com/jsightapi/jsight-schema-go-library"
 	"github.com/jsightapi/jsight-schema-go-library/bytes"
 	"github.com/jsightapi/jsight-schema-go-library/fs"
-	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
+	"github.com/jsightapi/jsight-schema-go-library/lexeme"
 )
 
 type Document struct {
 	file *fs.File
 }
 
-var _ jschema.Document = &Document{}
+var _ schema.Document = &Document{}
 
 // New creates a JSON document with specified name and content.
 func New[T bytes.Byter](name string, content T) *Document {

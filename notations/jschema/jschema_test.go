@@ -9,11 +9,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	jschema "github.com/jsightapi/jsight-schema-go-library"
-	"github.com/jsightapi/jsight-schema-go-library/formats/json"
+	schema "github.com/jsightapi/jsight-schema-go-library"
 	"github.com/jsightapi/jsight-schema-go-library/internal/mocks"
 	schemaMocks "github.com/jsightapi/jsight-schema-go-library/notations/jschema/internal/mocks"
-	internalSchema "github.com/jsightapi/jsight-schema-go-library/notations/jschema/schema"
+	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/ischema"
 	"github.com/jsightapi/jsight-schema-go-library/notations/regex"
 	"github.com/jsightapi/jsight-schema-go-library/rules/enum"
 )
@@ -26,7 +25,6 @@ func ExampleSchema() {
 		fmt.Printf("Error: %s\n", err)
 		return
 	}
-	fmt.Println(l)
 
 	err = s.AddType("@Fizz", New("fizz", `{"fizz": 1}`))
 	if err != nil {
@@ -46,11 +44,7 @@ func ExampleSchema() {
 		return
 	}
 
-	err = s.Validate(json.New("json", `{"foo":{"fizz":42},"bar":{"buzz":42}}`))
-	if err != nil {
-		fmt.Printf("Error: %s\n", err)
-		return
-	}
+	fmt.Println(l)
 	// Output: 27
 }
 
@@ -273,16 +267,16 @@ func TestSchema_Example(t *testing.T) {
 
 func TestSchema_AddType(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
-		t.Run("jschema", func(t *testing.T) {
+		t.Run("schema", func(t *testing.T) {
 			root := New("", `{"foo": @foo}`)
 			typ := New("", "123")
 			err := root.AddType("@foo", typ)
 			require.NoError(t, err)
 
-			require.NotNil(t, root.inner)
-			actualType, err := root.inner.Type("@foo")
+			require.NotNil(t, root.Inner)
+			actualType, err := root.Inner.Type("@foo")
 			require.NoError(t, err)
-			assert.Equal(t, typ.inner, actualType)
+			assert.Equal(t, typ.Inner, actualType)
 		})
 
 		t.Run("regex", func(t *testing.T) {
@@ -291,7 +285,7 @@ func TestSchema_AddType(t *testing.T) {
 			err := root.AddType("@foo", typ)
 			require.NoError(t, err)
 
-			require.NotNil(t, root.inner)
+			require.NotNil(t, root.Inner)
 		})
 	})
 
@@ -318,20 +312,20 @@ func TestSchema_AddRule(t *testing.T) {
 		err := s.AddRule(name, r)
 
 		require.NoError(t, err)
-		assert.Len(t, s.rules, 1)
-		assert.Contains(t, s.rules, name)
-		assert.Same(t, r, s.rules[name])
+		assert.Len(t, s.Rules, 1)
+		assert.Contains(t, s.Rules, name)
+		assert.Same(t, r, s.Rules[name])
 	})
 
 	t.Run("negative", func(t *testing.T) {
 		t.Run("already compiled", func(t *testing.T) {
 			s := New("foo", "content")
-			s.inner = &internalSchema.Schema{}
+			s.Inner = &ischema.ISchema{}
 
 			err := s.AddRule("foo", mocks.NewRule(t))
 
 			assert.EqualError(t, err, "schema is already compiled")
-			assert.Len(t, s.rules, 0)
+			assert.Len(t, s.Rules, 0)
 		})
 
 		t.Run("nil rule", func(t *testing.T) {
@@ -340,7 +334,7 @@ func TestSchema_AddRule(t *testing.T) {
 			err := s.AddRule("", nil)
 
 			assert.EqualError(t, err, "rule is nil")
-			assert.Len(t, s.rules, 0)
+			assert.Len(t, s.Rules, 0)
 		})
 
 		t.Run("invalid rule", func(t *testing.T) {
@@ -351,7 +345,7 @@ func TestSchema_AddRule(t *testing.T) {
 			err := s.AddRule("", r)
 
 			assert.EqualError(t, err, "fake error")
-			assert.Len(t, s.rules, 0)
+			assert.Len(t, s.Rules, 0)
 		})
 	})
 }
@@ -1655,9 +1649,9 @@ func TestSchema_Check(t *testing.T) {
 	--^`: `[] // {type: "@foo"}`,
 			}
 
-			for expected, schema := range cc {
+			for expected, s := range cc {
 				t.Run(expected, func(t *testing.T) {
-					assert.EqualError(t, New("", schema).Check(), expected)
+					assert.EqualError(t, New("", s).Check(), expected)
 				})
 			}
 		})
@@ -1705,9 +1699,9 @@ func TestSchema_Check(t *testing.T) {
 }`,
 			}
 
-			for expected, schema := range cc {
+			for expected, s := range cc {
 				t.Run(expected, func(t *testing.T) {
-					assert.EqualError(t, New("", schema).Check(), expected)
+					assert.EqualError(t, New("", s).Check(), expected)
 				})
 			}
 		})
@@ -1773,298 +1767,25 @@ func TestSchema_Check(t *testing.T) {
 	})
 }
 
-func TestSchema_Validate(t *testing.T) {
-	t.Run("positive", func(t *testing.T) {
-		cc := map[string]struct {
-			schema string
-			types  map[string]string
-			jsons  []string
-		}{
-			"object": {
-				schema: `
-{
-	"foo": 1,
-	"bar": "string"
-}`,
-				jsons: []string{`
-{
-	"foo": 42,
-	"bar": "fizz"
-}`},
-			},
-
-			"allOf": {
-				schema: `
-{ // {allOf: "@aaa"}
-	"bbb": 222
-}
-`,
-				types: map[string]string{
-					"@aaa": `{"aaa": 111}`,
-				},
-				jsons: []string{
-					`{"aaa": 1, "bbb": 2}`,
-					`{"aaa": 1}`,
-					`{"bbb": 2}`,
-					`{}`,
-				},
-			},
-
-			"user type nullable": {
-				schema: `{
-	"foo": 1 // {type: "@bar", nullable: true}
-}`,
-				types: map[string]string{
-					"@bar": "123",
-				},
-				jsons: []string{
-					`{"foo": 42}`,
-					`{"foo": null}`,
-				},
-			},
-
-			"shortcut nullable": {
-				schema: `{
-	"foo": @bar // {nullable: true}
-}`,
-				types: map[string]string{
-					"@bar": "123",
-				},
-				jsons: []string{
-					`{"foo": 24}`,
-					`{"foo": null}`,
-				},
-			},
-
-			"or nullable": {
-				schema: `{
-	"foo": @fizz | @buzz // {nullable: true}
-}`,
-				types: map[string]string{
-					"@fizz": "[]",
-					"@buzz": "{}",
-				},
-				jsons: []string{
-					`{"foo": []}`,
-					`{"foo": {}}`,
-					`{"foo": null}`,
-				},
-			},
-
-			"enum nullable": {
-				schema: `{
-	"foo": 1 // {enum: [1, 2, 3], nullable: true}
-}`,
-				jsons: []string{
-					`{"foo": 1}`,
-					`{"foo": 2}`,
-					`{"foo": 3}`,
-					`{"foo": null}`,
-				},
-			},
-
-			"or with types (objects)": {
-				schema: `42 /* {or: [
-	{type: "boolean"},
-	{type: "integer"},
-	{type: "float"},
-	{type: "null"},
-	{type: "string"},
-	{type: "@foo"}
-]} */`,
-				types: map[string]string{
-					"@foo": `"foo-1" // {regex: "foo-[0-9]+"}`,
-				},
-				jsons: []string{
-					"42",
-					"3.14",
-					"true",
-					"null",
-					"false",
-					`"foo-42"`,
-					`"fizz"`,
-				},
-			},
-
-			"or with types (mixed)": {
-				schema: `42 /* {or: [
-	{type: "boolean"},
-	"integer",
-	{type: "float"},
-	"null",
-	{type: "string"},
-	"@foo"
-]} */`,
-				types: map[string]string{
-					"@foo": `"foo-1" // {regex: "foo-[0-9]+"}`,
-				},
-				jsons: []string{
-					"42",
-					"3.14",
-					"true",
-					"null",
-					"false",
-					`"foo-42"`,
-					`"fizz"`,
-				},
-			},
-
-			"or with types (flat)": {
-				schema: `42 /* {or: [
-	"boolean",
-	"integer",
-	"float",
-	"null",
-	"string",
-	"@foo"
-]} */`,
-				types: map[string]string{
-					"@foo": `"foo-1" // {regex: "foo-[0-9]+"}`,
-				},
-				jsons: []string{
-					"42",
-					"3.14",
-					"true",
-					"null",
-					"false",
-					`"foo-42"`,
-					`"fizz"`,
-				},
-			},
-
-			"Or without type": {
-				schema: `{
-	"foo": 123 /* {or: [
-		{min: 100},
-		{type: "string"}
-	]} */
-}`,
-				jsons: []string{
-					`{"foo": 1000}`,
-					`{"foo": "bar"}`,
-				},
-			},
-		}
-
-		for name, c := range cc {
-			t.Run(name, func(t *testing.T) {
-				schema := New("schema", c.schema, KeysAreOptionalByDefault())
-
-				for n, s := range c.types {
-					require.NoError(t, schema.AddType(n, New(s, s, KeysAreOptionalByDefault())))
-				}
-
-				for _, s := range c.jsons {
-					t.Run(s, func(t *testing.T) {
-						err := schema.Validate(json.New("json", s))
-						require.NoError(t, err)
-					})
-				}
-			})
-		}
-	})
-
-	t.Run("negative", func(t *testing.T) {
-		cc := map[string]struct {
-			schema string
-			types  map[string]string
-			json   string
-		}{
-			`ERROR (code 1302): Type "@int" not found
-	in line 2 on file schema
-	> "aaa": 111 // {type: "@int"}
-	---------^`: {
-				schema: `{
-		"aaa": 111 // {type: "@int"}
-	}`,
-			},
-
-			`ERROR (code 1301): Incorrect type of user type
-	in line 2 on file schema
-	> "aaa": 111 // {type: "@int"}
-	---------^`: {
-				schema: `{
-		"aaa": 111 // {type: "@int"}
-	}`,
-				types: map[string]string{
-					"@int": `"abc"`,
-				},
-			},
-
-			`ERROR (code 204): None of the rules in the "OR" set has been validated
-	in line 1 on file json
-	> {"foo": 10}
-	----------^`: {
-				schema: `{
-	"foo": 123 /* {or: [
-		{min: 100},
-		{type: "string"}
-	]} */
-}`,
-				json: `{"foo": 10}`,
-			},
-
-			`ERROR (code 204): None of the rules in the "OR" set has been validated
-	in line 1 on file json
-	> {"foo": true}
-	----------^`: {
-				schema: `{
-	"foo": 123 /* {or: [
-		{min: 100},
-		{type: "string"}
-	]} */
-}`,
-				json: `{"foo": true}`,
-			},
-
-			`ERROR (code 1117): The "precision" constraint can't be used for the "float" type
-	in line 1 on file schema
-	> 1.1 // {type: "float", precision: 2}
-	--^`: {
-				schema: `1.1 // {type: "float", precision: 2}`,
-				json:   "3.14",
-			},
-		}
-
-		for expected, c := range cc {
-			t.Run(expected, func(t *testing.T) {
-				schema := New("schema", c.schema, KeysAreOptionalByDefault())
-
-				for n, s := range c.types {
-					require.NoError(t, schema.AddType(n, New(s, s, KeysAreOptionalByDefault())))
-				}
-
-				err := schema.Validate(json.New("json", c.json))
-				assert.EqualError(t, err, expected)
-			})
-		}
-
-		t.Run("not a JSON document", func(t *testing.T) {
-			err := New("schema", "42").Validate(&mocks.Document{})
-			assert.EqualError(t, err, "support only JSON documents, but got *mocks.Document")
-		})
-	})
-}
-
 func TestSchema_GetAST(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
 		cc := map[string]struct {
-			expected jschema.ASTNode
+			expected schema.ASTNode
 			types    map[string]string
 			rules    map[string]string
 		}{
 			"@foo": {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeShortcut,
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeShortcut,
 					SchemaType: "@foo",
 					Value:      "@foo",
-					Rules: jschema.NewRuleASTNodes(
-						map[string]jschema.RuleASTNode{
+					Rules: schema.NewRuleASTNodes(
+						map[string]schema.RuleASTNode{
 							"type": {
-								TokenType:  jschema.TokenTypeShortcut,
+								TokenType:  schema.TokenTypeShortcut,
 								Value:      "@foo",
-								Properties: &jschema.RuleASTNodes{},
-								Source:     jschema.RuleASTNodeSourceGenerated,
+								Properties: &schema.RuleASTNodes{},
+								Source:     schema.RuleASTNodeSourceGenerated,
 							},
 						},
 						[]string{"type"},
@@ -2076,17 +1797,17 @@ func TestSchema_GetAST(t *testing.T) {
 			},
 
 			"   @foo   ": {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeShortcut,
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeShortcut,
 					SchemaType: "@foo",
 					Value:      "@foo",
-					Rules: jschema.NewRuleASTNodes(
-						map[string]jschema.RuleASTNode{
+					Rules: schema.NewRuleASTNodes(
+						map[string]schema.RuleASTNode{
 							"type": {
-								TokenType:  jschema.TokenTypeShortcut,
+								TokenType:  schema.TokenTypeShortcut,
 								Value:      "@foo",
-								Properties: &jschema.RuleASTNodes{},
-								Source:     jschema.RuleASTNodeSourceGenerated,
+								Properties: &schema.RuleASTNodes{},
+								Source:     schema.RuleASTNodeSourceGenerated,
 							},
 						},
 						[]string{"type"},
@@ -2098,30 +1819,30 @@ func TestSchema_GetAST(t *testing.T) {
 			},
 
 			"   @foo | @bar   ": {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeShortcut,
-					SchemaType: string(jschema.SchemaTypeMixed),
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeShortcut,
+					SchemaType: string(schema.SchemaTypeMixed),
 					Value:      "@foo | @bar",
-					Rules: jschema.NewRuleASTNodes(
-						map[string]jschema.RuleASTNode{
+					Rules: schema.NewRuleASTNodes(
+						map[string]schema.RuleASTNode{
 							"or": {
-								TokenType:  jschema.TokenTypeArray,
-								Properties: &jschema.RuleASTNodes{},
-								Items: []jschema.RuleASTNode{
+								TokenType:  schema.TokenTypeArray,
+								Properties: &schema.RuleASTNodes{},
+								Items: []schema.RuleASTNode{
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "@foo",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceGenerated,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceGenerated,
 									},
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "@bar",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceGenerated,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceGenerated,
 									},
 								},
-								Source: jschema.RuleASTNodeSourceGenerated,
+								Source: schema.RuleASTNodeSourceGenerated,
 							},
 						},
 						[]string{"or"},
@@ -2141,45 +1862,45 @@ func TestSchema_GetAST(t *testing.T) {
 					]
 				} */
 			}`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeObject,
-					SchemaType: string(jschema.SchemaTypeObject),
-					Rules:      &jschema.RuleASTNodes{},
-					Children: []jschema.ASTNode{
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeObject,
+					SchemaType: string(schema.SchemaTypeObject),
+					Rules:      &schema.RuleASTNodes{},
+					Children: []schema.ASTNode{
 						{
 							Key:        "data",
-							TokenType:  jschema.TokenTypeString,
-							SchemaType: string(jschema.SchemaTypeMixed),
+							TokenType:  schema.TokenTypeString,
+							SchemaType: string(schema.SchemaTypeMixed),
 							Value:      "abc",
-							Rules: jschema.NewRuleASTNodes(
-								map[string]jschema.RuleASTNode{
+							Rules: schema.NewRuleASTNodes(
+								map[string]schema.RuleASTNode{
 									"or": {
-										TokenType:  jschema.TokenTypeArray,
-										Properties: &jschema.RuleASTNodes{},
-										Items: []jschema.RuleASTNode{
+										TokenType:  schema.TokenTypeArray,
+										Properties: &schema.RuleASTNodes{},
+										Items: []schema.RuleASTNode{
 											{
-												TokenType:  jschema.TokenTypeShortcut,
+												TokenType:  schema.TokenTypeShortcut,
 												Value:      "@foo",
-												Properties: &jschema.RuleASTNodes{},
-												Source:     jschema.RuleASTNodeSourceManual,
+												Properties: &schema.RuleASTNodes{},
+												Source:     schema.RuleASTNodeSourceManual,
 											},
 											{
-												TokenType: jschema.TokenTypeObject,
-												Properties: jschema.NewRuleASTNodes(
-													map[string]jschema.RuleASTNode{
+												TokenType: schema.TokenTypeObject,
+												Properties: schema.NewRuleASTNodes(
+													map[string]schema.RuleASTNode{
 														"type": {
-															TokenType:  jschema.TokenTypeShortcut,
+															TokenType:  schema.TokenTypeShortcut,
 															Value:      "@bar",
-															Properties: &jschema.RuleASTNodes{},
-															Source:     jschema.RuleASTNodeSourceManual,
+															Properties: &schema.RuleASTNodes{},
+															Source:     schema.RuleASTNodeSourceManual,
 														},
 													},
 													[]string{"type"},
 												),
-												Source: jschema.RuleASTNodeSourceManual,
+												Source: schema.RuleASTNodeSourceManual,
 											},
 										},
-										Source: jschema.RuleASTNodeSourceManual,
+										Source: schema.RuleASTNodeSourceManual,
 									},
 								},
 								[]string{"or"},
@@ -2201,54 +1922,54 @@ func TestSchema_GetAST(t *testing.T) {
 					]
 				} */
 			}`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeObject,
-					SchemaType: string(jschema.SchemaTypeObject),
-					Rules:      &jschema.RuleASTNodes{},
-					Children: []jschema.ASTNode{
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeObject,
+					SchemaType: string(schema.SchemaTypeObject),
+					Rules:      &schema.RuleASTNodes{},
+					Children: []schema.ASTNode{
 						{
 							Key:        "data",
-							TokenType:  jschema.TokenTypeString,
-							SchemaType: string(jschema.SchemaTypeMixed),
+							TokenType:  schema.TokenTypeString,
+							SchemaType: string(schema.SchemaTypeMixed),
 							Value:      "abc",
-							Rules: jschema.NewRuleASTNodes(
-								map[string]jschema.RuleASTNode{
+							Rules: schema.NewRuleASTNodes(
+								map[string]schema.RuleASTNode{
 									"or": {
-										TokenType:  jschema.TokenTypeArray,
-										Properties: &jschema.RuleASTNodes{},
-										Items: []jschema.RuleASTNode{
+										TokenType:  schema.TokenTypeArray,
+										Properties: &schema.RuleASTNodes{},
+										Items: []schema.RuleASTNode{
 											{
-												TokenType: jschema.TokenTypeObject,
-												Properties: jschema.NewRuleASTNodes(
-													map[string]jschema.RuleASTNode{
+												TokenType: schema.TokenTypeObject,
+												Properties: schema.NewRuleASTNodes(
+													map[string]schema.RuleASTNode{
 														"type": {
-															TokenType:  jschema.TokenTypeShortcut,
+															TokenType:  schema.TokenTypeShortcut,
 															Value:      "@foo",
-															Properties: &jschema.RuleASTNodes{},
-															Source:     jschema.RuleASTNodeSourceManual,
+															Properties: &schema.RuleASTNodes{},
+															Source:     schema.RuleASTNodeSourceManual,
 														},
 													},
 													[]string{"type"},
 												),
-												Source: jschema.RuleASTNodeSourceManual,
+												Source: schema.RuleASTNodeSourceManual,
 											},
 											{
-												TokenType: jschema.TokenTypeObject,
-												Properties: jschema.NewRuleASTNodes(
-													map[string]jschema.RuleASTNode{
+												TokenType: schema.TokenTypeObject,
+												Properties: schema.NewRuleASTNodes(
+													map[string]schema.RuleASTNode{
 														"type": {
-															TokenType:  jschema.TokenTypeShortcut,
+															TokenType:  schema.TokenTypeShortcut,
 															Value:      "@bar",
-															Properties: &jschema.RuleASTNodes{},
-															Source:     jschema.RuleASTNodeSourceManual,
+															Properties: &schema.RuleASTNodes{},
+															Source:     schema.RuleASTNodeSourceManual,
 														},
 													},
 													[]string{"type"},
 												),
-												Source: jschema.RuleASTNodeSourceManual,
+												Source: schema.RuleASTNodeSourceManual,
 											},
 										},
-										Source: jschema.RuleASTNodeSourceManual,
+										Source: schema.RuleASTNodeSourceManual,
 									},
 								},
 								[]string{"or"},
@@ -2270,106 +1991,106 @@ func TestSchema_GetAST(t *testing.T) {
 					]
 				} */
 			}`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeObject,
-					SchemaType: string(jschema.SchemaTypeObject),
-					Children: []jschema.ASTNode{
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeObject,
+					SchemaType: string(schema.SchemaTypeObject),
+					Children: []schema.ASTNode{
 						{
 							Key:        "data",
-							TokenType:  jschema.TokenTypeString,
-							SchemaType: string(jschema.SchemaTypeMixed),
+							TokenType:  schema.TokenTypeString,
+							SchemaType: string(schema.SchemaTypeMixed),
 							Value:      "abc",
-							Rules: jschema.NewRuleASTNodes(
-								map[string]jschema.RuleASTNode{
+							Rules: schema.NewRuleASTNodes(
+								map[string]schema.RuleASTNode{
 									"or": {
-										TokenType:  jschema.TokenTypeArray,
-										Properties: &jschema.RuleASTNodes{},
-										Items: []jschema.RuleASTNode{
+										TokenType:  schema.TokenTypeArray,
+										Properties: &schema.RuleASTNodes{},
+										Items: []schema.RuleASTNode{
 											{
-												TokenType: jschema.TokenTypeObject,
-												Properties: jschema.NewRuleASTNodes(
-													map[string]jschema.RuleASTNode{
+												TokenType: schema.TokenTypeObject,
+												Properties: schema.NewRuleASTNodes(
+													map[string]schema.RuleASTNode{
 														"type": {
-															TokenType:  jschema.TokenTypeString,
+															TokenType:  schema.TokenTypeString,
 															Value:      "string",
-															Properties: &jschema.RuleASTNodes{},
-															Source:     jschema.RuleASTNodeSourceManual,
+															Properties: &schema.RuleASTNodes{},
+															Source:     schema.RuleASTNodeSourceManual,
 														},
 														"maxLength": {
-															TokenType:  jschema.TokenTypeNumber,
+															TokenType:  schema.TokenTypeNumber,
 															Value:      "3",
-															Properties: &jschema.RuleASTNodes{},
-															Source:     jschema.RuleASTNodeSourceManual,
+															Properties: &schema.RuleASTNodes{},
+															Source:     schema.RuleASTNodeSourceManual,
 														},
 													},
 													[]string{"type", "maxLength"},
 												),
-												Source: jschema.RuleASTNodeSourceManual,
+												Source: schema.RuleASTNodeSourceManual,
 											},
 											{
-												TokenType: jschema.TokenTypeObject,
-												Properties: jschema.NewRuleASTNodes(
-													map[string]jschema.RuleASTNode{
+												TokenType: schema.TokenTypeObject,
+												Properties: schema.NewRuleASTNodes(
+													map[string]schema.RuleASTNode{
 														"type": {
-															TokenType:  jschema.TokenTypeString,
+															TokenType:  schema.TokenTypeString,
 															Value:      "integer",
-															Properties: &jschema.RuleASTNodes{},
-															Source:     jschema.RuleASTNodeSourceManual,
+															Properties: &schema.RuleASTNodes{},
+															Source:     schema.RuleASTNodeSourceManual,
 														},
 														"min": {
-															TokenType:  jschema.TokenTypeNumber,
+															TokenType:  schema.TokenTypeNumber,
 															Value:      "0",
-															Properties: &jschema.RuleASTNodes{},
-															Source:     jschema.RuleASTNodeSourceManual,
+															Properties: &schema.RuleASTNodes{},
+															Source:     schema.RuleASTNodeSourceManual,
 														},
 													},
 													[]string{"type", "min"},
 												),
-												Source: jschema.RuleASTNodeSourceManual,
+												Source: schema.RuleASTNodeSourceManual,
 											},
 										},
-										Source: jschema.RuleASTNodeSourceManual,
+										Source: schema.RuleASTNodeSourceManual,
 									},
 								},
 								[]string{"or"},
 							),
 						},
 					},
-					Rules: &jschema.RuleASTNodes{},
+					Rules: &schema.RuleASTNodes{},
 				},
 			},
 
 			`1 // {type: "mixed", or: ["@foo", "@bar"]}`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeNumber,
-					SchemaType: string(jschema.SchemaTypeMixed),
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeNumber,
+					SchemaType: string(schema.SchemaTypeMixed),
 					Value:      "1",
-					Rules: jschema.NewRuleASTNodes(
-						map[string]jschema.RuleASTNode{
+					Rules: schema.NewRuleASTNodes(
+						map[string]schema.RuleASTNode{
 							"type": {
-								TokenType:  jschema.TokenTypeString,
+								TokenType:  schema.TokenTypeString,
 								Value:      "mixed",
-								Properties: &jschema.RuleASTNodes{},
-								Source:     jschema.RuleASTNodeSourceManual,
+								Properties: &schema.RuleASTNodes{},
+								Source:     schema.RuleASTNodeSourceManual,
 							},
 							"or": {
-								TokenType:  jschema.TokenTypeArray,
-								Properties: &jschema.RuleASTNodes{},
-								Items: []jschema.RuleASTNode{
+								TokenType:  schema.TokenTypeArray,
+								Properties: &schema.RuleASTNodes{},
+								Items: []schema.RuleASTNode{
 									{
-										TokenType:  jschema.TokenTypeShortcut,
+										TokenType:  schema.TokenTypeShortcut,
 										Value:      "@foo",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									{
-										TokenType:  jschema.TokenTypeShortcut,
+										TokenType:  schema.TokenTypeShortcut,
 										Value:      "@bar",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
-								Source: jschema.RuleASTNodeSourceManual,
+								Source: schema.RuleASTNodeSourceManual,
 							},
 						},
 						[]string{"type", "or"},
@@ -2382,17 +2103,17 @@ func TestSchema_GetAST(t *testing.T) {
 			},
 
 			`"section0" // {regex: "section[0-9]"}`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeString,
-					SchemaType: string(jschema.SchemaTypeString),
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeString,
+					SchemaType: string(schema.SchemaTypeString),
 					Value:      "section0",
-					Rules: jschema.NewRuleASTNodes(
-						map[string]jschema.RuleASTNode{
+					Rules: schema.NewRuleASTNodes(
+						map[string]schema.RuleASTNode{
 							"regex": {
-								TokenType:  jschema.TokenTypeString,
+								TokenType:  schema.TokenTypeString,
 								Value:      "section[0-9]",
-								Properties: &jschema.RuleASTNodes{},
-								Source:     jschema.RuleASTNodeSourceManual,
+								Properties: &schema.RuleASTNodes{},
+								Source:     schema.RuleASTNodeSourceManual,
 							},
 						},
 						[]string{"regex"},
@@ -2405,17 +2126,17 @@ func TestSchema_GetAST(t *testing.T) {
         {min: 0}
       */
 `: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeNumber,
-					SchemaType: string(jschema.SchemaTypeInteger),
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeNumber,
+					SchemaType: string(schema.SchemaTypeInteger),
 					Value:      "123",
-					Rules: jschema.NewRuleASTNodes(
-						map[string]jschema.RuleASTNode{
+					Rules: schema.NewRuleASTNodes(
+						map[string]schema.RuleASTNode{
 							"min": {
-								TokenType:  jschema.TokenTypeNumber,
+								TokenType:  schema.TokenTypeNumber,
 								Value:      "0",
-								Properties: &jschema.RuleASTNodes{},
-								Source:     jschema.RuleASTNodeSourceManual,
+								Properties: &schema.RuleASTNodes{},
+								Source:     schema.RuleASTNodeSourceManual,
 							},
 						},
 						[]string{"min"},
@@ -2430,28 +2151,28 @@ func TestSchema_GetAST(t *testing.T) {
   "size": 1, // {enum: [1,2,3], nullable: true}
   "choice": 1 // {or: [{type: "integer"}, {type: "string"}]}
 }`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeObject,
-					SchemaType: string(jschema.SchemaTypeObject),
-					Children: []jschema.ASTNode{
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeObject,
+					SchemaType: string(schema.SchemaTypeObject),
+					Children: []schema.ASTNode{
 						{
 							Key:        "id1",
-							TokenType:  jschema.TokenTypeNumber,
+							TokenType:  schema.TokenTypeNumber,
 							SchemaType: "@id",
 							Value:      "1",
-							Rules: jschema.NewRuleASTNodes(
-								map[string]jschema.RuleASTNode{
+							Rules: schema.NewRuleASTNodes(
+								map[string]schema.RuleASTNode{
 									"type": {
-										TokenType:  jschema.TokenTypeShortcut,
-										Properties: &jschema.RuleASTNodes{},
+										TokenType:  schema.TokenTypeShortcut,
+										Properties: &schema.RuleASTNodes{},
 										Value:      "@id",
-										Source:     jschema.RuleASTNodeSourceManual,
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									"nullable": {
-										TokenType:  jschema.TokenTypeBoolean,
-										Properties: &jschema.RuleASTNodes{},
+										TokenType:  schema.TokenTypeBoolean,
+										Properties: &schema.RuleASTNodes{},
 										Value:      "true",
-										Source:     jschema.RuleASTNodeSourceManual,
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
 								[]string{"type", "nullable"},
@@ -2459,22 +2180,22 @@ func TestSchema_GetAST(t *testing.T) {
 						},
 						{
 							Key:        "id2",
-							TokenType:  jschema.TokenTypeShortcut,
+							TokenType:  schema.TokenTypeShortcut,
 							SchemaType: "@id",
 							Value:      "@id",
-							Rules: jschema.NewRuleASTNodes(
-								map[string]jschema.RuleASTNode{
+							Rules: schema.NewRuleASTNodes(
+								map[string]schema.RuleASTNode{
 									"type": {
-										TokenType:  jschema.TokenTypeShortcut,
+										TokenType:  schema.TokenTypeShortcut,
 										Value:      "@id",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceGenerated,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceGenerated,
 									},
 									"nullable": {
-										TokenType:  jschema.TokenTypeBoolean,
-										Properties: &jschema.RuleASTNodes{},
+										TokenType:  schema.TokenTypeBoolean,
+										Properties: &schema.RuleASTNodes{},
 										Value:      "true",
-										Source:     jschema.RuleASTNodeSourceManual,
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
 								[]string{"type", "nullable"},
@@ -2482,35 +2203,35 @@ func TestSchema_GetAST(t *testing.T) {
 						},
 						{
 							Key:        "id3",
-							TokenType:  jschema.TokenTypeShortcut,
-							SchemaType: string(jschema.SchemaTypeMixed),
+							TokenType:  schema.TokenTypeShortcut,
+							SchemaType: string(schema.SchemaTypeMixed),
 							Value:      "@id1 | @id2",
-							Rules: jschema.NewRuleASTNodes(
-								map[string]jschema.RuleASTNode{
+							Rules: schema.NewRuleASTNodes(
+								map[string]schema.RuleASTNode{
 									"or": {
-										TokenType:  jschema.TokenTypeArray,
-										Properties: &jschema.RuleASTNodes{},
-										Items: []jschema.RuleASTNode{
+										TokenType:  schema.TokenTypeArray,
+										Properties: &schema.RuleASTNodes{},
+										Items: []schema.RuleASTNode{
 											{
-												TokenType:  jschema.TokenTypeString,
+												TokenType:  schema.TokenTypeString,
 												Value:      "@id1",
-												Properties: &jschema.RuleASTNodes{},
-												Source:     jschema.RuleASTNodeSourceGenerated,
+												Properties: &schema.RuleASTNodes{},
+												Source:     schema.RuleASTNodeSourceGenerated,
 											},
 											{
-												TokenType:  jschema.TokenTypeString,
+												TokenType:  schema.TokenTypeString,
 												Value:      "@id2",
-												Properties: &jschema.RuleASTNodes{},
-												Source:     jschema.RuleASTNodeSourceGenerated,
+												Properties: &schema.RuleASTNodes{},
+												Source:     schema.RuleASTNodeSourceGenerated,
 											},
 										},
-										Source: jschema.RuleASTNodeSourceGenerated,
+										Source: schema.RuleASTNodeSourceGenerated,
 									},
 									"nullable": {
-										TokenType:  jschema.TokenTypeBoolean,
-										Properties: &jschema.RuleASTNodes{},
+										TokenType:  schema.TokenTypeBoolean,
+										Properties: &schema.RuleASTNodes{},
 										Value:      "true",
-										Source:     jschema.RuleASTNodeSourceManual,
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
 								[]string{"or", "nullable"},
@@ -2518,41 +2239,41 @@ func TestSchema_GetAST(t *testing.T) {
 						},
 						{
 							Key:        "size",
-							TokenType:  jschema.TokenTypeNumber,
-							SchemaType: string(jschema.SchemaTypeEnum),
+							TokenType:  schema.TokenTypeNumber,
+							SchemaType: string(schema.SchemaTypeEnum),
 							Value:      "1",
-							Rules: jschema.NewRuleASTNodes(
-								map[string]jschema.RuleASTNode{
+							Rules: schema.NewRuleASTNodes(
+								map[string]schema.RuleASTNode{
 									"enum": {
-										TokenType:  jschema.TokenTypeArray,
-										Properties: &jschema.RuleASTNodes{},
-										Items: []jschema.RuleASTNode{
+										TokenType:  schema.TokenTypeArray,
+										Properties: &schema.RuleASTNodes{},
+										Items: []schema.RuleASTNode{
 											{
-												TokenType:  jschema.TokenTypeNumber,
+												TokenType:  schema.TokenTypeNumber,
 												Value:      "1",
-												Properties: &jschema.RuleASTNodes{},
-												Source:     jschema.RuleASTNodeSourceManual,
+												Properties: &schema.RuleASTNodes{},
+												Source:     schema.RuleASTNodeSourceManual,
 											},
 											{
-												TokenType:  jschema.TokenTypeNumber,
+												TokenType:  schema.TokenTypeNumber,
 												Value:      "2",
-												Properties: &jschema.RuleASTNodes{},
-												Source:     jschema.RuleASTNodeSourceManual,
+												Properties: &schema.RuleASTNodes{},
+												Source:     schema.RuleASTNodeSourceManual,
 											},
 											{
-												TokenType:  jschema.TokenTypeNumber,
+												TokenType:  schema.TokenTypeNumber,
 												Value:      "3",
-												Properties: &jschema.RuleASTNodes{},
-												Source:     jschema.RuleASTNodeSourceManual,
+												Properties: &schema.RuleASTNodes{},
+												Source:     schema.RuleASTNodeSourceManual,
 											},
 										},
-										Source: jschema.RuleASTNodeSourceManual,
+										Source: schema.RuleASTNodeSourceManual,
 									},
 									"nullable": {
-										TokenType:  jschema.TokenTypeBoolean,
-										Properties: &jschema.RuleASTNodes{},
+										TokenType:  schema.TokenTypeBoolean,
+										Properties: &schema.RuleASTNodes{},
 										Value:      "true",
-										Source:     jschema.RuleASTNodeSourceManual,
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
 								[]string{"enum", "nullable"},
@@ -2560,54 +2281,54 @@ func TestSchema_GetAST(t *testing.T) {
 						},
 						{
 							Key:        "choice",
-							TokenType:  jschema.TokenTypeNumber,
-							SchemaType: string(jschema.SchemaTypeMixed),
+							TokenType:  schema.TokenTypeNumber,
+							SchemaType: string(schema.SchemaTypeMixed),
 							Value:      "1",
-							Rules: jschema.NewRuleASTNodes(
-								map[string]jschema.RuleASTNode{
+							Rules: schema.NewRuleASTNodes(
+								map[string]schema.RuleASTNode{
 									"or": {
-										TokenType:  jschema.TokenTypeArray,
-										Properties: &jschema.RuleASTNodes{},
-										Items: []jschema.RuleASTNode{
+										TokenType:  schema.TokenTypeArray,
+										Properties: &schema.RuleASTNodes{},
+										Items: []schema.RuleASTNode{
 											{
-												TokenType: jschema.TokenTypeObject,
-												Properties: jschema.NewRuleASTNodes(
-													map[string]jschema.RuleASTNode{
+												TokenType: schema.TokenTypeObject,
+												Properties: schema.NewRuleASTNodes(
+													map[string]schema.RuleASTNode{
 														"type": {
-															TokenType:  jschema.TokenTypeString,
+															TokenType:  schema.TokenTypeString,
 															Value:      "integer",
-															Properties: &jschema.RuleASTNodes{},
-															Source:     jschema.RuleASTNodeSourceManual,
+															Properties: &schema.RuleASTNodes{},
+															Source:     schema.RuleASTNodeSourceManual,
 														},
 													},
 													[]string{"type"},
 												),
-												Source: jschema.RuleASTNodeSourceManual,
+												Source: schema.RuleASTNodeSourceManual,
 											},
 											{
-												TokenType: jschema.TokenTypeObject,
-												Properties: jschema.NewRuleASTNodes(
-													map[string]jschema.RuleASTNode{
+												TokenType: schema.TokenTypeObject,
+												Properties: schema.NewRuleASTNodes(
+													map[string]schema.RuleASTNode{
 														"type": {
-															TokenType:  jschema.TokenTypeString,
+															TokenType:  schema.TokenTypeString,
 															Value:      "string",
-															Properties: &jschema.RuleASTNodes{},
-															Source:     jschema.RuleASTNodeSourceManual,
+															Properties: &schema.RuleASTNodes{},
+															Source:     schema.RuleASTNodeSourceManual,
 														},
 													},
 													[]string{"type"},
 												),
-												Source: jschema.RuleASTNodeSourceManual,
+												Source: schema.RuleASTNodeSourceManual,
 											},
 										},
-										Source: jschema.RuleASTNodeSourceManual,
+										Source: schema.RuleASTNodeSourceManual,
 									},
 								},
 								[]string{"or"},
 							),
 						},
 					},
-					Rules: &jschema.RuleASTNodes{},
+					Rules: &schema.RuleASTNodes{},
 				},
 				types: map[string]string{
 					"@id":  "1",
@@ -2617,16 +2338,16 @@ func TestSchema_GetAST(t *testing.T) {
 			},
 
 			"[]  // {minItems: 0} - Description": {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeArray,
-					SchemaType: string(jschema.SchemaTypeArray),
-					Rules: jschema.NewRuleASTNodes(
-						map[string]jschema.RuleASTNode{
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeArray,
+					SchemaType: string(schema.SchemaTypeArray),
+					Rules: schema.NewRuleASTNodes(
+						map[string]schema.RuleASTNode{
 							"minItems": {
-								TokenType:  jschema.TokenTypeNumber,
+								TokenType:  schema.TokenTypeNumber,
 								Value:      "0",
-								Properties: &jschema.RuleASTNodes{},
-								Source:     jschema.RuleASTNodeSourceManual,
+								Properties: &schema.RuleASTNodes{},
+								Source:     schema.RuleASTNodeSourceManual,
 							},
 						},
 						[]string{"minItems"},
@@ -2639,50 +2360,50 @@ func TestSchema_GetAST(t *testing.T) {
 	"foo": [1],
 	"bar": 42 // number
 }`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeObject,
-					SchemaType: string(jschema.SchemaTypeObject),
-					Children: []jschema.ASTNode{
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeObject,
+					SchemaType: string(schema.SchemaTypeObject),
+					Children: []schema.ASTNode{
 						{
 							Key:        "foo",
-							TokenType:  jschema.TokenTypeArray,
-							SchemaType: string(jschema.SchemaTypeArray),
-							Rules:      &jschema.RuleASTNodes{},
-							Children: []jschema.ASTNode{
+							TokenType:  schema.TokenTypeArray,
+							SchemaType: string(schema.SchemaTypeArray),
+							Rules:      &schema.RuleASTNodes{},
+							Children: []schema.ASTNode{
 								{
-									TokenType:  jschema.TokenTypeNumber,
-									SchemaType: string(jschema.SchemaTypeInteger),
+									TokenType:  schema.TokenTypeNumber,
+									SchemaType: string(schema.SchemaTypeInteger),
 									Value:      "1",
-									Rules:      &jschema.RuleASTNodes{},
+									Rules:      &schema.RuleASTNodes{},
 								},
 							},
 						},
 						{
 							Key:        "bar",
-							TokenType:  jschema.TokenTypeNumber,
-							SchemaType: string(jschema.SchemaTypeInteger),
+							TokenType:  schema.TokenTypeNumber,
+							SchemaType: string(schema.SchemaTypeInteger),
 							Value:      "42",
-							Rules:      &jschema.RuleASTNodes{},
+							Rules:      &schema.RuleASTNodes{},
 							Comment:    "number",
 						},
 					},
-					Rules: &jschema.RuleASTNodes{},
+					Rules: &schema.RuleASTNodes{},
 				},
 			},
 
 			`[ // Comment
 	1
 ]`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeArray,
-					SchemaType: string(jschema.SchemaTypeArray),
-					Rules:      &jschema.RuleASTNodes{},
-					Children: []jschema.ASTNode{
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeArray,
+					SchemaType: string(schema.SchemaTypeArray),
+					Rules:      &schema.RuleASTNodes{},
+					Children: []schema.ASTNode{
 						{
-							TokenType:  jschema.TokenTypeNumber,
-							SchemaType: string(jschema.SchemaTypeInteger),
+							TokenType:  schema.TokenTypeNumber,
+							SchemaType: string(schema.SchemaTypeInteger),
 							Value:      "1",
-							Rules:      &jschema.RuleASTNodes{},
+							Rules:      &schema.RuleASTNodes{},
 						},
 					},
 					Comment: "Comment",
@@ -2690,10 +2411,10 @@ func TestSchema_GetAST(t *testing.T) {
 			},
 
 			"[] // Comment": {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeArray,
-					SchemaType: string(jschema.SchemaTypeArray),
-					Rules:      &jschema.RuleASTNodes{},
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeArray,
+					SchemaType: string(schema.SchemaTypeArray),
+					Rules:      &schema.RuleASTNodes{},
 					Comment:    "Comment",
 				},
 			},
@@ -2702,21 +2423,21 @@ func TestSchema_GetAST(t *testing.T) {
 	[],
 	2 // Annotation
 ]`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeArray,
-					SchemaType: string(jschema.SchemaTypeArray),
-					Rules:      &jschema.RuleASTNodes{},
-					Children: []jschema.ASTNode{
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeArray,
+					SchemaType: string(schema.SchemaTypeArray),
+					Rules:      &schema.RuleASTNodes{},
+					Children: []schema.ASTNode{
 						{
-							TokenType:  jschema.TokenTypeArray,
-							SchemaType: string(jschema.SchemaTypeArray),
-							Rules:      &jschema.RuleASTNodes{},
+							TokenType:  schema.TokenTypeArray,
+							SchemaType: string(schema.SchemaTypeArray),
+							Rules:      &schema.RuleASTNodes{},
 						},
 						{
-							TokenType:  jschema.TokenTypeNumber,
-							SchemaType: string(jschema.SchemaTypeInteger),
+							TokenType:  schema.TokenTypeNumber,
+							SchemaType: string(schema.SchemaTypeInteger),
 							Value:      "2",
-							Rules:      &jschema.RuleASTNodes{},
+							Rules:      &schema.RuleASTNodes{},
 							Comment:    "Annotation",
 						},
 					},
@@ -2724,31 +2445,31 @@ func TestSchema_GetAST(t *testing.T) {
 			},
 
 			`"A" // {or: ["string", "integer"]}`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeString,
-					SchemaType: string(jschema.SchemaTypeMixed),
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeString,
+					SchemaType: string(schema.SchemaTypeMixed),
 
 					Value: "A",
-					Rules: jschema.NewRuleASTNodes(
-						map[string]jschema.RuleASTNode{
+					Rules: schema.NewRuleASTNodes(
+						map[string]schema.RuleASTNode{
 							"or": {
-								TokenType:  jschema.TokenTypeArray,
-								Properties: &jschema.RuleASTNodes{},
-								Items: []jschema.RuleASTNode{
+								TokenType:  schema.TokenTypeArray,
+								Properties: &schema.RuleASTNodes{},
+								Items: []schema.RuleASTNode{
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "string",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "integer",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
-								Source: jschema.RuleASTNodeSourceManual,
+								Source: schema.RuleASTNodeSourceManual,
 							},
 						},
 						[]string{"or"},
@@ -2762,60 +2483,60 @@ func TestSchema_GetAST(t *testing.T) {
 		{type: "string"}
 	]} */
 }`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeObject,
-					SchemaType: string(jschema.SchemaTypeObject),
-					Children: []jschema.ASTNode{
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeObject,
+					SchemaType: string(schema.SchemaTypeObject),
+					Children: []schema.ASTNode{
 						{
 							Key:        "foo",
-							TokenType:  jschema.TokenTypeNumber,
-							SchemaType: string(jschema.SchemaTypeMixed),
+							TokenType:  schema.TokenTypeNumber,
+							SchemaType: string(schema.SchemaTypeMixed),
 							Value:      "123",
-							Rules: jschema.NewRuleASTNodes(
-								map[string]jschema.RuleASTNode{
+							Rules: schema.NewRuleASTNodes(
+								map[string]schema.RuleASTNode{
 									"or": {
-										TokenType:  jschema.TokenTypeArray,
-										Properties: &jschema.RuleASTNodes{},
-										Items: []jschema.RuleASTNode{
+										TokenType:  schema.TokenTypeArray,
+										Properties: &schema.RuleASTNodes{},
+										Items: []schema.RuleASTNode{
 											{
-												TokenType: jschema.TokenTypeObject,
-												Properties: jschema.NewRuleASTNodes(
-													map[string]jschema.RuleASTNode{
+												TokenType: schema.TokenTypeObject,
+												Properties: schema.NewRuleASTNodes(
+													map[string]schema.RuleASTNode{
 														"min": {
-															TokenType:  jschema.TokenTypeNumber,
+															TokenType:  schema.TokenTypeNumber,
 															Value:      "100",
-															Properties: &jschema.RuleASTNodes{},
-															Source:     jschema.RuleASTNodeSourceManual,
+															Properties: &schema.RuleASTNodes{},
+															Source:     schema.RuleASTNodeSourceManual,
 														},
 													},
 													[]string{"min"},
 												),
-												Source: jschema.RuleASTNodeSourceManual,
+												Source: schema.RuleASTNodeSourceManual,
 											},
 											{
-												TokenType: jschema.TokenTypeObject,
-												Properties: jschema.NewRuleASTNodes(
-													map[string]jschema.RuleASTNode{
+												TokenType: schema.TokenTypeObject,
+												Properties: schema.NewRuleASTNodes(
+													map[string]schema.RuleASTNode{
 														"type": {
-															TokenType:  jschema.TokenTypeString,
+															TokenType:  schema.TokenTypeString,
 															Value:      "string",
-															Properties: &jschema.RuleASTNodes{},
-															Source:     jschema.RuleASTNodeSourceManual,
+															Properties: &schema.RuleASTNodes{},
+															Source:     schema.RuleASTNodeSourceManual,
 														},
 													},
 													[]string{"type"},
 												),
-												Source: jschema.RuleASTNodeSourceManual,
+												Source: schema.RuleASTNodeSourceManual,
 											},
 										},
-										Source: jschema.RuleASTNodeSourceManual,
+										Source: schema.RuleASTNodeSourceManual,
 									},
 								},
 								[]string{"or"},
 							),
 						},
 					},
-					Rules: &jschema.RuleASTNodes{},
+					Rules: &schema.RuleASTNodes{},
 				},
 			},
 
@@ -2859,27 +2580,27 @@ func TestSchema_GetAST(t *testing.T) {
   "userType": { // {additionalProperties: "@cat", nullable: false}
   }
 }`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeObject,
-					SchemaType: string(jschema.SchemaTypeObject),
-					Children: []jschema.ASTNode{
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeObject,
+					SchemaType: string(schema.SchemaTypeObject),
+					Children: []schema.ASTNode{
 						{
 							Key:        "enabled",
-							TokenType:  jschema.TokenTypeObject,
-							SchemaType: string(jschema.SchemaTypeObject),
-							Rules: jschema.NewRuleASTNodes(
-								map[string]jschema.RuleASTNode{
+							TokenType:  schema.TokenTypeObject,
+							SchemaType: string(schema.SchemaTypeObject),
+							Rules: schema.NewRuleASTNodes(
+								map[string]schema.RuleASTNode{
 									"additionalProperties": {
-										TokenType:  jschema.TokenTypeBoolean,
+										TokenType:  schema.TokenTypeBoolean,
 										Value:      "true",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									"nullable": {
-										TokenType:  jschema.TokenTypeBoolean,
+										TokenType:  schema.TokenTypeBoolean,
 										Value:      "false",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
 								[]string{"additionalProperties", "nullable"},
@@ -2887,21 +2608,21 @@ func TestSchema_GetAST(t *testing.T) {
 						},
 						{
 							Key:        "disabled",
-							TokenType:  jschema.TokenTypeObject,
-							SchemaType: string(jschema.SchemaTypeObject),
-							Rules: jschema.NewRuleASTNodes(
-								map[string]jschema.RuleASTNode{
+							TokenType:  schema.TokenTypeObject,
+							SchemaType: string(schema.SchemaTypeObject),
+							Rules: schema.NewRuleASTNodes(
+								map[string]schema.RuleASTNode{
 									"additionalProperties": {
-										TokenType:  jschema.TokenTypeBoolean,
+										TokenType:  schema.TokenTypeBoolean,
 										Value:      "false",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									"nullable": {
-										TokenType:  jschema.TokenTypeBoolean,
+										TokenType:  schema.TokenTypeBoolean,
 										Value:      "false",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
 								[]string{"additionalProperties", "nullable"},
@@ -2909,21 +2630,21 @@ func TestSchema_GetAST(t *testing.T) {
 						},
 						{
 							Key:        "string",
-							TokenType:  jschema.TokenTypeObject,
-							SchemaType: string(jschema.SchemaTypeObject),
-							Rules: jschema.NewRuleASTNodes(
-								map[string]jschema.RuleASTNode{
+							TokenType:  schema.TokenTypeObject,
+							SchemaType: string(schema.SchemaTypeObject),
+							Rules: schema.NewRuleASTNodes(
+								map[string]schema.RuleASTNode{
 									"additionalProperties": {
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "string",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									"nullable": {
-										TokenType:  jschema.TokenTypeBoolean,
+										TokenType:  schema.TokenTypeBoolean,
 										Value:      "false",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
 								[]string{"additionalProperties", "nullable"},
@@ -2931,21 +2652,21 @@ func TestSchema_GetAST(t *testing.T) {
 						},
 						{
 							Key:        "integer",
-							TokenType:  jschema.TokenTypeObject,
-							SchemaType: string(jschema.SchemaTypeObject),
-							Rules: jschema.NewRuleASTNodes(
-								map[string]jschema.RuleASTNode{
+							TokenType:  schema.TokenTypeObject,
+							SchemaType: string(schema.SchemaTypeObject),
+							Rules: schema.NewRuleASTNodes(
+								map[string]schema.RuleASTNode{
 									"additionalProperties": {
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "integer",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									"nullable": {
-										TokenType:  jschema.TokenTypeBoolean,
+										TokenType:  schema.TokenTypeBoolean,
 										Value:      "false",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
 								[]string{"additionalProperties", "nullable"},
@@ -2953,21 +2674,21 @@ func TestSchema_GetAST(t *testing.T) {
 						},
 						{
 							Key:        "float",
-							TokenType:  jschema.TokenTypeObject,
-							SchemaType: string(jschema.SchemaTypeObject),
-							Rules: jschema.NewRuleASTNodes(
-								map[string]jschema.RuleASTNode{
+							TokenType:  schema.TokenTypeObject,
+							SchemaType: string(schema.SchemaTypeObject),
+							Rules: schema.NewRuleASTNodes(
+								map[string]schema.RuleASTNode{
 									"additionalProperties": {
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "float",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									"nullable": {
-										TokenType:  jschema.TokenTypeBoolean,
+										TokenType:  schema.TokenTypeBoolean,
 										Value:      "false",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
 								[]string{"additionalProperties", "nullable"},
@@ -2975,21 +2696,21 @@ func TestSchema_GetAST(t *testing.T) {
 						},
 						{
 							Key:        "decimal",
-							TokenType:  jschema.TokenTypeObject,
-							SchemaType: string(jschema.SchemaTypeObject),
-							Rules: jschema.NewRuleASTNodes(
-								map[string]jschema.RuleASTNode{
+							TokenType:  schema.TokenTypeObject,
+							SchemaType: string(schema.SchemaTypeObject),
+							Rules: schema.NewRuleASTNodes(
+								map[string]schema.RuleASTNode{
 									"additionalProperties": {
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "decimal",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									"nullable": {
-										TokenType:  jschema.TokenTypeBoolean,
+										TokenType:  schema.TokenTypeBoolean,
 										Value:      "false",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
 								[]string{"additionalProperties", "nullable"},
@@ -2997,21 +2718,21 @@ func TestSchema_GetAST(t *testing.T) {
 						},
 						{
 							Key:        "boolean",
-							TokenType:  jschema.TokenTypeObject,
-							SchemaType: string(jschema.SchemaTypeObject),
-							Rules: jschema.NewRuleASTNodes(
-								map[string]jschema.RuleASTNode{
+							TokenType:  schema.TokenTypeObject,
+							SchemaType: string(schema.SchemaTypeObject),
+							Rules: schema.NewRuleASTNodes(
+								map[string]schema.RuleASTNode{
 									"additionalProperties": {
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "boolean",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									"nullable": {
-										TokenType:  jschema.TokenTypeBoolean,
+										TokenType:  schema.TokenTypeBoolean,
 										Value:      "false",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
 								[]string{"additionalProperties", "nullable"},
@@ -3019,21 +2740,21 @@ func TestSchema_GetAST(t *testing.T) {
 						},
 						{
 							Key:        "object",
-							TokenType:  jschema.TokenTypeObject,
-							SchemaType: string(jschema.SchemaTypeObject),
-							Rules: jschema.NewRuleASTNodes(
-								map[string]jschema.RuleASTNode{
+							TokenType:  schema.TokenTypeObject,
+							SchemaType: string(schema.SchemaTypeObject),
+							Rules: schema.NewRuleASTNodes(
+								map[string]schema.RuleASTNode{
 									"additionalProperties": {
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "object",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									"nullable": {
-										TokenType:  jschema.TokenTypeBoolean,
+										TokenType:  schema.TokenTypeBoolean,
 										Value:      "false",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
 								[]string{"additionalProperties", "nullable"},
@@ -3041,21 +2762,21 @@ func TestSchema_GetAST(t *testing.T) {
 						},
 						{
 							Key:        "array",
-							TokenType:  jschema.TokenTypeObject,
-							SchemaType: string(jschema.SchemaTypeObject),
-							Rules: jschema.NewRuleASTNodes(
-								map[string]jschema.RuleASTNode{
+							TokenType:  schema.TokenTypeObject,
+							SchemaType: string(schema.SchemaTypeObject),
+							Rules: schema.NewRuleASTNodes(
+								map[string]schema.RuleASTNode{
 									"additionalProperties": {
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "array",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									"nullable": {
-										TokenType:  jschema.TokenTypeBoolean,
+										TokenType:  schema.TokenTypeBoolean,
 										Value:      "false",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
 								[]string{"additionalProperties", "nullable"},
@@ -3063,21 +2784,21 @@ func TestSchema_GetAST(t *testing.T) {
 						},
 						{
 							Key:        "null",
-							TokenType:  jschema.TokenTypeObject,
-							SchemaType: string(jschema.SchemaTypeObject),
-							Rules: jschema.NewRuleASTNodes(
-								map[string]jschema.RuleASTNode{
+							TokenType:  schema.TokenTypeObject,
+							SchemaType: string(schema.SchemaTypeObject),
+							Rules: schema.NewRuleASTNodes(
+								map[string]schema.RuleASTNode{
 									"additionalProperties": {
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "null",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									"nullable": {
-										TokenType:  jschema.TokenTypeBoolean,
+										TokenType:  schema.TokenTypeBoolean,
 										Value:      "false",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
 								[]string{"additionalProperties", "nullable"},
@@ -3085,21 +2806,21 @@ func TestSchema_GetAST(t *testing.T) {
 						},
 						{
 							Key:        "email",
-							TokenType:  jschema.TokenTypeObject,
-							SchemaType: string(jschema.SchemaTypeObject),
-							Rules: jschema.NewRuleASTNodes(
-								map[string]jschema.RuleASTNode{
+							TokenType:  schema.TokenTypeObject,
+							SchemaType: string(schema.SchemaTypeObject),
+							Rules: schema.NewRuleASTNodes(
+								map[string]schema.RuleASTNode{
 									"additionalProperties": {
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "email",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									"nullable": {
-										TokenType:  jschema.TokenTypeBoolean,
+										TokenType:  schema.TokenTypeBoolean,
 										Value:      "false",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
 								[]string{"additionalProperties", "nullable"},
@@ -3107,21 +2828,21 @@ func TestSchema_GetAST(t *testing.T) {
 						},
 						{
 							Key:        "uri",
-							TokenType:  jschema.TokenTypeObject,
-							SchemaType: string(jschema.SchemaTypeObject),
-							Rules: jschema.NewRuleASTNodes(
-								map[string]jschema.RuleASTNode{
+							TokenType:  schema.TokenTypeObject,
+							SchemaType: string(schema.SchemaTypeObject),
+							Rules: schema.NewRuleASTNodes(
+								map[string]schema.RuleASTNode{
 									"additionalProperties": {
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "uri",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									"nullable": {
-										TokenType:  jschema.TokenTypeBoolean,
+										TokenType:  schema.TokenTypeBoolean,
 										Value:      "false",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
 								[]string{"additionalProperties", "nullable"},
@@ -3129,21 +2850,21 @@ func TestSchema_GetAST(t *testing.T) {
 						},
 						{
 							Key:        "uuid",
-							TokenType:  jschema.TokenTypeObject,
-							SchemaType: string(jschema.SchemaTypeObject),
-							Rules: jschema.NewRuleASTNodes(
-								map[string]jschema.RuleASTNode{
+							TokenType:  schema.TokenTypeObject,
+							SchemaType: string(schema.SchemaTypeObject),
+							Rules: schema.NewRuleASTNodes(
+								map[string]schema.RuleASTNode{
 									"additionalProperties": {
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "uuid",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									"nullable": {
-										TokenType:  jschema.TokenTypeBoolean,
+										TokenType:  schema.TokenTypeBoolean,
 										Value:      "false",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
 								[]string{"additionalProperties", "nullable"},
@@ -3151,21 +2872,21 @@ func TestSchema_GetAST(t *testing.T) {
 						},
 						{
 							Key:        "date",
-							TokenType:  jschema.TokenTypeObject,
-							SchemaType: string(jschema.SchemaTypeObject),
-							Rules: jschema.NewRuleASTNodes(
-								map[string]jschema.RuleASTNode{
+							TokenType:  schema.TokenTypeObject,
+							SchemaType: string(schema.SchemaTypeObject),
+							Rules: schema.NewRuleASTNodes(
+								map[string]schema.RuleASTNode{
 									"additionalProperties": {
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "date",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									"nullable": {
-										TokenType:  jschema.TokenTypeBoolean,
+										TokenType:  schema.TokenTypeBoolean,
 										Value:      "false",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
 								[]string{"additionalProperties", "nullable"},
@@ -3173,21 +2894,21 @@ func TestSchema_GetAST(t *testing.T) {
 						},
 						{
 							Key:        "datetime",
-							TokenType:  jschema.TokenTypeObject,
-							SchemaType: string(jschema.SchemaTypeObject),
-							Rules: jschema.NewRuleASTNodes(
-								map[string]jschema.RuleASTNode{
+							TokenType:  schema.TokenTypeObject,
+							SchemaType: string(schema.SchemaTypeObject),
+							Rules: schema.NewRuleASTNodes(
+								map[string]schema.RuleASTNode{
 									"additionalProperties": {
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "datetime",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									"nullable": {
-										TokenType:  jschema.TokenTypeBoolean,
+										TokenType:  schema.TokenTypeBoolean,
 										Value:      "false",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
 								[]string{"additionalProperties", "nullable"},
@@ -3195,21 +2916,21 @@ func TestSchema_GetAST(t *testing.T) {
 						},
 						{
 							Key:        "enum",
-							TokenType:  jschema.TokenTypeObject,
-							SchemaType: string(jschema.SchemaTypeObject),
-							Rules: jschema.NewRuleASTNodes(
-								map[string]jschema.RuleASTNode{
+							TokenType:  schema.TokenTypeObject,
+							SchemaType: string(schema.SchemaTypeObject),
+							Rules: schema.NewRuleASTNodes(
+								map[string]schema.RuleASTNode{
 									"additionalProperties": {
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "enum",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									"nullable": {
-										TokenType:  jschema.TokenTypeBoolean,
+										TokenType:  schema.TokenTypeBoolean,
 										Value:      "false",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
 								[]string{"additionalProperties", "nullable"},
@@ -3217,21 +2938,21 @@ func TestSchema_GetAST(t *testing.T) {
 						},
 						{
 							Key:        "mixed",
-							TokenType:  jschema.TokenTypeObject,
-							SchemaType: string(jschema.SchemaTypeObject),
-							Rules: jschema.NewRuleASTNodes(
-								map[string]jschema.RuleASTNode{
+							TokenType:  schema.TokenTypeObject,
+							SchemaType: string(schema.SchemaTypeObject),
+							Rules: schema.NewRuleASTNodes(
+								map[string]schema.RuleASTNode{
 									"additionalProperties": {
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "mixed",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									"nullable": {
-										TokenType:  jschema.TokenTypeBoolean,
+										TokenType:  schema.TokenTypeBoolean,
 										Value:      "false",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
 								[]string{"additionalProperties", "nullable"},
@@ -3239,21 +2960,21 @@ func TestSchema_GetAST(t *testing.T) {
 						},
 						{
 							Key:        "any",
-							TokenType:  jschema.TokenTypeObject,
-							SchemaType: string(jschema.SchemaTypeObject),
-							Rules: jschema.NewRuleASTNodes(
-								map[string]jschema.RuleASTNode{
+							TokenType:  schema.TokenTypeObject,
+							SchemaType: string(schema.SchemaTypeObject),
+							Rules: schema.NewRuleASTNodes(
+								map[string]schema.RuleASTNode{
 									"additionalProperties": {
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "any",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									"nullable": {
-										TokenType:  jschema.TokenTypeBoolean,
+										TokenType:  schema.TokenTypeBoolean,
 										Value:      "false",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
 								[]string{"additionalProperties", "nullable"},
@@ -3261,28 +2982,28 @@ func TestSchema_GetAST(t *testing.T) {
 						},
 						{
 							Key:        "userType",
-							TokenType:  jschema.TokenTypeObject,
-							SchemaType: string(jschema.SchemaTypeObject),
-							Rules: jschema.NewRuleASTNodes(
-								map[string]jschema.RuleASTNode{
+							TokenType:  schema.TokenTypeObject,
+							SchemaType: string(schema.SchemaTypeObject),
+							Rules: schema.NewRuleASTNodes(
+								map[string]schema.RuleASTNode{
 									"additionalProperties": {
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "@cat",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									"nullable": {
-										TokenType:  jschema.TokenTypeBoolean,
+										TokenType:  schema.TokenTypeBoolean,
 										Value:      "false",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
 								[]string{"additionalProperties", "nullable"},
 							),
 						},
 					},
-					Rules: &jschema.RuleASTNodes{},
+					Rules: &schema.RuleASTNodes{},
 				},
 				types: map[string]string{
 					"@cat": `"cat"`,
@@ -3292,30 +3013,30 @@ func TestSchema_GetAST(t *testing.T) {
 			`{
 	@fooKey: @foo
 }`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeObject,
-					SchemaType: string(jschema.SchemaTypeObject),
-					Children: []jschema.ASTNode{
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeObject,
+					SchemaType: string(schema.SchemaTypeObject),
+					Children: []schema.ASTNode{
 						{
 							Key:           "@fooKey",
 							IsKeyShortcut: true,
-							TokenType:     jschema.TokenTypeShortcut,
+							TokenType:     schema.TokenTypeShortcut,
 							SchemaType:    "@foo",
 							Value:         "@foo",
-							Rules: jschema.NewRuleASTNodes(
-								map[string]jschema.RuleASTNode{
+							Rules: schema.NewRuleASTNodes(
+								map[string]schema.RuleASTNode{
 									"type": {
-										TokenType:  jschema.TokenTypeShortcut,
+										TokenType:  schema.TokenTypeShortcut,
 										Value:      "@foo",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceGenerated,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceGenerated,
 									},
 								},
 								[]string{"type"},
 							),
 						},
 					},
-					Rules: &jschema.RuleASTNodes{},
+					Rules: &schema.RuleASTNodes{},
 				},
 				types: map[string]string{
 					"@fooKey": `"key"`,
@@ -3333,129 +3054,129 @@ func TestSchema_GetAST(t *testing.T) {
                   {type: "decimal", precision: 1}
                 ]} 
             */`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeString,
-					SchemaType: string(jschema.SchemaTypeMixed),
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeString,
+					SchemaType: string(schema.SchemaTypeMixed),
 					Value:      "foo",
-					Rules: jschema.NewRuleASTNodes(
-						map[string]jschema.RuleASTNode{
+					Rules: schema.NewRuleASTNodes(
+						map[string]schema.RuleASTNode{
 							"or": {
-								TokenType:  jschema.TokenTypeArray,
-								Properties: &jschema.RuleASTNodes{},
-								Items: []jschema.RuleASTNode{
+								TokenType:  schema.TokenTypeArray,
+								Properties: &schema.RuleASTNodes{},
+								Items: []schema.RuleASTNode{
 									{
-										TokenType: jschema.TokenTypeObject,
-										Properties: jschema.NewRuleASTNodes(
-											map[string]jschema.RuleASTNode{
+										TokenType: schema.TokenTypeObject,
+										Properties: schema.NewRuleASTNodes(
+											map[string]schema.RuleASTNode{
 												"type": {
-													TokenType:  jschema.TokenTypeString,
+													TokenType:  schema.TokenTypeString,
 													Value:      "string",
-													Properties: &jschema.RuleASTNodes{},
-													Source:     jschema.RuleASTNodeSourceManual,
+													Properties: &schema.RuleASTNodes{},
+													Source:     schema.RuleASTNodeSourceManual,
 												},
 											},
 											[]string{"type"},
 										),
-										Source: jschema.RuleASTNodeSourceManual,
+										Source: schema.RuleASTNodeSourceManual,
 									},
 									{
-										TokenType: jschema.TokenTypeObject,
-										Properties: jschema.NewRuleASTNodes(
-											map[string]jschema.RuleASTNode{
+										TokenType: schema.TokenTypeObject,
+										Properties: schema.NewRuleASTNodes(
+											map[string]schema.RuleASTNode{
 												"type": {
-													TokenType:  jschema.TokenTypeString,
+													TokenType:  schema.TokenTypeString,
 													Value:      "boolean",
-													Properties: &jschema.RuleASTNodes{},
-													Source:     jschema.RuleASTNodeSourceManual,
+													Properties: &schema.RuleASTNodes{},
+													Source:     schema.RuleASTNodeSourceManual,
 												},
 											},
 											[]string{"type"},
 										),
-										Source: jschema.RuleASTNodeSourceManual,
+										Source: schema.RuleASTNodeSourceManual,
 									},
 									{
-										TokenType: jschema.TokenTypeObject,
-										Properties: jschema.NewRuleASTNodes(
-											map[string]jschema.RuleASTNode{
+										TokenType: schema.TokenTypeObject,
+										Properties: schema.NewRuleASTNodes(
+											map[string]schema.RuleASTNode{
 												"type": {
-													TokenType:  jschema.TokenTypeString,
+													TokenType:  schema.TokenTypeString,
 													Value:      "integer",
-													Properties: &jschema.RuleASTNodes{},
-													Source:     jschema.RuleASTNodeSourceManual,
+													Properties: &schema.RuleASTNodes{},
+													Source:     schema.RuleASTNodeSourceManual,
 												},
 											},
 											[]string{"type"},
 										),
-										Source: jschema.RuleASTNodeSourceManual,
+										Source: schema.RuleASTNodeSourceManual,
 									},
 									{
-										TokenType: jschema.TokenTypeObject,
-										Properties: jschema.NewRuleASTNodes(
-											map[string]jschema.RuleASTNode{
+										TokenType: schema.TokenTypeObject,
+										Properties: schema.NewRuleASTNodes(
+											map[string]schema.RuleASTNode{
 												"type": {
-													TokenType:  jschema.TokenTypeString,
+													TokenType:  schema.TokenTypeString,
 													Value:      "float",
-													Properties: &jschema.RuleASTNodes{},
-													Source:     jschema.RuleASTNodeSourceManual,
+													Properties: &schema.RuleASTNodes{},
+													Source:     schema.RuleASTNodeSourceManual,
 												},
 											},
 											[]string{"type"},
 										),
-										Source: jschema.RuleASTNodeSourceManual,
+										Source: schema.RuleASTNodeSourceManual,
 									},
 									{
-										TokenType: jschema.TokenTypeObject,
-										Properties: jschema.NewRuleASTNodes(
-											map[string]jschema.RuleASTNode{
+										TokenType: schema.TokenTypeObject,
+										Properties: schema.NewRuleASTNodes(
+											map[string]schema.RuleASTNode{
 												"type": {
-													TokenType:  jschema.TokenTypeString,
+													TokenType:  schema.TokenTypeString,
 													Value:      "object",
-													Properties: &jschema.RuleASTNodes{},
-													Source:     jschema.RuleASTNodeSourceManual,
+													Properties: &schema.RuleASTNodes{},
+													Source:     schema.RuleASTNodeSourceManual,
 												},
 											},
 											[]string{"type"},
 										),
-										Source: jschema.RuleASTNodeSourceManual,
+										Source: schema.RuleASTNodeSourceManual,
 									},
 									{
-										TokenType: jschema.TokenTypeObject,
-										Properties: jschema.NewRuleASTNodes(
-											map[string]jschema.RuleASTNode{
+										TokenType: schema.TokenTypeObject,
+										Properties: schema.NewRuleASTNodes(
+											map[string]schema.RuleASTNode{
 												"type": {
-													TokenType:  jschema.TokenTypeString,
+													TokenType:  schema.TokenTypeString,
 													Value:      "array",
-													Properties: &jschema.RuleASTNodes{},
-													Source:     jschema.RuleASTNodeSourceManual,
+													Properties: &schema.RuleASTNodes{},
+													Source:     schema.RuleASTNodeSourceManual,
 												},
 											},
 											[]string{"type"},
 										),
-										Source: jschema.RuleASTNodeSourceManual,
+										Source: schema.RuleASTNodeSourceManual,
 									},
 									{
-										TokenType: jschema.TokenTypeObject,
-										Properties: jschema.NewRuleASTNodes(
-											map[string]jschema.RuleASTNode{
+										TokenType: schema.TokenTypeObject,
+										Properties: schema.NewRuleASTNodes(
+											map[string]schema.RuleASTNode{
 												"type": {
-													TokenType:  jschema.TokenTypeString,
+													TokenType:  schema.TokenTypeString,
 													Value:      "decimal",
-													Properties: &jschema.RuleASTNodes{},
-													Source:     jschema.RuleASTNodeSourceManual,
+													Properties: &schema.RuleASTNodes{},
+													Source:     schema.RuleASTNodeSourceManual,
 												},
 												"precision": {
-													TokenType:  jschema.TokenTypeNumber,
+													TokenType:  schema.TokenTypeNumber,
 													Value:      "1",
-													Properties: &jschema.RuleASTNodes{},
-													Source:     jschema.RuleASTNodeSourceManual,
+													Properties: &schema.RuleASTNodes{},
+													Source:     schema.RuleASTNodeSourceManual,
 												},
 											},
 											[]string{"type", "precision"},
 										),
-										Source: jschema.RuleASTNodeSourceManual,
+										Source: schema.RuleASTNodeSourceManual,
 									},
 								},
-								Source: jschema.RuleASTNodeSourceManual,
+								Source: schema.RuleASTNodeSourceManual,
 							},
 						},
 						[]string{"or"},
@@ -3464,18 +3185,18 @@ func TestSchema_GetAST(t *testing.T) {
 			},
 
 			`1.2 // {precision: 2}`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeNumber,
-					SchemaType: string(jschema.SchemaTypeDecimal),
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeNumber,
+					SchemaType: string(schema.SchemaTypeDecimal),
 
 					Value: "1.2",
-					Rules: jschema.NewRuleASTNodes(
-						map[string]jschema.RuleASTNode{
+					Rules: schema.NewRuleASTNodes(
+						map[string]schema.RuleASTNode{
 							"precision": {
-								TokenType:  jschema.TokenTypeNumber,
+								TokenType:  schema.TokenTypeNumber,
 								Value:      "2",
-								Properties: &jschema.RuleASTNodes{},
-								Source:     jschema.RuleASTNodeSourceManual,
+								Properties: &schema.RuleASTNodes{},
+								Source:     schema.RuleASTNodeSourceManual,
 							},
 						},
 						[]string{"precision"},
@@ -3484,31 +3205,31 @@ func TestSchema_GetAST(t *testing.T) {
 			},
 
 			`"a" // {or: ["string", "integer"]}`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeString,
-					SchemaType: string(jschema.SchemaTypeMixed),
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeString,
+					SchemaType: string(schema.SchemaTypeMixed),
 
 					Value: "a",
-					Rules: jschema.NewRuleASTNodes(
-						map[string]jschema.RuleASTNode{
+					Rules: schema.NewRuleASTNodes(
+						map[string]schema.RuleASTNode{
 							"or": {
-								TokenType:  jschema.TokenTypeArray,
-								Properties: &jschema.RuleASTNodes{},
-								Items: []jschema.RuleASTNode{
+								TokenType:  schema.TokenTypeArray,
+								Properties: &schema.RuleASTNodes{},
+								Items: []schema.RuleASTNode{
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "string",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "integer",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
-								Source: jschema.RuleASTNodeSourceManual,
+								Source: schema.RuleASTNodeSourceManual,
 							},
 						},
 						[]string{"or"},
@@ -3524,47 +3245,47 @@ func TestSchema_GetAST(t *testing.T) {
               "frog" // The frog
             ]}
         */`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeString,
-					SchemaType: string(jschema.SchemaTypeEnum),
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeString,
+					SchemaType: string(schema.SchemaTypeEnum),
 
 					Value: "cat",
-					Rules: jschema.NewRuleASTNodes(
-						map[string]jschema.RuleASTNode{
+					Rules: schema.NewRuleASTNodes(
+						map[string]schema.RuleASTNode{
 							"enum": {
-								TokenType:  jschema.TokenTypeArray,
-								Properties: &jschema.RuleASTNodes{},
-								Items: []jschema.RuleASTNode{
+								TokenType:  schema.TokenTypeArray,
+								Properties: &schema.RuleASTNodes{},
+								Items: []schema.RuleASTNode{
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "cat",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 										Comment:    "The cat",
 									},
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "dog",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 										Comment:    "The dog",
 									},
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "pig",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 										Comment:    "The pig",
 									},
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "frog",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 										Comment:    "The frog",
 									},
 								},
-								Source: jschema.RuleASTNodeSourceManual,
+								Source: schema.RuleASTNodeSourceManual,
 							},
 						},
 						[]string{"enum"},
@@ -3573,18 +3294,18 @@ func TestSchema_GetAST(t *testing.T) {
 			},
 
 			`"foo" // {type: "string"} - annotation # should not be a comment in AST node`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeString,
-					SchemaType: string(jschema.SchemaTypeString),
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeString,
+					SchemaType: string(schema.SchemaTypeString),
 
 					Value: "foo",
-					Rules: jschema.NewRuleASTNodes(
-						map[string]jschema.RuleASTNode{
+					Rules: schema.NewRuleASTNodes(
+						map[string]schema.RuleASTNode{
 							"type": {
-								TokenType:  jschema.TokenTypeString,
-								Properties: &jschema.RuleASTNodes{},
+								TokenType:  schema.TokenTypeString,
+								Properties: &schema.RuleASTNodes{},
 								Value:      "string",
-								Source:     jschema.RuleASTNodeSourceManual,
+								Source:     schema.RuleASTNodeSourceManual,
 							},
 						},
 						[]string{"type"},
@@ -3594,18 +3315,18 @@ func TestSchema_GetAST(t *testing.T) {
 			},
 
 			`"#" // {regex: "#"} - annotation # comment`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeString,
-					SchemaType: string(jschema.SchemaTypeString),
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeString,
+					SchemaType: string(schema.SchemaTypeString),
 
 					Value: "#",
-					Rules: jschema.NewRuleASTNodes(
-						map[string]jschema.RuleASTNode{
+					Rules: schema.NewRuleASTNodes(
+						map[string]schema.RuleASTNode{
 							"regex": {
-								TokenType:  jschema.TokenTypeString,
-								Properties: &jschema.RuleASTNodes{},
+								TokenType:  schema.TokenTypeString,
+								Properties: &schema.RuleASTNodes{},
 								Value:      "#",
-								Source:     jschema.RuleASTNodeSourceManual,
+								Source:     schema.RuleASTNodeSourceManual,
 							},
 						},
 						[]string{"regex"},
@@ -3615,31 +3336,31 @@ func TestSchema_GetAST(t *testing.T) {
 			},
 
 			`"#" // {enum: ["#", "##"]} - annotation # comment`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeString,
-					SchemaType: string(jschema.SchemaTypeEnum),
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeString,
+					SchemaType: string(schema.SchemaTypeEnum),
 
 					Value: "#",
-					Rules: jschema.NewRuleASTNodes(
-						map[string]jschema.RuleASTNode{
+					Rules: schema.NewRuleASTNodes(
+						map[string]schema.RuleASTNode{
 							"enum": {
-								TokenType:  jschema.TokenTypeArray,
-								Properties: &jschema.RuleASTNodes{},
-								Items: []jschema.RuleASTNode{
+								TokenType:  schema.TokenTypeArray,
+								Properties: &schema.RuleASTNodes{},
+								Items: []schema.RuleASTNode{
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "#",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "##",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
-								Source: jschema.RuleASTNodeSourceManual,
+								Source: schema.RuleASTNodeSourceManual,
 							},
 						},
 						[]string{"enum"},
@@ -3652,26 +3373,26 @@ func TestSchema_GetAST(t *testing.T) {
   "id": 5,
   "name": "John" # single-line COMMENT
 }`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeObject,
-					SchemaType: string(jschema.SchemaTypeObject),
-					Children: []jschema.ASTNode{
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeObject,
+					SchemaType: string(schema.SchemaTypeObject),
+					Children: []schema.ASTNode{
 						{
 							Key:        "id",
-							TokenType:  jschema.TokenTypeNumber,
-							SchemaType: string(jschema.SchemaTypeInteger),
+							TokenType:  schema.TokenTypeNumber,
+							SchemaType: string(schema.SchemaTypeInteger),
 							Value:      "5",
-							Rules:      &jschema.RuleASTNodes{},
+							Rules:      &schema.RuleASTNodes{},
 						},
 						{
 							Key:        "name",
-							TokenType:  jschema.TokenTypeString,
-							SchemaType: string(jschema.SchemaTypeString),
+							TokenType:  schema.TokenTypeString,
+							SchemaType: string(schema.SchemaTypeString),
 							Value:      "John",
-							Rules:      &jschema.RuleASTNodes{},
+							Rules:      &schema.RuleASTNodes{},
 						},
 					},
-					Rules: &jschema.RuleASTNodes{},
+					Rules: &schema.RuleASTNodes{},
 				},
 			},
 
@@ -3683,26 +3404,26 @@ func TestSchema_GetAST(t *testing.T) {
   COMMENT
   ###
 }`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeObject,
-					SchemaType: string(jschema.SchemaTypeObject),
-					Children: []jschema.ASTNode{
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeObject,
+					SchemaType: string(schema.SchemaTypeObject),
+					Children: []schema.ASTNode{
 						{
 							Key:        "id",
-							TokenType:  jschema.TokenTypeNumber,
-							SchemaType: string(jschema.SchemaTypeInteger),
+							TokenType:  schema.TokenTypeNumber,
+							SchemaType: string(schema.SchemaTypeInteger),
 							Value:      "5",
-							Rules:      &jschema.RuleASTNodes{},
+							Rules:      &schema.RuleASTNodes{},
 						},
 						{
 							Key:        "name",
-							TokenType:  jschema.TokenTypeString,
-							SchemaType: string(jschema.SchemaTypeString),
+							TokenType:  schema.TokenTypeString,
+							SchemaType: string(schema.SchemaTypeString),
 							Value:      "John",
-							Rules:      &jschema.RuleASTNodes{},
+							Rules:      &schema.RuleASTNodes{},
 						},
 					},
-					Rules: &jschema.RuleASTNodes{},
+					Rules: &schema.RuleASTNodes{},
 				},
 			},
 
@@ -3712,27 +3433,27 @@ func TestSchema_GetAST(t *testing.T) {
   # comment
 */
 }`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeObject,
-					SchemaType: string(jschema.SchemaTypeObject),
-					Children: []jschema.ASTNode{
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeObject,
+					SchemaType: string(schema.SchemaTypeObject),
+					Children: []schema.ASTNode{
 						{
 							Key:        "id",
-							TokenType:  jschema.TokenTypeNumber,
-							SchemaType: string(jschema.SchemaTypeInteger),
+							TokenType:  schema.TokenTypeNumber,
+							SchemaType: string(schema.SchemaTypeInteger),
 							Value:      "5",
-							Rules:      &jschema.RuleASTNodes{},
+							Rules:      &schema.RuleASTNodes{},
 						},
 						{
 							Key:        "name",
-							TokenType:  jschema.TokenTypeString,
-							SchemaType: string(jschema.SchemaTypeString),
+							TokenType:  schema.TokenTypeString,
+							SchemaType: string(schema.SchemaTypeString),
 							Value:      "John",
-							Rules:      &jschema.RuleASTNodes{},
+							Rules:      &schema.RuleASTNodes{},
 							Comment:    "# comment",
 						},
 					},
-					Rules: &jschema.RuleASTNodes{},
+					Rules: &schema.RuleASTNodes{},
 				},
 			},
 
@@ -3742,29 +3463,29 @@ func TestSchema_GetAST(t *testing.T) {
   # comment
 */
 }`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeObject,
-					SchemaType: string(jschema.SchemaTypeObject),
-					Children: []jschema.ASTNode{
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeObject,
+					SchemaType: string(schema.SchemaTypeObject),
+					Children: []schema.ASTNode{
 						{
 							Key:        "id",
-							TokenType:  jschema.TokenTypeNumber,
-							SchemaType: string(jschema.SchemaTypeInteger),
+							TokenType:  schema.TokenTypeNumber,
+							SchemaType: string(schema.SchemaTypeInteger),
 							Value:      "5",
-							Rules:      &jschema.RuleASTNodes{},
+							Rules:      &schema.RuleASTNodes{},
 						},
 						{
 							Key:        "name",
-							TokenType:  jschema.TokenTypeString,
-							SchemaType: string(jschema.SchemaTypeString),
+							TokenType:  schema.TokenTypeString,
+							SchemaType: string(schema.SchemaTypeString),
 							Value:      "John",
-							Rules: jschema.NewRuleASTNodes(
-								map[string]jschema.RuleASTNode{
+							Rules: schema.NewRuleASTNodes(
+								map[string]schema.RuleASTNode{
 									"type": {
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "string",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
 								[]string{"type"},
@@ -3773,7 +3494,7 @@ func TestSchema_GetAST(t *testing.T) {
   # comment`,
 						},
 					},
-					Rules: &jschema.RuleASTNodes{},
+					Rules: &schema.RuleASTNodes{},
 				},
 			},
 
@@ -3782,29 +3503,29 @@ func TestSchema_GetAST(t *testing.T) {
   "name": "John" /* {type: "string"} - annotation # comment
 */
 }`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeObject,
-					SchemaType: string(jschema.SchemaTypeObject),
-					Children: []jschema.ASTNode{
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeObject,
+					SchemaType: string(schema.SchemaTypeObject),
+					Children: []schema.ASTNode{
 						{
 							Key:        "id",
-							TokenType:  jschema.TokenTypeNumber,
-							SchemaType: string(jschema.SchemaTypeInteger),
+							TokenType:  schema.TokenTypeNumber,
+							SchemaType: string(schema.SchemaTypeInteger),
 							Value:      "5",
-							Rules:      &jschema.RuleASTNodes{},
+							Rules:      &schema.RuleASTNodes{},
 						},
 						{
 							Key:        "name",
-							TokenType:  jschema.TokenTypeString,
-							SchemaType: string(jschema.SchemaTypeString),
+							TokenType:  schema.TokenTypeString,
+							SchemaType: string(schema.SchemaTypeString),
 							Value:      "John",
-							Rules: jschema.NewRuleASTNodes(
-								map[string]jschema.RuleASTNode{
+							Rules: schema.NewRuleASTNodes(
+								map[string]schema.RuleASTNode{
 									"type": {
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "string",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
 								[]string{"type"},
@@ -3812,7 +3533,7 @@ func TestSchema_GetAST(t *testing.T) {
 							Comment: `annotation # comment`,
 						},
 					},
-					Rules: &jschema.RuleASTNodes{},
+					Rules: &schema.RuleASTNodes{},
 				},
 			},
 
@@ -3820,29 +3541,29 @@ func TestSchema_GetAST(t *testing.T) {
   "id": 5,
   "name": "John" // {type: "string"} - annotation # comment
 }`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeObject,
-					SchemaType: string(jschema.SchemaTypeObject),
-					Children: []jschema.ASTNode{
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeObject,
+					SchemaType: string(schema.SchemaTypeObject),
+					Children: []schema.ASTNode{
 						{
 							Key:        "id",
-							TokenType:  jschema.TokenTypeNumber,
-							SchemaType: string(jschema.SchemaTypeInteger),
+							TokenType:  schema.TokenTypeNumber,
+							SchemaType: string(schema.SchemaTypeInteger),
 							Value:      "5",
-							Rules:      &jschema.RuleASTNodes{},
+							Rules:      &schema.RuleASTNodes{},
 						},
 						{
 							Key:        "name",
-							TokenType:  jschema.TokenTypeString,
-							SchemaType: string(jschema.SchemaTypeString),
+							TokenType:  schema.TokenTypeString,
+							SchemaType: string(schema.SchemaTypeString),
 							Value:      "John",
-							Rules: jschema.NewRuleASTNodes(
-								map[string]jschema.RuleASTNode{
+							Rules: schema.NewRuleASTNodes(
+								map[string]schema.RuleASTNode{
 									"type": {
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "string",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
 								[]string{"type"},
@@ -3850,7 +3571,7 @@ func TestSchema_GetAST(t *testing.T) {
 							Comment: `annotation`,
 						},
 					},
-					Rules: &jschema.RuleASTNodes{},
+					Rules: &schema.RuleASTNodes{},
 				},
 			},
 
@@ -3863,30 +3584,30 @@ func TestSchema_GetAST(t *testing.T) {
   ###
 */
 }`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeObject,
-					SchemaType: string(jschema.SchemaTypeObject),
-					Children: []jschema.ASTNode{
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeObject,
+					SchemaType: string(schema.SchemaTypeObject),
+					Children: []schema.ASTNode{
 						{
 							Key:        "id",
-							TokenType:  jschema.TokenTypeNumber,
-							SchemaType: string(jschema.SchemaTypeInteger),
+							TokenType:  schema.TokenTypeNumber,
+							SchemaType: string(schema.SchemaTypeInteger),
 							Value:      "5",
-							Rules:      &jschema.RuleASTNodes{},
+							Rules:      &schema.RuleASTNodes{},
 						},
 						{
 							Key:        "name",
-							TokenType:  jschema.TokenTypeString,
-							SchemaType: string(jschema.SchemaTypeString),
+							TokenType:  schema.TokenTypeString,
+							SchemaType: string(schema.SchemaTypeString),
 							Value:      "John",
-							Rules:      &jschema.RuleASTNodes{},
+							Rules:      &schema.RuleASTNodes{},
 							Comment: `###
   block
   COMMENT
   ###`,
 						},
 					},
-					Rules: &jschema.RuleASTNodes{},
+					Rules: &schema.RuleASTNodes{},
 				},
 			},
 
@@ -3899,29 +3620,29 @@ func TestSchema_GetAST(t *testing.T) {
   ###
 */
 }`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeObject,
-					SchemaType: string(jschema.SchemaTypeObject),
-					Children: []jschema.ASTNode{
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeObject,
+					SchemaType: string(schema.SchemaTypeObject),
+					Children: []schema.ASTNode{
 						{
 							Key:        "id",
-							TokenType:  jschema.TokenTypeNumber,
-							SchemaType: string(jschema.SchemaTypeInteger),
+							TokenType:  schema.TokenTypeNumber,
+							SchemaType: string(schema.SchemaTypeInteger),
 							Value:      "5",
-							Rules:      &jschema.RuleASTNodes{},
+							Rules:      &schema.RuleASTNodes{},
 						},
 						{
 							Key:        "name",
-							TokenType:  jschema.TokenTypeString,
-							SchemaType: string(jschema.SchemaTypeString),
+							TokenType:  schema.TokenTypeString,
+							SchemaType: string(schema.SchemaTypeString),
 							Value:      "John",
-							Rules: jschema.NewRuleASTNodes(
-								map[string]jschema.RuleASTNode{
+							Rules: schema.NewRuleASTNodes(
+								map[string]schema.RuleASTNode{
 									"type": {
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "string",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
 								[]string{"type"},
@@ -3933,7 +3654,7 @@ func TestSchema_GetAST(t *testing.T) {
   ###`,
 						},
 					},
-					Rules: &jschema.RuleASTNodes{},
+					Rules: &schema.RuleASTNodes{},
 				},
 			},
 
@@ -3941,23 +3662,23 @@ func TestSchema_GetAST(t *testing.T) {
 #  "id": 5,
 #  "name": "John"
 # }`: {
-				expected: jschema.ASTNode{
-					Rules: &jschema.RuleASTNodes{},
+				expected: schema.ASTNode{
+					Rules: &schema.RuleASTNodes{},
 				},
 			},
 
 			`"foo" // {enum: @enum}`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeString,
-					SchemaType: string(jschema.SchemaTypeEnum),
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeString,
+					SchemaType: string(schema.SchemaTypeEnum),
 					Value:      "foo",
-					Rules: jschema.NewRuleASTNodes(
-						map[string]jschema.RuleASTNode{
+					Rules: schema.NewRuleASTNodes(
+						map[string]schema.RuleASTNode{
 							"enum": {
-								TokenType:  jschema.TokenTypeShortcut,
+								TokenType:  schema.TokenTypeShortcut,
 								Value:      "@enum",
-								Properties: &jschema.RuleASTNodes{},
-								Source:     jschema.RuleASTNodeSourceManual,
+								Properties: &schema.RuleASTNodes{},
+								Source:     schema.RuleASTNodeSourceManual,
 							},
 						},
 						[]string{"enum"},
@@ -3978,17 +3699,17 @@ func TestSchema_GetAST(t *testing.T) {
 	type: "string"
 } - comment
 */`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeString,
-					SchemaType: string(jschema.SchemaTypeString),
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeString,
+					SchemaType: string(schema.SchemaTypeString),
 					Value:      "foo",
-					Rules: jschema.NewRuleASTNodes(
-						map[string]jschema.RuleASTNode{
+					Rules: schema.NewRuleASTNodes(
+						map[string]schema.RuleASTNode{
 							"type": {
-								TokenType:  jschema.TokenTypeString,
+								TokenType:  schema.TokenTypeString,
 								Value:      "string",
-								Properties: &jschema.RuleASTNodes{},
-								Source:     jschema.RuleASTNodeSourceManual,
+								Properties: &schema.RuleASTNodes{},
+								Source:     schema.RuleASTNodeSourceManual,
 							},
 						},
 						[]string{"type"},
@@ -4003,17 +3724,17 @@ func TestSchema_GetAST(t *testing.T) {
 line
 	comment
 */`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeString,
-					SchemaType: string(jschema.SchemaTypeString),
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeString,
+					SchemaType: string(schema.SchemaTypeString),
 					Value:      "foo",
-					Rules: jschema.NewRuleASTNodes(
-						map[string]jschema.RuleASTNode{
+					Rules: schema.NewRuleASTNodes(
+						map[string]schema.RuleASTNode{
 							"type": {
-								TokenType:  jschema.TokenTypeString,
+								TokenType:  schema.TokenTypeString,
 								Value:      "string",
-								Properties: &jschema.RuleASTNodes{},
-								Source:     jschema.RuleASTNodeSourceManual,
+								Properties: &schema.RuleASTNodes{},
+								Source:     schema.RuleASTNodeSourceManual,
 							},
 						},
 						[]string{"type"},
@@ -4038,96 +3759,96 @@ line
 	"uuid"
 ]}
 */`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeString,
-					SchemaType: string(jschema.SchemaTypeMixed),
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeString,
+					SchemaType: string(schema.SchemaTypeMixed),
 					Value:      "foo",
-					Rules: jschema.NewRuleASTNodes(
-						map[string]jschema.RuleASTNode{
+					Rules: schema.NewRuleASTNodes(
+						map[string]schema.RuleASTNode{
 							"or": {
-								TokenType:  jschema.TokenTypeArray,
-								Properties: &jschema.RuleASTNodes{},
-								Items: []jschema.RuleASTNode{
+								TokenType:  schema.TokenTypeArray,
+								Properties: &schema.RuleASTNodes{},
+								Items: []schema.RuleASTNode{
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "any",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "array",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "boolean",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "date",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "datetime",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "email",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "float",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "integer",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "null",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "object",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "string",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "uri",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "uuid",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
-								Source: jschema.RuleASTNodeSourceManual,
+								Source: schema.RuleASTNodeSourceManual,
 							},
 						},
 						[]string{"or"},
@@ -4136,30 +3857,30 @@ line
 			},
 
 			`123 // {or: ["@dogId", "@catId"]}`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeNumber,
-					SchemaType: string(jschema.SchemaTypeMixed),
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeNumber,
+					SchemaType: string(schema.SchemaTypeMixed),
 					Value:      "123",
-					Rules: jschema.NewRuleASTNodes(
-						map[string]jschema.RuleASTNode{
+					Rules: schema.NewRuleASTNodes(
+						map[string]schema.RuleASTNode{
 							"or": {
-								TokenType:  jschema.TokenTypeArray,
-								Properties: &jschema.RuleASTNodes{},
-								Items: []jschema.RuleASTNode{
+								TokenType:  schema.TokenTypeArray,
+								Properties: &schema.RuleASTNodes{},
+								Items: []schema.RuleASTNode{
 									{
-										TokenType:  jschema.TokenTypeShortcut,
+										TokenType:  schema.TokenTypeShortcut,
 										Value:      "@dogId",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									{
-										TokenType:  jschema.TokenTypeShortcut,
+										TokenType:  schema.TokenTypeShortcut,
 										Value:      "@catId",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
-								Source: jschema.RuleASTNodeSourceManual,
+								Source: schema.RuleASTNodeSourceManual,
 							},
 						},
 						[]string{"or"},
@@ -4172,60 +3893,60 @@ line
 			},
 
 			`"\n" // {enum: ["\u0001", "\u0002", "\n", "\t", "n \n nn n", "b \n b", "a \\n a"]}`: {
-				expected: jschema.ASTNode{
-					TokenType:  jschema.TokenTypeString,
-					SchemaType: string(jschema.SchemaTypeEnum),
+				expected: schema.ASTNode{
+					TokenType:  schema.TokenTypeString,
+					SchemaType: string(schema.SchemaTypeEnum),
 					Value:      "\n",
-					Rules: jschema.NewRuleASTNodes(
-						map[string]jschema.RuleASTNode{
+					Rules: schema.NewRuleASTNodes(
+						map[string]schema.RuleASTNode{
 							"enum": {
-								TokenType:  jschema.TokenTypeArray,
-								Properties: &jschema.RuleASTNodes{},
-								Items: []jschema.RuleASTNode{
+								TokenType:  schema.TokenTypeArray,
+								Properties: &schema.RuleASTNodes{},
+								Items: []schema.RuleASTNode{
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "\u0001",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "\u0002",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "\n",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "\t",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "n \n nn n",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "b \n b",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 									{
-										TokenType:  jschema.TokenTypeString,
+										TokenType:  schema.TokenTypeString,
 										Value:      "a \\n a",
-										Properties: &jschema.RuleASTNodes{},
-										Source:     jschema.RuleASTNodeSourceManual,
+										Properties: &schema.RuleASTNodes{},
+										Source:     schema.RuleASTNodeSourceManual,
 									},
 								},
-								Source: jschema.RuleASTNodeSourceManual,
+								Source: schema.RuleASTNodeSourceManual,
 							},
 						},
 						[]string{"enum"},
@@ -4464,14 +4185,14 @@ func TestSchema_UsedUserTypes(t *testing.T) {
 	})
 }
 
-func TestSchema_Build(t *testing.T) {
+func TestSchema_Compile(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
-		err := New("", "42").Build()
+		err := New("", "42").Compile()
 		assert.NoError(t, err)
 	})
 
 	t.Run("negative", func(t *testing.T) {
-		err := New("", "foo").Build()
+		err := New("", "foo").Compile()
 		assert.EqualError(t, err, `ERROR (code 301): Invalid character "o" in literal false (expecting 'a')
 	in line 1 on file 
 	> foo
@@ -4481,29 +4202,29 @@ func TestSchema_Build(t *testing.T) {
 
 func TestSchema_buildASTNode(t *testing.T) {
 	t.Run("root node nil", func(t *testing.T) {
-		s := &Schema{
-			inner: &internalSchema.Schema{},
+		s := &JSchema{
+			Inner: &ischema.ISchema{},
 		}
 
-		n := s.buildASTNode()
-		assert.Equal(t, jschema.ASTNode{
-			Rules: &jschema.RuleASTNodes{},
+		n := s.BuildASTNode()
+		assert.Equal(t, schema.ASTNode{
+			Rules: &schema.RuleASTNodes{},
 		}, n)
 	})
 
 	t.Run("root node isn't nil", func(t *testing.T) {
-		newSchema := func(rootNode internalSchema.Node) *Schema {
-			inner := internalSchema.New()
+		newSchema := func(rootNode ischema.Node) *JSchema {
+			inner := ischema.New()
 			inner.SetRootNode(rootNode)
-			return &Schema{
-				inner: &inner,
+			return &JSchema{
+				Inner: &inner,
 			}
 		}
 
 		t.Run("positive", func(t *testing.T) {
-			expected := jschema.ASTNode{
-				TokenType: jschema.TokenTypeString,
-				Rules:     &jschema.RuleASTNodes{},
+			expected := schema.ASTNode{
+				TokenType: schema.TokenTypeString,
+				Rules:     &schema.RuleASTNodes{},
 			}
 
 			root := &schemaMocks.Node{}
@@ -4511,18 +4232,18 @@ func TestSchema_buildASTNode(t *testing.T) {
 
 			s := newSchema(root)
 
-			n := s.buildASTNode()
+			n := s.BuildASTNode()
 			assert.Equal(t, expected, n)
 		})
 
 		t.Run("negative", func(t *testing.T) {
 			root := &schemaMocks.Node{}
-			root.On("ASTNode").Return(jschema.ASTNode{}, stdErrors.New("fake error"))
+			root.On("ASTNode").Return(schema.ASTNode{}, stdErrors.New("fake error"))
 
 			s := newSchema(root)
 
 			assert.PanicsWithError(t, "fake error", func() {
-				s.buildASTNode()
+				s.BuildASTNode()
 			})
 		})
 	})

@@ -37,25 +37,3 @@ func isExists(f string) bool {
 	_, err := os.Stat(f)
 	return err == nil
 }
-
-// Integer power: compute a**b using binary powering algorithm
-// See Donald Knuth, The Art of Computer Programming, Volume 2, Section
-// func Pow(a, b uint) uint {
-// 	var p uint = 1
-// 	for b > 0 {
-// 		if b&1 != 0 {
-// 			p *= a
-// 		}
-// 		b >>= 1
-// 		a *= a
-// 	}
-// 	return p
-// }
-//
-// func VarDump(mixed interface{}) string {
-// 	b, err := json.MarshalIndent(mixed, "", "  ")
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	return string(b)
-// }

@@ -1,9 +1,0 @@
-{
-  "id": 1, /* { min: 1 } */
-  "name": "John", /* name */
-  "age": 25 /* {
-                  optional: true,
-                  min: 0,
-                  max: 200
-                } - age */
-}

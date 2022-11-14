@@ -27,9 +27,9 @@ func Benchmark_buildExample(b *testing.B) {
 		"buzz": 2
 	}
 }`)
-	require.NoError(b, s.compile())
+	require.NoError(b, s.Compile())
 
-	node := s.inner.RootNode()
+	node := s.Inner.RootNode()
 
 	b.ReportAllocs()
 	b.ResetTimer()

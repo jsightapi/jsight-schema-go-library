@@ -1,6 +1,0 @@
-{
-  "id": 1,
-  "name": "John",
-  "isAdmin": false,
-  "mandatory": true // {optional true }
-}

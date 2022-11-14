@@ -1,5 +1,0 @@
-{
-  "id": 1,
-  "name": "John", // {minLengt: 5}
-  "age": 5.5
-}

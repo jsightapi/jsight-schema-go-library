@@ -4,12 +4,11 @@ import (
 	"regexp"
 	"testing"
 
+	schema "github.com/jsightapi/jsight-schema-go-library"
+	"github.com/jsightapi/jsight-schema-go-library/fs"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	jschema "github.com/jsightapi/jsight-schema-go-library"
-	"github.com/jsightapi/jsight-schema-go-library/formats/plaintext"
-	"github.com/jsightapi/jsight-schema-go-library/fs"
 )
 
 func TestNew(t *testing.T) {
@@ -20,7 +19,7 @@ func TestNew(t *testing.T) {
 
 	s := New(name, content, WithGeneratorSeed(42))
 
-	assert.Equal(t, fs.NewFile(name, content), s.file)
+	assert.Equal(t, fs.NewFile(name, content), s.File)
 	assert.Equal(t, int64(42), s.generatorSeed)
 	assert.Equal(t, "", s.pattern)
 }
@@ -30,7 +29,7 @@ func TestFromFile(t *testing.T) {
 
 	s := FromFile(file, WithGeneratorSeed(42))
 
-	assert.Equal(t, file, s.file)
+	assert.Equal(t, file, s.File)
 	assert.Equal(t, int64(42), s.generatorSeed)
 	assert.Equal(t, "", s.pattern)
 }
@@ -97,12 +96,12 @@ func TestSchema_Example(t *testing.T) {
 }
 
 func TestSchema_AddType(t *testing.T) {
-	err := (&Schema{}).AddType("foo", nil)
+	err := (&RSchema{}).AddType("foo", nil)
 	require.NoError(t, err)
 }
 
 func TestSchema_AddRule(t *testing.T) {
-	err := (&Schema{}).AddRule("foo", nil)
+	err := (&RSchema{}).AddRule("foo", nil)
 	require.NoError(t, err)
 }
 
@@ -121,19 +120,13 @@ func TestSchema_Check(t *testing.T) {
 	})
 }
 
-func TestSchema_Validate(t *testing.T) {
-	s := New("", "/^\\d+$/")
-	assert.NoError(t, s.Validate(plaintext.New("", "123")))
-	assert.Error(t, s.Validate(plaintext.New("", "abc")))
-}
-
 func TestSchema_GetAST(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
 		actual, err := New("", complexRegex, WithGeneratorSeed(0)).GetAST()
 		require.NoError(t, err)
-		assert.Equal(t, jschema.ASTNode{
-			TokenType:  jschema.TokenTypeString,
-			SchemaType: string(jschema.SchemaTypeString),
+		assert.Equal(t, schema.ASTNode{
+			TokenType:  schema.TokenTypeString,
+			SchemaType: string(schema.SchemaTypeString),
 			Value:      "/" + complexRegexPattern + "/",
 		}, actual)
 	})
@@ -148,7 +141,7 @@ func TestSchema_GetAST(t *testing.T) {
 }
 
 func TestSchema_UsedUserTypes(t *testing.T) {
-	actual, err := (&Schema{}).UsedUserTypes()
+	actual, err := (&RSchema{}).UsedUserTypes()
 	require.NoError(t, err)
 	assert.Nil(t, actual)
 }

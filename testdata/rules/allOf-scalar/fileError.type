@@ -1,3 +1,0 @@
-{ // {allOf: "@basicError"}
-  "filename": "filename.ext"
-}

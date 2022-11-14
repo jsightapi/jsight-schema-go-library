@@ -1,4 +1,4 @@
-package jschema
+package schema
 
 import (
 	"fmt"

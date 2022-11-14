@@ -1,1 +1,0 @@
-"foo" // {or: [{type: "@obj"}, "@arr", {type: "string", minLength: 3}, {type: "integer", min: 0}]}

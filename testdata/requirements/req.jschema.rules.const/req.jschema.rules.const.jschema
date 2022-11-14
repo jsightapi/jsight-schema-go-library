@@ -1,8 +1,0 @@
-{
-  "integer": 1, // {const: true}
-  "string": "foo", // {const: true}
-  "float": 3.14, // {const: true}
-  "null": null, // {const: true}
-  "boolean": true, // {const: true}
-  "not_a_const": 42 // {const: false}
-}

@@ -1,3 +1,0 @@
-{ // {additionalProperties: "boolean"}
-  @catid: 1234
-}

@@ -1,10 +1,10 @@
-package jschema
+package schema
 
 import (
 	"errors"
 
 	"github.com/jsightapi/jsight-schema-go-library/bytes"
-	"github.com/jsightapi/jsight-schema-go-library/internal/json"
+	"github.com/jsightapi/jsight-schema-go-library/json"
 )
 
 type TokenType = string

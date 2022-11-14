@@ -1,6 +1,0 @@
-{
-    "object": @fizz | @buzz,
-    "array": [
-        @fizz | @buzz
-    ]
-}
