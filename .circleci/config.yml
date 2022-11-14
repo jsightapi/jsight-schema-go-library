@@ -9,9 +9,6 @@ parameters:
   golangci-lint-version:
     type: string
     default: '1.50.1'
-  run-mod-vendor:
-    type: boolean
-    default: true
 
 
 workflows:
