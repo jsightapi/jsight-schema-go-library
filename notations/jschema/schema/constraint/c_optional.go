@@ -41,9 +41,9 @@ func (Optional) Type() Type {
 func (c Optional) String() string {
 	str := "[ UNVERIFIABLE CONSTRAINT ] " + OptionalConstraintType.String()
 	if c.value {
-		str += ": true"
+		str += colonTrue
 	} else {
-		str += ": false"
+		str += colonFalse
 	}
 	return str
 }

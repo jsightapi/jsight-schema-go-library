@@ -23,7 +23,7 @@ func NewRawPathVariablesSchema(content bytes.Bytes, userTypes map[string]*Schema
 	}
 
 	for k, v := range userTypes {
-		if err = s.AddType(k, v); err != nil {
+		if err = s.AddType(k, v); err != nil { //nolint:gocritic
 			return nil, err
 		}
 	}
@@ -48,8 +48,6 @@ func (s *Schema) loadPathVariables() error {
 		)
 		s.inner = &sc
 		s.ASTNode = s.buildASTNode()
-		// s.collectUserTypes()
-		// loader.CompileBasic(s.inner, s.areKeysOptionalByDefault)
 		return nil
 	})
 }
@@ -60,9 +58,6 @@ func (s *Schema) compilePathVariables() error {
 			err = panics.Handle(recover(), err)
 		}()
 		loader.CompileAllOf(s.inner)
-		// loader.AddUnnamedTypes(s.inner)
-		// checker.CheckRootSchema(s.inner)
-		// return checker.CheckRecursion(s.file.Name(), s.inner)
 		return nil
 	})
 }
@@ -70,13 +65,11 @@ func (s *Schema) compilePathVariables() error {
 func (s *Schema) RootObjectNode() (*schema.ObjectNode, bool) {
 	root := s.inner.RootNode()
 	if root.Type() != json.TypeObject {
-		// return nil, kit.ConvertError(s.file, jerr.ErrObjectExpected)
 		return nil, false
 	}
 
 	obj, ok := root.(*schema.ObjectNode)
 	if !ok {
-		// return nil, kit.ConvertError(s.file, jerr.ErrObjectExpected)
 		return nil, false
 	}
 

@@ -38,13 +38,13 @@ type orderedMapGenerator struct{}
 
 func (orderedMapGenerator) Name() string { return "OrderedMap" }
 
-func (g orderedMapGenerator) Generate(path string) error {
-	pkgName, dd, err := g.parseFile(path)
+func (g orderedMapGenerator) Generate(p string) error {
+	pkgName, dd, err := g.parseFile(p)
 	if err != nil {
 		return fmt.Errorf("faile to parse file: %w", err)
 	}
 
-	if err := g.generate(pkgName, dd, filepath.Dir(path)); err != nil {
+	if err := g.generate(pkgName, dd, filepath.Dir(p)); err != nil {
 		return fmt.Errorf("failed to find target types: %w", err)
 	}
 
@@ -481,7 +481,7 @@ func (m *{{ .Name }}) MarshalJSON() ([]byte, error) {
 	}
 
 	buf := bytes.NewBuffer(make([]byte, 0, 2048))
-	if err := t.Execute(buf, om); err != nil {
+	if err = t.Execute(buf, om); err != nil {
 		return fmt.Errorf("failed to execute template: %w", err)
 	}
 

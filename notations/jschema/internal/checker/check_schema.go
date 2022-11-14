@@ -127,7 +127,7 @@ func (c checkSchema) checkLiteralNode(node schema.Node, ss map[string]schema.Typ
 // Checks for array elements. Including recursively for types. Or if the array
 // type is "any".
 func (c checkSchema) checkArrayItems(node schema.Node) {
-	arrayNode := node.(*schema.ArrayNode) //nolint:errcheck // We're sure about this type.
+	arrayNode := node.(*schema.ArrayNode)
 
 	if arrayNode.Len() != 0 {
 		return
@@ -149,7 +149,7 @@ func (c checkSchema) checkArrayItems(node schema.Node) {
 }
 
 func (checkSchema) checkArrayNode(node schema.Node) {
-	arrayNode := node.(*schema.ArrayNode) //nolint:errcheck // We're sure about this type.
+	arrayNode := node.(*schema.ArrayNode)
 
 	length := uint(arrayNode.Len())
 

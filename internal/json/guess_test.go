@@ -10,7 +10,7 @@ import (
 )
 
 func BenchmarkIsNull(b *testing.B) {
-	null := bytes.NewBytes("null")
+	null := bytes.NewBytes(nullStr)
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -201,13 +201,13 @@ func TestIsBoolean(t *testing.T) {
 }
 
 func TestIsNull(t *testing.T) {
-	for _, str := range success("null") {
+	for _, str := range success(nullStr) {
 		t.Run(str, func(t *testing.T) {
 			assert.True(t, Guess(bytes.NewBytes(str)).IsNull())
 		})
 	}
 
-	for _, str := range fail("null") {
+	for _, str := range fail(nullStr) {
 		t.Run(str, func(t *testing.T) {
 			assert.False(t, Guess(bytes.NewBytes(str)).IsNull())
 		})
@@ -239,7 +239,7 @@ func TestGuessLiteralNodeType(t *testing.T) {
 		})
 	}
 
-	for _, str := range success("null") {
+	for _, str := range success(nullStr) {
 		t.Run(str, func(t *testing.T) {
 			assert.Equal(t, TypeNull, Guess(bytes.NewBytes(str)).LiteralJsonType())
 		})

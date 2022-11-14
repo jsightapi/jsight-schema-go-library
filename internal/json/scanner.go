@@ -221,7 +221,7 @@ func appendZeros(to bytes.Bytes, n int) bytes.Bytes {
 	return to
 }
 
-func appendDigits(from bytes.Bytes, to bytes.Bytes) bytes.Bytes {
+func appendDigits(from, to bytes.Bytes) bytes.Bytes {
 loop:
 	for _, c := range from.Data() {
 		switch c {

@@ -71,7 +71,7 @@ type Schema interface {
 }
 
 // ASTNode an AST node.
-type ASTNode struct { //nolint:govet // This is okay.
+type ASTNode struct {
 	// TokenType corresponding JSON type for this AST node's value.
 	TokenType TokenType
 
@@ -104,9 +104,9 @@ type ASTNode struct { //nolint:govet // This is okay.
 }
 
 func (c *ASTNode) ObjectProperty(k string) *ASTNode {
-	for _, v := range c.Children {
-		if v.Key == k {
-			return &v
+	for i := range c.Children {
+		if c.Children[i].Key == k {
+			return &c.Children[i]
 		}
 	}
 	return nil

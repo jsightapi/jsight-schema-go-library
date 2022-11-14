@@ -56,7 +56,7 @@ func (b *exampleBuilder) buildExampleForObjectNode(node *internalSchema.ObjectNo
 	buf := exampleBufferPool.Get()
 	defer exampleBufferPool.Put(buf)
 
-	buf.WriteRune('{')
+	buf.WriteByte('{')
 	children := node.Children()
 	length := len(children)
 	for i, childNode := range children {
@@ -74,15 +74,15 @@ func (b *exampleBuilder) buildExampleForObjectNode(node *internalSchema.ObjectNo
 			return nil, err
 		}
 
-		buf.WriteRune('"')
+		buf.WriteByte('"')
 		buf.Write(k)
 		buf.WriteString(`":`)
 		buf.Write(ex)
 		if i+1 != length {
-			buf.WriteRune(',')
+			buf.WriteByte(',')
 		}
 	}
-	buf.WriteRune('}')
+	buf.WriteByte('}')
 	return buf.Bytes(), nil
 }
 
@@ -111,7 +111,7 @@ func (b *exampleBuilder) buildExampleForArrayNode(node *internalSchema.ArrayNode
 	buf := exampleBufferPool.Get()
 	defer exampleBufferPool.Put(buf)
 
-	buf.WriteRune('[')
+	buf.WriteByte('[')
 	children := node.Children()
 	length := len(children)
 	for i, childNode := range children {
@@ -126,10 +126,10 @@ func (b *exampleBuilder) buildExampleForArrayNode(node *internalSchema.ArrayNode
 
 		buf.Write(ex)
 		if i+1 != length {
-			buf.WriteRune(',')
+			buf.WriteByte(',')
 		}
 	}
-	buf.WriteRune(']')
+	buf.WriteByte(']')
 	return buf.Bytes(), nil
 }
 
@@ -192,12 +192,12 @@ func buildExampleForObjectNode(
 	b := exampleBufferPool.Get()
 	defer exampleBufferPool.Put(b)
 
-	b.WriteRune('{')
+	b.WriteByte('{')
 	children := node.Children()
 	length := len(children)
 	for i, childNode := range children {
 		key := node.Key(i)
-		b.WriteRune('"')
+		b.WriteByte('"')
 		b.WriteString(key.Key)
 		b.WriteString(`":`)
 
@@ -207,10 +207,10 @@ func buildExampleForObjectNode(
 		}
 		b.Write(ex)
 		if i+1 != length {
-			b.WriteRune(',')
+			b.WriteByte(',')
 		}
 	}
-	b.WriteRune('}')
+	b.WriteByte('}')
 	return b.Bytes(), nil
 }
 
@@ -225,7 +225,7 @@ func buildExampleForArrayNode(
 	b := exampleBufferPool.Get()
 	defer exampleBufferPool.Put(b)
 
-	b.WriteRune('[')
+	b.WriteByte('[')
 	children := node.Children()
 	length := len(children)
 	for i, childNode := range children {
@@ -235,10 +235,10 @@ func buildExampleForArrayNode(
 		}
 		b.Write(ex)
 		if i+1 != length {
-			b.WriteRune(',')
+			b.WriteByte(',')
 		}
 	}
-	b.WriteRune(']')
+	b.WriteByte(']')
 	return b.Bytes(), nil
 }
 

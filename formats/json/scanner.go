@@ -43,7 +43,7 @@ const (
 // completed, *before* the byte that just got passed in.  (The indication must be
 // delayed in order to recognize the end of numbers: is 123 a whole value or the
 // beginning of 12345e+6?).
-type scanner struct { //nolint:govet // It's ok.
+type scanner struct {
 	// step is a func to be called to execute the next transition.
 	// Also tried using an integer constant and a single func with a switch, but
 	// using the func directly was 10% faster on a 64-bit Mac Mini, and it's nicer
@@ -313,7 +313,7 @@ func stateFoundArrayItemBegin(s *scanner, c byte) state {
 	return r
 }
 
-func stateBeginValue(s *scanner, c byte) state { //nolint:gocyclo // It's okay.
+func stateBeginValue(s *scanner, c byte) state {
 	if bytes.IsBlank(c) {
 		return scanContinue
 	}

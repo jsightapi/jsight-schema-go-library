@@ -61,27 +61,16 @@ func (b ObjectBuilder) AddType(name string, sc jschema.Schema) {
 
 func (b ObjectBuilder) Build() *Schema {
 	s := b.jschema
-	_ = s.loadOnce.Do(func() (err error) { //nolint:errcheck // It's ok.
+	_ = s.loadOnce.Do(func() (err error) {
 		defer func() {
 			err = panics.Handle(recover(), err)
 		}()
-		// sc := loader.LoadSchemaWithoutCompile(
-		// 	scanner.New(s.file),
-		// 	nil,
-		// 	s.rules,
-		// )
-		// s.inner = &sc
 		s.ASTNode = s.buildASTNode()
-		// s.collectUserTypes()
 		loader.CompileBasic(s.inner, s.areKeysOptionalByDefault)
 		return nil
 	})
 
-	// _ = s.compileOnce.Do(func() (err error) { //nolint:errcheck // It's ok.
-	// 	return nil
-	// })
-
-	_ = s.compile() //nolint:errcheck // It's ok.
+	_ = s.compile()
 
 	return s
 }

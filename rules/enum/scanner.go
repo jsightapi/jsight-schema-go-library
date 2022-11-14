@@ -39,7 +39,7 @@ const (
 // just got passed in.  (The indication must be delayed in order
 // to recognize the end of numbers: is 123 a whole value or
 // the beginning of 12345e+6?).
-type scanner struct { //nolint:govet // It's ok.
+type scanner struct {
 	// step is a func to be called to execute the next transition.
 	// Also tried using an integer constant and a single func
 	// with a switch, but using the func directly was 10% faster
@@ -274,7 +274,7 @@ func (s *scanner) stateFoundArrayItemBegin(c byte) (state, error) {
 	return r, nil
 }
 
-func (s *scanner) stateBeginValue(c byte) (state, error) { //nolint:gocyclo // It's okay.
+func (s *scanner) stateBeginValue(c byte) (state, error) {
 	if bytes.IsNewLine(c) {
 		if s.annotation {
 			return scanSkip, s.newDocumentErrorAtCharacter("inside inline annotation")
@@ -807,7 +807,7 @@ func isNonScalarPair(pairType, lexType lexeme.LexEventType) bool {
 		(pairType == lexeme.MultiLineAnnotationBegin && lexType == lexeme.MultiLineAnnotationEnd)
 }
 
-func isScalarPair(pairType, lexType lexeme.LexEventType) bool { //nolint:gocyclo // We can't do anything about it.
+func isScalarPair(pairType, lexType lexeme.LexEventType) bool {
 	return (pairType == lexeme.LiteralBegin && lexType == lexeme.LiteralEnd) ||
 		(pairType == lexeme.ArrayItemBegin && lexType == lexeme.ArrayItemEnd) ||
 		(pairType == lexeme.MultiLineAnnotationTextBegin && lexType == lexeme.MultiLineAnnotationTextEnd) ||

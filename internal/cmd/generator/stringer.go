@@ -81,7 +81,7 @@ func (stringerGenerator) shouldProcess(d *ast.GenDecl) bool {
 	return strings.Contains(d.Doc.Text(), stringerMarker)
 }
 
-func (stringerGenerator) getReceiverAndComment(d *ast.GenDecl) (receiver string, comment string) {
+func (stringerGenerator) getReceiverAndComment(d *ast.GenDecl) (receiver, comment string) {
 	if len(d.Specs) == 0 {
 		return "", ""
 	}
@@ -132,7 +132,7 @@ func buildFileName(typeName string) string {
 	buf := stdBytes.NewBuffer(make([]byte, 0, len(typeName)))
 	for _, r := range typeName {
 		if 'A' <= r && r <= 'Z' {
-			buf.WriteRune('_')
+			buf.WriteByte('_')
 			r += 'a' - 'A'
 		}
 		buf.WriteRune(r)

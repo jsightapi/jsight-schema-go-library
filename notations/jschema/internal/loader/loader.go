@@ -76,7 +76,7 @@ func LoadSchemaWithoutCompile(
 	rootSchema *schema.Schema,
 	rules map[string]jschema.Rule,
 ) schema.Schema {
-	l := loaderPool.Get().(*loader) //nolint:errcheck // We're sure about this type.
+	l := loaderPool.Get().(*loader)
 	defer func() {
 		l.reset()
 		loaderPool.Put(l)
@@ -136,7 +136,7 @@ func (l *loader) doLoad() {
 	}
 }
 
-func (l *loader) handleLex(lex lexeme.LexEvent) (bool, error) { //nolint:gocyclo // Pretty readable though.
+func (l *loader) handleLex(lex lexeme.LexEvent) (bool, error) {
 	switch lex.Type() {
 	case lexeme.TypesShortcutBegin, lexeme.KeyShortcutBegin:
 		return l.mode != readMultiLineComment && l.mode != readInlineComment, nil

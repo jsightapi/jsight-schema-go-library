@@ -22,7 +22,7 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/notations/regex"
 )
 
-type Schema struct { //nolint:govet // This is okay.
+type Schema struct {
 	file  *fs.File
 	inner *internalSchema.Schema
 

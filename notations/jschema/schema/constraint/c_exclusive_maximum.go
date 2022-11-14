@@ -38,9 +38,9 @@ func (ExclusiveMaximum) Type() Type {
 func (c ExclusiveMaximum) String() string {
 	str := "[ UNVERIFIABLE CONSTRAINT ] " + ExclusiveMaximumConstraintType.String()
 	if c.exclusive {
-		str += ": true"
+		str += colonTrue
 	} else {
-		str += ": false"
+		str += colonFalse
 	}
 	return str
 }

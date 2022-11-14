@@ -9,7 +9,7 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/notations/jschema/schema/constraint"
 )
 
-type baseNode struct { //nolint:govet // It's ok.
+type baseNode struct {
 	// parent a parent node.
 	parent Node
 
@@ -214,7 +214,7 @@ func (n *baseNode) InheritedFrom() string {
 func (n *baseNode) Copy() baseNode {
 	nn := *n
 	nn.constraints = &Constraints{}
-	_ = n.constraints.Each(func(k constraint.Type, v constraint.Constraint) error { //nolint:errcheck // It's ok.
+	_ = n.constraints.Each(func(k constraint.Type, v constraint.Constraint) error {
 		nn.constraints.Set(k, v)
 		return nil
 	})

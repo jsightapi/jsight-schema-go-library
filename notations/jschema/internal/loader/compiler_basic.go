@@ -119,12 +119,12 @@ func ensureCanUseORConstraint(node schema.Node) {
 		return
 	}
 
-	or := node.Constraint(constraint.OrConstraintType).(*constraint.Or) //nolint:errcheck // We are sure about that.
+	or := node.Constraint(constraint.OrConstraintType).(*constraint.Or)
 	if or.IsGenerated() {
 		return
 	}
 
-	ssl := node.Constraint(constraint.TypesListConstraintType).(*constraint.TypesList) //nolint:errcheck // We are sure about that.
+	ssl := node.Constraint(constraint.TypesListConstraintType).(*constraint.TypesList)
 	if ssl.HasUserTypes() {
 		panic(errors.ErrInvalidChildNodeTogetherWithOrRule)
 	}
@@ -190,7 +190,7 @@ func (compile schemaCompiler) typeConstraint(node schema.Node) {
 		return
 	}
 
-	typeConstraint := c.(*constraint.TypeConstraint) //nolint:errcheck // We sure about that.
+	typeConstraint := c.(*constraint.TypeConstraint)
 	val := typeConstraint.Bytes().Unquote()
 
 	if val.IsUserTypeName() {
@@ -405,8 +405,8 @@ func (schemaCompiler) checkMinAndMax(node schema.Node) error {
 		return nil
 	}
 
-	min := minRaw.(*constraint.Min) //nolint:errcheck // We're sure about this type.
-	max := maxRaw.(*constraint.Max) //nolint:errcheck // We're sure about this type.
+	min := minRaw.(*constraint.Min)
+	max := maxRaw.(*constraint.Max)
 
 	if min.Exclusive() || max.Exclusive() {
 		if min.Value().GreaterThanOrEqual(max.Value()) {
@@ -436,8 +436,8 @@ func (schemaCompiler) checkMinLengthAndMaxLength(node schema.Node) error {
 		return nil
 	}
 
-	minLength := minLengthRaw.(*constraint.MinLength) //nolint:errcheck // We're sure about this type.
-	maxLength := maxLengthRaw.(*constraint.MaxLength) //nolint:errcheck // We're sure about this type.
+	minLength := minLengthRaw.(*constraint.MinLength)
+	maxLength := maxLengthRaw.(*constraint.MaxLength)
 
 	if minLength.Value() > maxLength.Value() {
 		return errors.Format(
@@ -457,8 +457,8 @@ func (schemaCompiler) checkMinItemsAndMaxItems(node schema.Node) error {
 		return nil
 	}
 
-	minItems := minItemsRaw.(*constraint.MinItems) //nolint:errcheck // We're sure about this type.
-	maxItems := maxItemsRaw.(*constraint.MaxItems) //nolint:errcheck // We're sure about this type.
+	minItems := minItemsRaw.(*constraint.MinItems)
+	maxItems := maxItemsRaw.(*constraint.MaxItems)
 
 	if minItems.Value() > maxItems.Value() {
 		return errors.Format(

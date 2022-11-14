@@ -9,7 +9,7 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/internal/lexeme"
 )
 
-type ObjectNode struct { //nolint:govet // It's ok.
+type ObjectNode struct {
 	// children node list.
 	children []Node
 

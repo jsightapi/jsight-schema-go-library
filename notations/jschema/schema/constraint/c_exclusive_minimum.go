@@ -39,9 +39,9 @@ func (ExclusiveMinimum) Type() Type {
 func (c ExclusiveMinimum) String() string {
 	str := "[ UNVERIFIABLE CONSTRAINT ] " + ExclusiveMinimumConstraintType.String()
 	if c.exclusive {
-		str += ": true"
+		str += colonTrue
 	} else {
-		str += ": false"
+		str += colonFalse
 	}
 	return str
 }

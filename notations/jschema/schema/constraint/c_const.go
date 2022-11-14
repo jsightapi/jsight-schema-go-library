@@ -45,9 +45,9 @@ func (Const) Type() Type {
 
 func (c Const) String() string {
 	if c.apply {
-		return ConstConstraintType.String() + ": true"
+		return ConstConstraintType.String() + colonTrue
 	}
-	return ConstConstraintType.String() + ": false"
+	return ConstConstraintType.String() + colonFalse
 }
 
 func (c Const) Bool() bool {

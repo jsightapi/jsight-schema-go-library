@@ -54,7 +54,7 @@ const (
 // just got passed in.  (The indication must be delayed in order
 // to recognize the end of numbers: is 123 a whole value or
 // the beginning of 12345e+6?).
-type Scanner struct { //nolint:govet // It's ok.
+type Scanner struct {
 	// step is a func to be called to execute the next transition.
 	// Also tried using an integer constant and a single func
 	// with a switch, but using the func directly was 10% faster
@@ -633,7 +633,7 @@ func beginKeyShortcut(s *Scanner) state {
 	return scanContinue
 }
 
-func stateBeginValue(s *Scanner, c byte) state { //nolint:gocyclo // It's okay.
+func stateBeginValue(s *Scanner, c byte) state {
 	if s.isNewLine(c) {
 		s.found(lexeme.NewLine)
 		return scanContinue
@@ -719,7 +719,7 @@ func stateBeginString(s *Scanner, c byte) state {
 	return scanBeginLiteral
 }
 
-func stateEndValue(s *Scanner, c byte) state { //nolint:gocyclo // Pretty readable though.
+func stateEndValue(s *Scanner, c byte) state {
 	length := s.stack.Len()
 
 	if length == 0 { // json ex `{} `

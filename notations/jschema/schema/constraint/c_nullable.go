@@ -40,9 +40,9 @@ func (Nullable) Type() Type {
 
 func (c Nullable) String() string {
 	if c.value {
-		return NullableConstraintType.String() + ": true"
+		return NullableConstraintType.String() + colonTrue
 	}
-	return NullableConstraintType.String() + ": false"
+	return NullableConstraintType.String() + colonFalse
 }
 
 func (c Nullable) Bool() bool {

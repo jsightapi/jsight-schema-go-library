@@ -256,13 +256,12 @@ func (b Bytes) LenIndex() Index {
 
 // LineAndColumn calculate the line and column numbers by byte index in the content
 // return 0 if not found
-func (b Bytes) LineAndColumn(index Index) (Index, Index) {
+func (b Bytes) LineAndColumn(index Index) (line, column Index) {
 	if b.Len() == 0 || Index(b.Len()) <= index {
 		return 0, 0
 	}
 
 	nl := b.NewLineSymbol()
-	var line, column Index
 
 	for _, c := range b.data[:index] {
 		if c == nl {

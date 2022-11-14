@@ -25,8 +25,8 @@ const (
 	TypeMixed
 )
 
-func NewJsonType(bytes bytes.Bytes) Type {
-	switch bytes.String() {
+func NewJsonType(b bytes.Bytes) Type {
+	switch b.String() {
 	case "object":
 		return TypeObject
 	case "array":
@@ -39,10 +39,10 @@ func NewJsonType(bytes bytes.Bytes) Type {
 		return TypeFloat
 	case "boolean":
 		return TypeBoolean
-	case "null":
+	case nullStr:
 		return TypeNull
 	}
-	panic(errors.Format(errors.ErrUnknownType, bytes.String()))
+	panic(errors.Format(errors.ErrUnknownType, b.String()))
 }
 
 var AllTypes = []Type{
@@ -71,7 +71,7 @@ func (t Type) String() string {
 	case TypeBoolean:
 		return "boolean"
 	case TypeNull:
-		return "null"
+		return nullStr
 	case TypeMixed:
 		return "mixed"
 	default:
@@ -100,7 +100,7 @@ func (t Type) ToTokenType() string {
 	case TypeBoolean:
 		return "boolean"
 	case TypeNull:
-		return "null"
+		return nullStr
 	case TypeMixed:
 		return "reference"
 	}

@@ -5,6 +5,8 @@ import (
 	"github.com/jsightapi/jsight-schema-go-library/errors"
 )
 
+const nullStr = "null"
+
 type GuessData struct {
 	number *Number
 	bytes  bytes.Bytes
@@ -82,10 +84,14 @@ func (g *GuessData) IsFloat() bool {
 }
 
 func (g GuessData) IsNull() bool {
-	// var null = Bytes{'n','u','l','l'}; if bytes.Equal(g.bytes, null) { // Benchmark: 9.75 ns/op   0 B/op   0 allocs/op
-	// if len(g.bytes) == 4 && g.bytes[0] == 'n' && g.bytes[1] == 'u' && g.bytes[2] == 'l' && g.bytes[3] == 'l' { // Benchmark: 0.82 ns/op  0 B/op  0 allocs/op
+	// Benchmark: 9.75 ns/op   0 B/op   0 allocs/op
+	// var null = Bytes{'n','u','l','l'}; if bytes.Equal(g.bytes, null) {
+
+	// Benchmark: 0.82 ns/op  0 B/op  0 allocs/op
+	// if len(g.bytes) == 4 && g.bytes[0] == 'n' && g.bytes[1] == 'u' && g.bytes[2] == 'l' && g.bytes[3] == 'l' {
+
 	// Benchmark: 0.47 ns/op  0 B/op  0 allocs/op
-	return g.bytes.String() == "null"
+	return g.bytes.String() == nullStr
 }
 
 func (g GuessData) IsBoolean() bool {

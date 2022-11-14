@@ -10,7 +10,7 @@ import (
 var projectRootOnce sync.ErrOnceWithValue[string]
 
 func GetProjectRoot() string {
-	v, _ := projectRootOnce.Do(func() (string, error) { //nolint:errcheck // There is no error.
+	v, _ := projectRootOnce.Do(func() (string, error) {
 		return determineProjectRoot(), nil
 	})
 	return v

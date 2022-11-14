@@ -201,7 +201,8 @@ func (rl *ruleLoader) ruleValueEnd(lex lexeme.LexEvent) {
 	}
 }
 
-// The method should not be called during normal operation. Ensures that the loader will not continue to work after the load is complete.
+// The method should not be called during normal operation. Ensures that the loader will not continue to work after
+// the load is complete.
 func (*ruleLoader) endOfLoading(lexeme.LexEvent) {
 	panic(errors.ErrLoader)
 }

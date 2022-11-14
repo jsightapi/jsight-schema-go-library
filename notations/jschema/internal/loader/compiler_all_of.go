@@ -103,9 +103,9 @@ func (c *allOfConstraintCompiler) extendWith(node schema.Node, name string) {
 	}
 
 	if fromAdditionalProperties := fromObject.Constraint(constraint.AdditionalPropertiesConstraintType); fromAdditionalProperties != nil { //nolint:lll
-		fromAdditionalProperties := fromAdditionalProperties.(*constraint.AdditionalProperties)                                          //nolint:errcheck // We're sure about this type.
+		fromAdditionalProperties := fromAdditionalProperties.(*constraint.AdditionalProperties)
 		if toAdditionalProperties := toObject.Constraint(constraint.AdditionalPropertiesConstraintType); toAdditionalProperties != nil { //nolint:lll
-			toAdditionalProperties := toAdditionalProperties.(*constraint.AdditionalProperties) //nolint:errcheck // We're sure about this type.
+			toAdditionalProperties := toAdditionalProperties.(*constraint.AdditionalProperties)
 			if !fromAdditionalProperties.IsEqual(*toAdditionalProperties) {
 				panic(errors.ErrConflictAdditionalProperties)
 			}
